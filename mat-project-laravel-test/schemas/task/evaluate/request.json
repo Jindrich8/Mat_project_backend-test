@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Evaluate task request",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/evaluate_request.json"
+                            },
+                            {
+                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/evaluate_request.json"
+                            }
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "exercises"
+            ]
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

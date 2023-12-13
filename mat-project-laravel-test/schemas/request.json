@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title":"Request",
+    "description": "Specifies format of the request body.",
+    "type":"object",
+    "additionalProperties": false,
+    "properties": {
+        "data":{
+            "title":"Request data",
+            "type":"object",
+            "description": "Endpoint specific request data."
+        }
+    },
+    "required": ["data"]
+}

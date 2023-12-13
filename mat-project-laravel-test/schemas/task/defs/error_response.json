@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Application error object",
+    "description": "Serves as object specifying details about the error for both application and user.",
+    "type": "object",
+    "properties": {
+        "message": {
+            "title": "Human readable error message",
+            "type": "string",
+            "description": "Human readable error message"
+        },
+        "code": {
+            "title": "Endpoint specific error code",
+            "type": "integer",
+            "description": "Serves as identifier for action which should be triggered by app."
+        },
+        "errorData": {
+            "title": "Error data",
+            "description": "Serves as error action specific data.",
+            "type": [
+                "object",
+                "array"
+            ]
+        },
+        "description": {
+            "title": "Human readable error description",
+            "type": "string",
+            "description": "Human readable details about error or help message, specifying which action should user take"
+        }
+    },
+    "required": [
+        "type",
+        "message",
+        "code",
+        "description"
+    ]
+}

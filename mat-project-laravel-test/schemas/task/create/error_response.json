@@ -1,0 +1,289 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Application error object",
+    "description": "Serves as object specifying details about the error for both application and user.",
+    "type": "object",
+    "properties": {
+        "error": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/error_response.json"
+                },
+                {
+                    "oneOf": [
+                        {
+                            "title": "Invalid element",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "const": 1
+                                },
+                                "errorData": {
+                                    "type": "object",
+                                    "properties": {
+                                        "eColumn": {
+                                            "title": "Element column",
+                                            "description": "Column of invalid element",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eLine": {
+                                            "title": "Element line",
+                                            "description": "Line of invalid element",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eByteIndex": {
+                                            "title": "Element byte index",
+                                            "description": "Byte index of invalid element",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "expectedElements": {
+                                            "title": "Expected elements",
+                                            "description": "Expected valid elements at this position",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "eColumn",
+                                        "eLine",
+                                        "expectedElements"
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "title": "Invalid attribute",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "const": 2
+                                },
+                                "errorData": {
+                                    "type": "object",
+                                    "properties": {
+                                        "eColumn": {
+                                            "title": "Element column",
+                                            "description": "Column of element with invalid attribute",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eLine": {
+                                            "title": "Element line",
+                                            "description": "Line of element with invalid attribute",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eByteIndex": {
+                                            "title": "Element byte index",
+                                            "description": "Byte index of element with invalid attribute",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "expectedAttributes": {
+                                            "title": "Expected attributes",
+                                            "description": "Expected valid attributes at this position",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "eColumn",
+                                        "eLine",
+                                        "expectedAttributes"
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "title": "Invalid attribute value",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "const": 3
+                                },
+                                "errorData": {
+                                    "type": "object",
+                                    "properties": {
+                                        "eColumn": {
+                                            "title": "Element column",
+                                            "description": "Column of element with invalid attribute value",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eLine": {
+                                            "title": "Element line",
+                                            "description": "Line of element with invalid attribute value",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eByteIndex": {
+                                            "title": "Element byte index",
+                                            "description": "Byte index of element with invalid attribute",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "eColumn",
+                                        "eLine"
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "title": "Missing required attributes",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "title": "Endpoint specific error code",
+                                    "const": 4,
+                                    "description": "Serves as identifier for action which should be triggered by app."
+                                },
+                                "errorData": {
+                                    "title": "Error data",
+                                    "description": "Serves as error action specific data.",
+                                    "type": "object",
+                                    "properties": {
+                                        "eColumn": {
+                                            "title": "Element column",
+                                            "description": "Column of element with missing attributes",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eLine": {
+                                            "title": "Element line",
+                                            "description": "Line of element with missing attributes",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eByteIndex": {
+                                            "title": "Element byte index",
+                                            "description": "Byte index of element with missing attributes",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "missingAttributes": {
+                                            "title": "Missing attributes",
+                                            "description": "Missing required attributes",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "eColumn",
+                                        "eLine",
+                                        "missingAttributes"
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "title": "Invalid element value",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "const": 5
+                                },
+                                "errorData": {
+                                    "title": "Error data",
+                                    "description": "Serves as error action specific data.",
+                                    "type": "object",
+                                    "properties": {
+                                        "column": {
+                                            "title": "Value column",
+                                            "description": "Column of invalid element value",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "line": {
+                                            "title": "Value line",
+                                            "description": "Line of invalid element value",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "byteIndex": {
+                                            "title": "Value byte index",
+                                            "description": "Byte index of invalid element value",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "column",
+                                        "line"
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "title": "Missing required elements",
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "title": "Endpoint specific error code",
+                                    "const": 6,
+                                    "description": "Serves as identifier for action which should be triggered by app."
+                                },
+                                "errorData": {
+                                    "title": "Error data",
+                                    "description": "Serves as error action specific data.",
+                                    "type": "object",
+                                    "properties": {
+                                        "eColumn": {
+                                            "title": "Element column",
+                                            "description": "Column of element with missing required children",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eLine": {
+                                            "title": "Element line",
+                                            "description": "Line of element with missing required children",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "eByteIndex": {
+                                            "title": "Element byte index",
+                                            "description": "Byte index of element with missing required children",
+                                            "type": "integer",
+                                            "minimum": 0
+                                        },
+                                        "missingElements": {
+                                            "title": "Missing elements",
+                                            "description": "Missing required elements",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "column",
+                                        "line"
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "required": [
+        "errorData",
+        "code"
+    ]
+}

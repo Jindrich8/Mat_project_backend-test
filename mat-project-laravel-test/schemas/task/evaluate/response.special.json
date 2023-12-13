@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Evaluate task response",
+  "type": "object",
+  "$defs": {
+    "exercise": {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "exercise"
+            },
+            "exerType": {
+              "type": "string"
+            },
+            "instructions": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            },
+            "content": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "exerType",
+            "instructions",
+            "content"
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "$ref": "../defs/exercises/*/review_response.json"
+            }
+          ]
+        }
+      ]
+    },
+    "group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "group"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/exercise"
+              },
+              {
+                "$ref": "#/$defs/group"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "resources",
+        "entries"
+      ]
+    }
+  },
+  "properties": {
+    "data": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "display": {
+              "enum": [
+                "vertical",
+                "horizontal"
+              ]
+            },
+            "description": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/group"
+                  },
+                  {
+                    "$ref": "#/$defs/exercise"
+                  }
+                ]
+              }
+            }
+          },
+          "required": [
+            "name",
+            "description",
+            "entries"
+          ]
+        }
+      },
+      "required": [
+        "task"
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}

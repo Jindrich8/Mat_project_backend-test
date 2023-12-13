@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Task create request",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "task": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "minLength": 5,
+                            "maxLength": 60
+                        },
+                        "orientation": {
+                            "enum": [
+                                "Horizontal",
+                                "Vertical"
+                            ]
+                        },
+                        "description": {
+                            "type": "string",
+                            "maxLength": 500
+                        },
+                        "source": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "name",
+                        "orientation",
+                        "description",
+                        "source"
+                    ]
+                }
+            },
+            "required":["task"]
+        }
+    },
+    "required": [
+        "data"
+    ]
+}
