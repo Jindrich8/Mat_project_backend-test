@@ -4,42 +4,26 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "data": {
+        "task": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "task": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "minLength": 5,
-                            "maxLength": 60
-                        },
-                        "orientation": {
-                            "enum": [
-                                "Horizontal",
-                                "Vertical"
-                            ]
-                        },
-                        "description": {
-                            "type": "string",
-                            "maxLength": 500
-                        },
-                        "source": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "name",
-                        "orientation",
-                        "description",
-                        "source"
-                    ]
+                "tags":{
+                    "type":"array",
+                    "minItems":1,
+                    "uniqueItems": true,
+                    "items": {
+                        "type":"integer"
+                    }
+                },
+                "source": {
+                    "type": "string"
                 }
             },
-            "required":["task"]
+            "required": [
+                "source",
+                "tags"
+            ]
         }
     },
     "required": [

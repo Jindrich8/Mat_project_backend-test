@@ -37,12 +37,34 @@ namespace Dev\DtoGen {
          * @param string $dir
          * @return string[]
          */
+        public static function getNamesOfAllEntriesInDir(string $dir): array{
+            $entries = array_diff(scandir($dir), ['.', '..']);
+            return $entries;
+        }
+
+        /**
+         * @param string $dir
+         * @return string[]
+         */
+        public static function getNamesOfAllSubdirsInDir(string $dir): array{
+            $names = array_filter(
+                self::getNamesOfAllEntriesInDir($dir),
+            fn($entry)=>
+            is_dir(PathHelper::concatPaths($dir, $entry))
+        );
+            return $names;
+        }
+
+        /**
+         * @param string $dir
+         * @return string[]
+         */
         public static function getAllEntriesInDir(string $dir): array
         {
             $entries = array_map(
                 fn ($v) =>
                 PathHelper::concatPaths($dir, $v),
-                array_diff(scandir($dir), ['.', '..'])
+                self::getNamesOfAllEntriesInDir($dir)
             );
             return $entries;
         }
@@ -67,22 +89,22 @@ namespace Dev\DtoGen {
          * @param string $separator null = DIRECTORY_SEPARATOR
          * @param string $paths
          */
-        public static function concatMultiplePaths(?string $separator = DIRECTORY_SEPARATOR,...$paths): string
+        public static function concatMultiplePaths(?string $separator = DIRECTORY_SEPARATOR, ...$paths): string
         {
-            return PathHelper::concatArrayOfPaths($paths,$separator ?? DIRECTORY_SEPARATOR);
+            return PathHelper::concatArrayOfPaths($paths, $separator ?? DIRECTORY_SEPARATOR);
         }
 
         /**
          * @param string[] $paths
          */
-        public static function concatArrayOfPaths(array $paths,string $separator = DIRECTORY_SEPARATOR): string
+        public static function concatArrayOfPaths(array $paths, string $separator = DIRECTORY_SEPARATOR): string
         {
             $result = '';
             if ($paths) {
                 $path1 = $paths[0];
                 $len = count($paths);
                 for ($i = 1; $i < $len; ++$i) {
-                    $result .= PathHelper::concatPaths($path1, $paths[$i],$separator);
+                    $result .= PathHelper::concatPaths($path1, $paths[$i], $separator);
                 }
             }
             return $result;
@@ -92,6 +114,18 @@ namespace Dev\DtoGen {
         {
             return Finder::create()->in($searchIn)->ignoreDotFiles(true)
                 ->ignoreUnreadableDirs(true);
+        }
+
+
+
+        public static function isRelative(string $path): bool
+        {
+            return Str::startsWith($path, '.')
+                || !(
+                    windows_os() ?
+                    Str::charAt($path, 1) === ':'
+                    : Str::startsWith($path, '/')
+                );
         }
     }
 }

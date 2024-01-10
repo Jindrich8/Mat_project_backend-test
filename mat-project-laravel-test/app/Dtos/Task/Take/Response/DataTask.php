@@ -26,7 +26,7 @@ class DataTask extends ClassStructure
     /** @var string */
     public $description;
 
-    /** @var DefsGroup[]|DefsExerciseAllOf0[]|DoplnovackaTakeResponse[]|HledaniChybTakeResponse[]|array */
+    /** @var DefsGroup[]|DefsExercise[]|array */
     public $entries;
 
     /**
@@ -45,100 +45,7 @@ class DataTask extends ClassStructure
         $properties->entries = Schema::arr();
         $properties->entries->items = new Schema();
         $properties->entries->items->oneOf[0] = DefsGroup::schema();
-        $propertiesEntriesItemsOneOf1 = new Schema();
-        $propertiesEntriesItemsOneOf1->allOf[0] = DefsExerciseAllOf0::schema();
-        $propertiesEntriesItemsOneOf1AllOf1 = new Schema();
-        $propertiesEntriesItemsOneOf1AllOf1->anyOf[0] = DoplnovackaTakeResponse::schema();
-        $propertiesEntriesItemsOneOf1AllOf1->anyOf[1] = HledaniChybTakeResponse::schema();
-        $propertiesEntriesItemsOneOf1AllOf1->defs = (object)[
-            'cmb' => (object)[
-                'required' => [
-                    'values',
-                ],
-                'properties' => (object)[
-                    'values' => (object)[
-                        'items' => (object)[
-                            'type' => 'object',
-                        ],
-                        'minItems' => 1,
-                        'type' => 'array',
-                    ],
-                    'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'txtI' => (object)[
-                'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'value' => (object)[
-                'type' => 'string',
-            ],
-        ];
-        $propertiesEntriesItemsOneOf1->allOf[1] = $propertiesEntriesItemsOneOf1AllOf1;
-        $propertiesEntriesItemsOneOf1->defs = (object)[
-            'cmb' => (object)[
-                'required' => [
-                    'values',
-                ],
-                'properties' => (object)[
-                    'values' => (object)[
-                        'items' => (object)[
-                            'type' => 'object',
-                        ],
-                        'minItems' => 1,
-                        'type' => 'array',
-                    ],
-                    'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'txtI' => (object)[
-                'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'value' => (object)[
-                'type' => 'string',
-            ],
-        ];
-        $propertiesEntriesItemsOneOf1->setFromRef('#/$defs/exercise');
-        $properties->entries->items->oneOf[1] = $propertiesEntriesItemsOneOf1;
+        $properties->entries->items->oneOf[1] = DefsExercise::schema();
         $properties->entries->items->defs = (object)[
             'group' => (object)[
                 'required' => [
@@ -147,6 +54,7 @@ class DataTask extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -180,54 +88,52 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
+                'title' => 'Combobox',
+                'description' => 'Combobox of Fill in blanks exercise.',
                 'required' => [
+                    'type',
                     'values',
                 ],
                 'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'cmb',
+                    ],
                     'values' => (object)[
                         'items' => (object)[
                             'type' => 'object',
@@ -251,12 +157,15 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'txtI' => (object)[
+                'title' => 'Text input',
+                'description' => 'Text input of Fill in blanks exercise.',
+                'required' => [
+                    'type',
+                ],
                 'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'txtI',
                     ],
                 ],
                 'type' => 'object',
@@ -273,6 +182,7 @@ class DataTask extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -306,54 +216,52 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
+                'title' => 'Combobox',
+                'description' => 'Combobox of Fill in blanks exercise.',
                 'required' => [
+                    'type',
                     'values',
                 ],
                 'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'cmb',
+                    ],
                     'values' => (object)[
                         'items' => (object)[
                             'type' => 'object',
@@ -377,12 +285,15 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'txtI' => (object)[
+                'title' => 'Text input',
+                'description' => 'Text input of Fill in blanks exercise.',
+                'required' => [
+                    'type',
+                ],
                 'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'txtI',
                     ],
                 ],
                 'type' => 'object',
@@ -405,6 +316,7 @@ class DataTask extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -438,54 +350,52 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
+                'title' => 'Combobox',
+                'description' => 'Combobox of Fill in blanks exercise.',
                 'required' => [
+                    'type',
                     'values',
                 ],
                 'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'cmb',
+                    ],
                     'values' => (object)[
                         'items' => (object)[
                             'type' => 'object',
@@ -509,12 +419,15 @@ class DataTask extends ClassStructure
                 'type' => 'object',
             ],
             'txtI' => (object)[
+                'title' => 'Text input',
+                'description' => 'Text input of Fill in blanks exercise.',
+                'required' => [
+                    'type',
+                ],
                 'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'txtI',
                     ],
                 ],
                 'type' => 'object',
@@ -562,7 +475,7 @@ class DataTask extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param DefsGroup[]|DefsExerciseAllOf0[]|DoplnovackaTakeResponse[]|HledaniChybTakeResponse[]|array $entries
+     * @param DefsGroup[]|DefsExercise[]|array $entries
      * @return $this
      * @codeCoverageIgnoreStart
      */

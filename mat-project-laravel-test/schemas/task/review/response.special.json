@@ -4,50 +4,42 @@
   "type": "object",
   "$defs": {
     "exercise": {
-      "allOf": [
-        {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "exercise"
+        },
+        "instructions": {
           "type": "object",
           "properties": {
-            "type": {
-              "const": "exercise"
-            },
-            "exerType": {
-              "type": "string"
-            },
-            "instructions": {
-              "type": "object",
-              "properties": {
-                "content": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "content"
-              ]
-            },
             "content": {
-              "type": "object"
+              "type": "string"
             }
           },
           "required": [
-            "exerType",
-            "instructions",
             "content"
           ]
         },
-        {
+        "details": {
           "anyOf": [
             {
-              "$ref": "../defs/exercises/*/review_response.json"
+              "$ref": "../../defs/exercises/*/review_response.json"
             }
           ]
         }
+      },
+      "required": [
+        "type",
+        "instructions",
+        "details"
       ]
     },
     "group": {
       "type": "object",
       "properties": {
         "type": {
+          "type": "string",
           "const": "group"
         },
         "resources": {
@@ -85,51 +77,43 @@
     }
   },
   "properties": {
-    "data": {
+    "task": {
       "type": "object",
       "properties": {
-        "task": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "display": {
-              "enum": [
-                "vertical",
-                "horizontal"
-              ]
-            },
-            "description": {
-              "type": "string"
-            },
-            "entries": {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "$ref": "#/$defs/group"
-                  },
-                  {
-                    "$ref": "#/$defs/exercise"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "name",
-            "description",
-            "entries"
+        "name": {
+          "type": "string"
+        },
+        "display": {
+          "enum": [
+            "vertical",
+            "horizontal"
           ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/group"
+              },
+              {
+                "$ref": "#/$defs/exercise"
+              }
+            ]
+          }
         }
       },
       "required": [
-        "task"
+        "name",
+        "description",
+        "entries"
       ]
     }
   },
   "required": [
-    "data"
+    "task"
   ]
 }

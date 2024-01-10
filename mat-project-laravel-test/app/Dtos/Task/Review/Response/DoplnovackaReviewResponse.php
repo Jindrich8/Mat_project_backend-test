@@ -12,15 +12,25 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json
  */
 class DoplnovackaReviewResponse extends ClassStructure
 {
-    /** @var mixed */
+    /** @var string */
     public $exerType;
 
     /** @var DefsCmb[]|DefsTxtI[]|string[]|array */
     public $content;
+
+    /**
+     * @return static
+     */
+    public static function create()
+    {
+        $instance = parent::create();
+        $instance->exerType = "Doplnovacka";
+        return $instance;
+    }
 
     /**
      * @param Properties|static $properties
@@ -28,7 +38,7 @@ class DoplnovackaReviewResponse extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->exerType = new Schema();
+        $properties->exerType = Schema::string();
         $properties->exerType->const = "Doplnovacka";
         $properties->content = Schema::arr();
         $properties->content->items = new Schema();
@@ -147,11 +157,11 @@ class DoplnovackaReviewResponse extends ClassStructure
                 'type' => 'object',
             ],
         ];
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json');
     }
 
     /**
-     * @param mixed $exerType
+     * @param string $exerType
      * @return $this
      * @codeCoverageIgnoreStart
      */

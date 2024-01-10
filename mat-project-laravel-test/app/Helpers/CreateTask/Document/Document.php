@@ -3,96 +3,80 @@
 namespace App\Helpers\CreateTask\Document {
 
     use App\Exceptions\XMLInvalidElementException;
+    use App\Helpers\CreateTask\ExerciseNode;
     use App\Helpers\CreateTask\TaskRes;
-    use App\Helpers\CreateTask\XMLNodeBase;
+    use App\Types\XMLNodeBase;
+    use App\Types\XMLNodeBaseWParentNode;
     use App\Helpers\CreateTask\XMLNoValueNode;
+    use App\Types\XMLNoValueNodeTrait;
     use App\Helpers\CreateTask\XMLOneUseNode;
+    use App\Models\Task;
+    use App\MyConfigs\TaskSrcConfig;
     use App\TableSpecificData\TaskDisplay;
+    use App\Types\XMLAttributes;
+    use App\Types\XMLChildren;
+    use App\Types\XMLContextBase;
+    use App\Types\XMLNodeValueType;
     use Illuminate\Support\Str;
 
-    class Document extends XMLNodeBase
+    class Document extends XMLNodeBaseWParentNode
     {
+        use XMLNoValueNodeTrait;
 
-       public function __construct()
+        public static function create():Document{
+            $doc = new self();
+            $docDesc = DocumentDescription::create($doc);
+            if($docDesc->getParentObjectId() === null){
+                dump("DOCUMENT DESCRIPTION DOES NOT HAVE PARENT!!!");
+            }
+            $doc->setChildren(
+                XMLChildren::construct()
+            ->addChild($docDesc,required:true)
+            ->addChild(DocumentContent::create($doc),required:true)
+        );
+        return $doc;
+        }
+
+       private function __construct()
        {
+        $config = TaskSrcConfig::get();
         parent::__construct(
             parent:null,
-            name:"document",
-            children:[
-                new XMLOneUseNode(
-                    'description',
-                parent:$this,
-                appendValue:function(XMLOneUseNode $thisNode,string $value,TaskRes $taskRes){
-                    if($taskRes->task->description){
-                        $taskRes->task->description .= $value;
+            name:$config->taskName,
+            maxCount:1,
+            attributes:XMLAttributes::construct()->addAttribute(
+                name:$config->taskNameAttr->name,
+                required:true,
+                parse:function(XMLNodeBase $node,string $attributeValue,XMLContextBase $context) {
+                    $attr = TaskSrcConfig::get()->taskNameAttr;
+                    if($error =$attr->validate($attributeValue)){
+                        $node->invalidAttributeValue($attr->name,$error,$context);
                     }
-                    else{
-                        $taskRes->task->description = $value;
-                    }
-                },
-                validateStart:function(XMLOneUseNode $thisNode,iterable $attributes,TaskRes $taskRes,?string $name){
-                    if($taskRes->task->description){
-                        throw null;
-                        //throw new XMLInvalidElementException();
-                    }
-                }
-            ),
-            new XMLOneUseNode(
-                'content',
-                parent:$this,
-                validateStart:function(XMLOneUseNode $thisNode,iterable $attributes,TaskRes $taskRes,?string $name){
-                    if($taskRes->exercises || $taskRes->groups){
-                        throw null;
-                        //throw new XMLInvalidElementException();
-                    }
-                },
-                children:[
-
-                ]
-                
-            )
-            ]
-            );
+                $context->getTaskRes()->task->name = $attributeValue;
+            })->addAttribute(
+                name:$config->taskOrientationAttr->name,
+                required:true,
+                parse:function(XMLNodeBase $node,string $attributeValue,XMLContextBase $context)use($config) {
+                    $attr = TaskSrcConfig::get()->taskOrientationAttr;
+                   $orientation = $attr->validate($attributeValue);
+                   if(!$orientation){
+                      $node->invalidEnumAttributeValue(
+                        $attr->name,
+                        $attr->getAllowedEnumStringValues(),
+                      $context
+                  );
+              }
+                  $context->getTaskRes()->task->orientation = $orientation->value;
+          }
+        )
+        );
        }
 
-           /**
-         * @return array{string,callable(string,TaskRes):void}
-         */
-        protected function getRequiredAttributes():array{
-            return [
-                'name' => function(string $attributeValue,TaskRes $taskRes) {
-                    $taskRes->task->name = $attributeValue;
-                    return $attributeValue;
-                },
-                'orientation' => function(string $attributeValue,TaskRes $taskRes) {
-                  $attributeValue =  Str::lower($attributeValue);
-                 $orientation = TaskDisplay::tryFrom($attributeValue);
-                 if(!$orientation){
-                    $this->invalidEnumAttributeValue(
-                        'orientation',
-                    TaskDisplay::getValues()
-                );
-            }
-                $taskRes->task->orientation = $orientation->value;
-        }
-            ];
-        }
-
-        function getNonRequiredAttributes(): array
-        {
-            return [];
-        }
-
-
-       function appendValue(string $value, TaskRes $taskRes, callable $getParserPosition): void
+       function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
        {
-        $this->valueNotSupported();
+        $context->getTaskRes()->task = new Task();
+        parent::validateStart($attributes,$context,$name);
        }
-
-        function validate(TaskRes $taskRes): void
-        {
-            
-        }
         
     }
 }

@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "XML: Invalid attribute value",
+    "type": "object",
+    "properties": {
+        "code": {
+            "type": "integer",
+            "const": 102
+        },
+        "errorData": {
+            "type": "object",
+            "properties": {
+                "invalidAttribute": {
+                    "title": "Invalid attribute",
+                    "description": "Name of invalid attribute",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "eColumn": {
+                    "title": "Element column",
+                    "description": "Column of element with invalid attribute value",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "eLine": {
+                    "title": "Element line",
+                    "description": "Line of element with invalid attribute value",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "eByteIndex": {
+                    "title": "Element byte index",
+                    "description": "Byte index of element with invalid attribute value",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "invalidAttribute",
+                "eColumn",
+                "eLine",
+                "eByteIndex"
+            ]
+        }
+    },
+    "required": ["code","errorData"]
+}

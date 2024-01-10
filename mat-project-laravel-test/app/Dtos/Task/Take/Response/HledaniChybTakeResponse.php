@@ -12,15 +12,25 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json
  */
 class HledaniChybTakeResponse extends ClassStructure
 {
-    /** @var mixed */
+    /** @var string */
     public $exerType;
 
     /** @var HledaniChybTakeResponseContent */
     public $content;
+
+    /**
+     * @return static
+     */
+    public static function create()
+    {
+        $instance = parent::create();
+        $instance->exerType = "HledaniChyb";
+        return $instance;
+    }
 
     /**
      * @param Properties|static $properties
@@ -28,7 +38,7 @@ class HledaniChybTakeResponse extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->exerType = new Schema();
+        $properties->exerType = Schema::string();
         $properties->exerType->const = "HledaniChyb";
         $properties->content = HledaniChybTakeResponseContent::schema();
         $ownerSchema->type = Schema::OBJECT;
@@ -37,11 +47,11 @@ class HledaniChybTakeResponse extends ClassStructure
             self::names()->exerType,
             self::names()->content,
         );
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json');
     }
 
     /**
-     * @param mixed $exerType
+     * @param string $exerType
      * @return $this
      * @codeCoverageIgnoreStart
      */

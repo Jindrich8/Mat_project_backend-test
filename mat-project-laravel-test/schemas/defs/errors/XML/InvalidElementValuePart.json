@@ -1,0 +1,49 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "XML: Invalid element value part",
+    "type": "object",
+    "properties": {
+        "code": {
+            "type": "integer",
+            "const": 104
+        },
+        "errorData": {
+            "title": "XML: Invalid element value part error data",
+            "description": "Serves as error action specific data.",
+            "type": "object",
+            "properties": {
+                "column": {
+                    "title": "Value column",
+                    "description": "Column of invalid element value part",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "line": {
+                    "title": "Value line",
+                    "description": "Line of invalid element value part",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "byteIndex": {
+                    "title": "Value byte index",
+                    "description": "Byte index of element value part",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "byteLength":{
+                    "title":"Invalid part byte length",
+                    "description": "Length in bytes of invalid part of element value",
+                    "type":"integer",
+                    "minimum": 1
+                }
+            },
+            "required": [
+                "column",
+                "line",
+                "byteIndex",
+                "byteLength"
+            ]
+        }
+    },
+    "required": ["code","errorData"]
+}

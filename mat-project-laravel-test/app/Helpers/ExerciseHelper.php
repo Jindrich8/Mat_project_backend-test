@@ -13,10 +13,6 @@ class ExerciseHelper
 {
     private static array $exerciseHelpers =[];
 
-    public static function addHelper(CExerciseHelper $helper, ExerciseType $type):CExerciseHelper{
-        return ExerciseHelper::$exerciseHelpers[$type->name]??=$helper;
-    }
-
     /**
      * @param ExerciseType $type
      * @return CExerciseHelper
@@ -25,10 +21,10 @@ class ExerciseHelper
   public static function getHelper(ExerciseType $type):CExerciseHelper{
       return match($type){
           ExerciseType::FillInBlanks =>
-          ExerciseHelper::addHelper(new FillInBlanksExerciseHelper(),$type),
+          self::$exerciseHelpers[$type->name]??=new FillInBlanksExerciseHelper(),
 
           ExerciseType::FixErrors =>
-          ExerciseHelper::addHelper(new FixErrorsExerciseHelper(),$type),
+          self::$exerciseHelpers[$type->name]??=new FixErrorsExerciseHelper(),
 
             default => throw new UnsupportedVariantException(ExerciseType::class,$type->name),
       };

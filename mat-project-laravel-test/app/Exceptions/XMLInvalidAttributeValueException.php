@@ -1,6 +1,10 @@
 <?php
 namespace App\Exceptions{
 
+    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
+    use App\Dtos\Errors\ErrorResponse\ErrorResponse;
+    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttributeValue;
+    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttributeValueErrorData;
     use App\Types\Coords;
     use App\Types\XMLParserOffest;
 use DOMDocument;
@@ -10,40 +14,31 @@ use XMLReader;
 
 class XMLInvalidAttributeValueException extends XMLParsingException{
 
-    private string $attribute;
-    /**
-     * @param string[] $xpath
-     * @param string $attribute
-     * @param string $description
-     * @param string $message
-     * @param Coords $xmlCoords
-     */
+ 
     public function __construct(
-        array $xpath,
-        string $attribute,
-        string $description = "",
-        string $message = "",
-        Coords $xmlCoords = Coords::getInvalid()
+        string $element,
+        XMLInvalidAttributeValueErrorData $errorData,
+        string $message = '',
+        string $description = ''
         )
     {
+        $attribute = $errorData->invalidAttribute;
         if(!$message){
-        $message = "Attribute '$attribute' has invalid value.";
+        $message = "Element '$element' has attribute '$attribute' with invalid value ";
         }
+        $message = self::formatMessage($message,
+            column:$errorData->eColumn,
+        line:$errorData->eLine
+    );
 
         parent::__construct(
-            xpath:$xpath,
-            message:$message,
-            description:$description,
-            xmlCoords:$xmlCoords
-        );
-        $this->attribute = $attribute;
-    }
-
-    public function getUserErrorData(): array
-    {
-        return array_merge(
-            ['attribute'=>$this->attribute],
-            parent::getUserErrorData()
+           errorResponse: ApplicationErrorObject::create()
+           ->setMessage($message)
+           ->setDescription($description)
+            ->setDetails(
+            XMLInvalidAttributeValue::create()
+            ->setErrorData($errorData)
+            )
         );
     }
 }

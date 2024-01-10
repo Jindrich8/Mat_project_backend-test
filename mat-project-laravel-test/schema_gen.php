@@ -7,15 +7,19 @@ use Dev\DtoGen\PathHelper;
 use  Dev\DtoGen\StarPattern;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
+use SplFileInfo as GlobalSplFileInfo;
 
 const EXPANDED_REF = '$ref';
 
 $SchemasDir = __DIR__ . DIRECTORY_SEPARATOR . 'schemas';
 $ExpandableRefkey = '$ref';
 $PathSeparator = DIRECTORY_SEPARATOR;
-$SchemaExtension = ".special";
 $OutputPathSeparator = DIRECTORY_SEPARATOR;
+$SchemaNamePattern = <<<'EOF'
+/(request|response)\.special\.json$/
+EOF;
 $ForceRegenerate = false;
+
 echo "\n\n-------",MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
 if(ScriptArgsBuilder::create()
 ->optionSet(name: "dir", set: function($value)use(&$SchemasDir){
@@ -23,8 +27,8 @@ if(ScriptArgsBuilder::create()
 })
     ->option(name: "refKey", var: $ExpandableRefkey)
     ->option(name: "sep", var: $PathSeparator)
-    ->option(name: "extension", var: $SchemaExtension)
     ->option(name: "outSep", var: $OutputPathSeparator)
+    ->option(name:"schemaNamePattern", var: $SchemaNamePattern)
     ->flag(name: "force", var: $ForceRegenerate)
     ->fetchScriptArguments()
     ->showPassedOptions()
@@ -33,7 +37,7 @@ if(ScriptArgsBuilder::create()
     ->helpRequested()) return;
 
 $finder = PathHelper::getFinderForReadableEntries($SchemasDir)
-    ->name("/(request|response)$SchemaExtension\.json$/")
+    ->name($SchemaNamePattern)
     ->files();
 foreach ($finder as $file) {
     $file = new MyFileInfo($file);
@@ -100,7 +104,7 @@ foreach ($finder as $file) {
                 $expanded = StarPattern::expandStarNameSearchPattern($patternParts,$isStarNamePattern);
                 $jsonObjects = [];
                 foreach ($expanded as $expandedValue) {
-                    $file = new SplFileInfo($expandedValue);
+                    $file = new GlobalSplFileInfo($expandedValue);
                     if ($file->isFile() && ($realPath = $file->getRealPath())) {
                         if (DIRECTORY_SEPARATOR !== $OutputPathSeparator) {
                             $newRealPath = StrUtils::replace(DIRECTORY_SEPARATOR, $OutputPathSeparator, $realPath);
@@ -125,8 +129,8 @@ foreach ($finder as $file) {
 
         file_put_contents($newFilePath, json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     } catch (Exception $e) {
-        echo "An error occured during processing file: ", $filePath, "\n",
-        "Error: $e\n";
+        throw new Exception(message:"An error occured during processing file: ". $filePath. "\n",
+        previous:$e);
     }
 }
 

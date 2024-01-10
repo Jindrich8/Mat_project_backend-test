@@ -16,8 +16,8 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  */
 class Response extends ClassStructure
 {
-    /** @var Data */
-    public $data;
+    /** @var Task */
+    public $task;
 
     /**
      * @param Properties|static $properties
@@ -25,57 +25,48 @@ class Response extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->data = Data::schema();
+        $properties->task = Task::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema";
         $ownerSchema->title = "Review task response";
         $ownerSchema->required = array(
-            self::names()->data,
+            self::names()->task,
         );
         $ownerSchema->defs = (object)[
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'group' => (object)[
                 'required' => [
@@ -84,6 +75,7 @@ class Response extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -149,13 +141,13 @@ class Response extends ClassStructure
     }
 
     /**
-     * @param Data $data
+     * @param Task $task
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setData(Data $data)
+    public function setTask(Task $task)
     {
-        $this->data = $data;
+        $this->task = $task;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

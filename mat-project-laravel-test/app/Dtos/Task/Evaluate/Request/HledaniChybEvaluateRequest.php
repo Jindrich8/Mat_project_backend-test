@@ -13,7 +13,7 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 /**
  * HledaniChyb evaluate request
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/evaluate_request.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/evaluate_request.json
  */
 class HledaniChybEvaluateRequest extends ClassStructure
 {
@@ -28,9 +28,10 @@ class HledaniChybEvaluateRequest extends ClassStructure
     {
         $properties->content = Schema::string();
         $ownerSchema->type = Schema::OBJECT;
+        $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
         $ownerSchema->title = "HledaniChyb evaluate request";
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/evaluate_request.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/evaluate_request.json');
     }
 
     /**

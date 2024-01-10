@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Dtos\Task as TaskDto;
+use App\Dtos\Task\Create;
+use App\Helpers\CreateTask\ParseEntry\ParseEntry;
+use App\Helpers\CreateTask\TaskRes;
 
 class TaskController extends Controller
 {
@@ -27,9 +31,12 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTaskRequest $request)
+    public function store(Create\Request\Request $request)
     {
-        //
+       $parseEnty = new ParseEntry();
+      $taskRes = $parseEnty->parse([$request->task->source]);
+      $taskRes->tagsIds = $request->task->tags;
+      $taskRes->insert();
     }
 
     /**

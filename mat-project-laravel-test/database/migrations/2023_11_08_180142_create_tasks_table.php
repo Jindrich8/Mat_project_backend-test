@@ -13,15 +13,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tasks', function (Blueprint $table) {
-            $table->id();
-            $table->string('name',255);
+            $table->id()->generatedAs()->always();
+            $table->string('name',250);
             $table->enum('orientation',array_map(fn(TaskDisplay $case)=>$case->value,TaskDisplay::cases()));
-            $table->text('description');
+            $table->string('description',2040);
             $table->unsignedInteger('version');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
+    
 
     /**
      * Reverse the migrations.

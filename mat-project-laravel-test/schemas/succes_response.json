@@ -8,6 +8,5 @@
             "type":"object",
             "description": "Specifies endpoint and request specific response data"
         }
-    },
-    "required": ["data"]
+    }
 }

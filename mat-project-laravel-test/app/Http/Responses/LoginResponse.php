@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Responses;
 
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
@@ -16,7 +17,10 @@ class LoginResponse implements LoginResponseContract
         // replace this with your own code
         // the user can be located with Auth facade
         $output = new \Symfony\Component\Console\Output\ConsoleOutput(2);
+        report(new Exception("LoginResponse::toResponse"));
+        throw new Exception("LoginResponse::toResponse");
 
+dd('LoginResponse.toResponse');
 $output->writeln('LoginResponse.toResponse');
             echo "LoginResponse::toResponse";
         return response()->json([
@@ -26,7 +30,7 @@ $output->writeln('LoginResponse.toResponse');
             'email'=>Auth::user()->email
             ]
         ]
-    );
+        );
     }
 
 }

@@ -17,4 +17,7 @@ interface CExerciseHelper
      */
     public function fetchSave(array $ids):array;
 
+   
+    public function getCreateHelper():CCreateExerciseHelper;
+
 }

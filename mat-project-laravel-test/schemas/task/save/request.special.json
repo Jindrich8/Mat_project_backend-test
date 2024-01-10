@@ -12,7 +12,7 @@
             "items":{
               "anyOf":[
                 {
-                  "$ref":"../defs/exercises/*/save_request.json"
+                  "$ref":"../../defs/exercises/*/save_request.json"
                 }
               ]
             }

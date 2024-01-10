@@ -183,7 +183,6 @@ namespace Dev\Utils {
             usort($options, fn(ScriptOption $value1,ScriptOption $value2)=>
             self::scriptOptionTypeToNum($value1->type)-self::scriptOptionTypeToNum($value2->type));
 
-            echo "Required values: \n";
             $prevType = null;
             
             foreach($options as $option){

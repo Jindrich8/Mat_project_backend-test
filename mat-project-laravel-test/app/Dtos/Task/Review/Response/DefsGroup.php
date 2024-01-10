@@ -16,14 +16,24 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  */
 class DefsGroup extends ClassStructure
 {
-    /** @var mixed */
+    /** @var string */
     public $type;
 
     /** @var DefsGroupResourcesItems[]|array */
     public $resources;
 
-    /** @var DefsExerciseAllOf0[]|DoplnovackaReviewResponse[]|HledaniChybReviewResponse[]|DefsGroup[]|array */
+    /** @var DefsExercise[]|DefsGroup[]|array */
     public $entries;
+
+    /**
+     * @return static
+     */
+    public static function create()
+    {
+        $instance = parent::create();
+        $instance->type = "group";
+        return $instance;
+    }
 
     /**
      * @param Properties|static $properties
@@ -31,127 +41,49 @@ class DefsGroup extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->type = new Schema();
+        $properties->type = Schema::string();
         $properties->type->const = "group";
         $properties->resources = Schema::arr();
         $properties->resources->items = DefsGroupResourcesItems::schema();
         $properties->entries = Schema::arr();
         $properties->entries->items = new Schema();
-        $propertiesEntriesItemsOneOf0 = new Schema();
-        $propertiesEntriesItemsOneOf0->allOf[0] = DefsExerciseAllOf0::schema();
-        $propertiesEntriesItemsOneOf0AllOf1 = new Schema();
-        $propertiesEntriesItemsOneOf0AllOf1->anyOf[0] = DoplnovackaReviewResponse::schema();
-        $propertiesEntriesItemsOneOf0AllOf1->anyOf[1] = HledaniChybReviewResponse::schema();
-        $propertiesEntriesItemsOneOf0AllOf1->defs = (object)[
-            'cmb' => (object)[
-                'required' => [
-                    'userValue',
-                ],
-                'properties' => (object)[
-                    'userValue' => (object)[
-                        'type' => 'string',
-                    ],
-                    'correctValue' => (object)[
-                        'type' => [
-                            'string',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'txtI' => (object)[
-                'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'value' => (object)[
-                'type' => 'string',
-            ],
-        ];
-        $propertiesEntriesItemsOneOf0->allOf[1] = $propertiesEntriesItemsOneOf0AllOf1;
-        $propertiesEntriesItemsOneOf0->defs = (object)[
-            'cmb' => (object)[
-                'required' => [
-                    'userValue',
-                ],
-                'properties' => (object)[
-                    'userValue' => (object)[
-                        'type' => 'string',
-                    ],
-                    'correctValue' => (object)[
-                        'type' => [
-                            'string',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'txtI' => (object)[
-                'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                        ],
-                    ],
-                ],
-                'type' => 'object',
-            ],
-            'value' => (object)[
-                'type' => 'string',
-            ],
-        ];
-        $propertiesEntriesItemsOneOf0->setFromRef('#/$defs/exercise');
-        $properties->entries->items->oneOf[0] = $propertiesEntriesItemsOneOf0;
+        $properties->entries->items->oneOf[0] = DefsExercise::schema();
         $properties->entries->items->oneOf[1] = DefsGroup::schema();
         $properties->entries->items->defs = (object)[
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
                 'required' => [
@@ -189,6 +121,7 @@ class DefsGroup extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -217,48 +150,39 @@ class DefsGroup extends ClassStructure
         ];
         $properties->entries->defs = (object)[
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
                 'required' => [
@@ -296,6 +220,7 @@ class DefsGroup extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -326,48 +251,39 @@ class DefsGroup extends ClassStructure
         );
         $ownerSchema->defs = (object)[
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/review_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/review_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'cmb' => (object)[
                 'required' => [
@@ -406,7 +322,7 @@ class DefsGroup extends ClassStructure
     }
 
     /**
-     * @param mixed $type
+     * @param string $type
      * @return $this
      * @codeCoverageIgnoreStart
      */
@@ -430,7 +346,7 @@ class DefsGroup extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param DefsExerciseAllOf0[]|DoplnovackaReviewResponse[]|HledaniChybReviewResponse[]|DefsGroup[]|array $entries
+     * @param DefsExercise[]|DefsGroup[]|array $entries
      * @return $this
      * @codeCoverageIgnoreStart
      */

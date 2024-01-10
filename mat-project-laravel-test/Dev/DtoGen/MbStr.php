@@ -14,11 +14,11 @@ class MbStr{
     }
 
     public function after(string $str){
-     return mb_strstr($this->str,$str);
+     return Str::after($this->str,$str);
     }
 
     public function before(string $str){
-        return mb_strstr($this->str,$str,true);
+        return Str::before($this->str,$str);
        }
 
 }

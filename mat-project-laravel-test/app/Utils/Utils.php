@@ -7,21 +7,25 @@ use ReflectionFunction;
 
 class Utils{
 
+
+    public static function arrayHasKey(array &$arr,string|int $key){
+        return array_key_exists($key,$arr);
+    }
     /**
      * @template T
      * @param T[] $array
      * @return T|null
      */
-    public static function lastArrayValue(array $array):mixed{
+    public static function lastArrayValue(array &$array):mixed{
         return $array ? $array[array_key_last($array)] : null;
     }
 
-    public static function wrapAndImplode(string $wrapStr,string $separator,array $array):string{
+    public static function wrapAndImplode(string $wrapStr,string $separator,array &$array):string{
         if(!$array) return "";
         return $wrapStr.implode($wrapStr.$separator,$array).$wrapStr;
     }
 
-    public static function arrayToStr(array $array):string{
+    public static function arrayToStr(array &$array):string{
         return self::wrapAndImplode("'",", ",$array);
     }
 
@@ -32,6 +36,8 @@ class Utils{
         return array_map( fn( $parameter ) => $parameter->name,
             (new ReflectionFunction($funcName))->getParameters() );
     }
+
+    
 
     public static function ifTrueAppendElseSet(string &$prop,string $value){
         if($prop){

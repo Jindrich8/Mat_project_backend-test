@@ -1,0 +1,54 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "XML: Missing required elements",
+    "type": "object",
+    "properties": {
+        "code": {
+            "title": "Endpoint specific error code",
+            "type": "integer",
+            "const": 105,
+            "description": "Serves as identifier for action which should be triggered by app."
+        },
+        "errorData": {
+            "title": "XML: Missing required elements error data",
+            "description": "Serves as error action specific data.",
+            "type": "object",
+            "properties": {
+                "eColumn": {
+                    "title": "Element column",
+                    "description": "Column of element with missing required children",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "eLine": {
+                    "title": "Element line",
+                    "description": "Line of element with missing required children",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "eByteIndex": {
+                    "title": "Element byte index",
+                    "description": "Byte index of element with missing required children",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "missingElements": {
+                    "title": "Missing elements",
+                    "description": "Missing required elements",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "eColumn",
+                "eLine",
+                "eByteIndex",
+                "missingElements"
+            ]
+        }
+    },
+    "required": ["code","errorData"]
+}

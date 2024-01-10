@@ -48,7 +48,7 @@ class MyFileInfo{
 
     public static function omitAllExtensions(string $path){
        $path = PathHelper::getPotentialyNonExistentAbsolutePath($path);
-       $newPath = mb_strstr($path,'.',true);
+       $newPath = Str::before($path,'.');
        if($newPath === false) return $path;
        return $newPath;
     }

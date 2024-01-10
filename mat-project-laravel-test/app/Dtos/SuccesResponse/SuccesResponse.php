@@ -32,9 +32,6 @@ class SuccesResponse extends ClassStructure
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
         $ownerSchema->title = "Application success response";
         $ownerSchema->description = "Specifies format of successfull response.";
-        $ownerSchema->required = array(
-            self::names()->data,
-        );
     }
 
     /**

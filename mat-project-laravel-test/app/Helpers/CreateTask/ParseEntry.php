@@ -2,130 +2,207 @@
 
 namespace App\Helpers\CreateTask\ParseEntry {
 
+    use App\Dtos\Errors\ErrorResponse\BytePositionForGivenLineAndColumn;
+    use App\Dtos\Errors\ErrorResponse\ErrorResponse;
+    use App\Dtos\Errors\ErrorResponse\HintPosition;
+    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementErrorData;
+    use App\Dtos\Errors\ErrorResponse\XMLSyntaxErrorErrorData;
+    use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstructErrorData;
+    use App\Dtos\Errors\XML\InvalidElement\InvalidElement;
+    use App\Exceptions\ApplicationException;
+    use App\Exceptions\InternalException;
+    use App\Exceptions\InvalidArgumentException;
     use App\Exceptions\XMLInvalidElementException;
     use App\Exceptions\XMLParsingException;
+    use App\Exceptions\XMLSyntaxErrorException;
+    use App\Exceptions\XMLUnsupportedConstructException;
+    use App\Helpers\CreateTask\Document\Document;
     use App\Helpers\CreateTask\TaskRes;
-    use App\Helpers\CreateTask\XMLNodeBase;
-    use App\Models\Group;
-    use App\Types\XMLParserPosition;
-    use finfo;
-    use Illuminate\Support\Facades\DB;
+    use App\Types\BaseXMLParser;
+    use App\Types\LibXmlParser;
+    use App\Types\TrimType;
+    use App\Types\XMLNodeBase;
+    use App\Types\XMLContext;
+    use App\Types\XMLContextBase;
+    use App\Types\XMLParserAccuratePosTracker;
+    use App\Types\XMLParserEvents;
+    use App\Types\XMLUnsupportedConstructType;
+    use App\Utils\DebugUtils;
+    use App\Utils\StrUtils;
+    use Exception;
+    use Illuminate\Support\Str;
     use XMLParser;
 
-    enum XMLParserEntryType{
+    enum XMLParserEntryType
+    {
         case ELEMENT_START;
         case ELEMENT_END;
         case ELEMENT_VALUE;
+        case COMMENT;
+        case ERROR;
         case UNSUPPORTED_ENTITY;
     }
 
-    abstract class ParseEntry
+    class ParseEntry implements XMLParserEvents
     {
-        private XMLNodeBase $node;
-        private TaskRes $taskRes;
-        private XMLParserPosition $lastPos = new XMLParserPosition();
-        private ?XMLParserEntryType $prevEntryType = null;
+        private ?XMLNodeBase $node;
+        private ?XMLContext $context;
+        private bool $start;
+
+        /**
+         * @var string[] $supportedConstructs
+         */
+        private array $supportedConstructs = ["element", "attribute", "comment", "element value"];
 
 
 
         public function __construct()
         {
-            
+            $this->context = null;
+            $this->node = Document::create();
+            $this->start = true;
         }
 
-        /**
-         * @param XMLParserEntryType $entryType - type of current entity
-         * @return XMLParserEntryType|null - the type of previous entity
-         */
-        private function initHandler(XMLParserEntryType $entryType):?XMLParserEntryType{
-            $prevEntryType = $this->prevEntryType;
-            $this->prevEntryType = $entryType;
-            return $prevEntryType;
-        }
-
-        private function unsupportedConstructHandler(XMLParser $parser, string $data): void
+        public function elementStartHandler(BaseXMLParser $parser, string $name, array $attributes): void
         {
-            $this->initHandler(XMLParserEntryType::UNSUPPORTED_ENTITY);
-            $this->lastPos->updateFromParser($parser);
-
-           // throw new XMLInvalidElementException();
-           throw null;
-        }
-
-        private function elementStartHandler(XMLParser $parser, string $name, array $attributes): void
-        {
-          $prevEntryType =  $this->initHandler(XMLParserEntryType::ELEMENT_START);
-            
-          $this->lastPos->updateFromParser($parser);
-
-            if ($prevEntryType) {
-                // TODO: repair
-                $this->node = $this->node->getChild($name,fn()=>$this->lastPos);
+            if (!$this->start) {
+                $this->node = $this->node->getChild($name, $this->context);
+            } else {
+                $this->start = false;
             }
 
             $this->node->validateStart(
                 name: $name,
-                taskRes: $this->taskRes,
-                attributes: $attributes
+                attributes: $attributes,
+                context: $this->context
             );
         }
 
-        private function elementEndHandler(XMLParser $parser, string $name): void
+        public function elementEndHandler(BaseXMLParser $parser, string $name): void
         {
-            $this->initHandler(XMLParserEntryType::ELEMENT_END);
-
-            $this->lastPos->updateFromParser($parser);
-
-            $this->node->validate($this->taskRes, $name);
+            $node = $this->node->validateAndMoveUp($this->context);
+            if(!$node){
+                dump("Node '".$this->node->getName()."' does not have parent node");
+                dump($this->node);
+            }
+            $this->node = $node;
         }
 
-        private function elementValueHandler(XMLParser $parser, string $data): void
+        public function elementValueHandler(BaseXMLParser $parser, string $data): void
         {
-            $this->initHandler(XMLParserEntryType::ELEMENT_VALUE);
-
-            $this->lastPos->updateFromParser($parser);
-
-            $this->node->appendValue($data, $this->taskRes,fn()=>$this->lastPos);
+            if($this->node === null){
+                if(StrUtils::trimWhites($data,TrimType::TRIM_BOTH)){
+                    dump("WTF: $data");
+                }
+                $parser->getPos($column,$line,$byteIndex);
+                dump(":$line, $column, $byteIndex");
+            }
+            else{
+            $this->node->appendValue(value: $data, context: $this->context);
+            }
         }
+
+        public function unsupportedConstructHandler(BaseXMLParser $parser, mixed $data, XMLUnsupportedConstructType $type): void
+        {
+           $name = match($type){
+                XMLUnsupportedConstructType::EXTERNAL_ENTITY_REFERENCE => 'external entity reference',
+                XMLUnsupportedConstructType::NOTATION_DECLARATION => 'notation declaration',
+                XMLUnsupportedConstructType::PROCESSING_INSTRUCTION => 'processing instruction',
+                XMLUnsupportedConstructType::START_NAMESPACE_DECLARATION => 'start namespace declaration',
+                XMLUnsupportedConstructType::UNPARSED_ENTITY_DECLARATION => 'unparsed entity declaration',
+                XMLUnsupportedConstructType::UNKNOWN_CONSTRUCT => 'unknown construct'
+            };
+            $this->unsupportedConstruct($parser,$name);
+        }
+
+       public function commentHandler(BaseXMLParser $parser, string $data): void
+       {
+        
+       }
 
         /**
          * @param iterable<string> $data
-         * @param string $encoding
-         * @return bool
+         * @return TaskRes
          */
-        public function parse(iterable $data, string $encoding = "UTF-8"): void
+        public function parse(iterable $data): TaskRes
         {
+            $parser = null;
             try {
-                // Prepare error buffer
-                libxml_clear_errors();
-                libxml_use_internal_errors(true);
+                $parser = LibXmlParser::create($this);
+                $this->context = new XMLContext($parser,new TaskRes());
 
-                // Create parser
-                $parser = xml_parser_create($encoding);
-
-                // Set options
-                xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, false);
-                xml_parser_set_option($parser, XML_OPTION_SKIP_WHITE, true);
-
-                // Set handlers
-                xml_set_default_handler($parser, $this->unsupportedConstructHandler(...));
-                xml_set_element_handler($parser, $this->elementStartHandler(...), $this->elementEndHandler(...));
-                xml_set_character_data_handler($parser, $this->elementValueHandler(...));
-
+                $error = null;
                 // Parse
                 foreach ($data as $dataPart) {
-                    xml_parse($parser, data: $dataPart);
+                   if(($error = $parser->parse($dataPart))){
+                    break;
+                   }
                 }
-                xml_parse($parser, data: "", is_final: true);
 
+                if($error || ($error = $parser->parse("",isFinal:true))){
+                    throw new XMLSyntaxErrorException(
+                        description:$error->errorMessage,
+                        errorData:XMLSyntaxErrorErrorData::create()
+                        ->setLine($error->line)
+                        ->setColumn($error->column)
+                        ->setByteIndex($error->byteIndex)
+                    );
+                }
+            } catch (ApplicationException $e) {
+                // TODO: REMOVE THIS catch
+                $errorResponse = $e->getErrorResponse();
+                echo "\nAPP ERROR:\n",
+                DebugUtils::jsonEncode(ErrorResponse::export($errorResponse)),
+                "\n";
+                $errorData = $errorResponse->error->details?->errorData;
+                if ($errorData) {
+                    $byteIndex = is_array($errorData) ? ($errorData['byteIndex'] ?? $errorData['eByteIndex'] ?? false) : ($errorData->{'byteIndex'} ?? $errorData->{'eByteIndex'} ?? false);
+                    if (is_int($byteIndex) && $byteIndex >= 0) {
+                        $char = substr(implode("", $data), $byteIndex, 1);
+                        echo "\nCHAR AT BYTE INDEX '$byteIndex': '$char' (", ord($char), ")\n";
+                    }
+                    $byteLength =  is_array($errorData) ? ($errorData['byteLength'] ?? false) : ($errorData->{'byteLength'} ?? false);
+                    if(is_int($byteLength)){
+                        $str = substr(implode("", $data), $byteIndex, $byteLength);
+                        echo "\nSTRING AT BYTE INDEX '$byteIndex':\n'$str'";
+                    }
+                }
+                throw new Exception(previous: $e);
+            } catch (InternalException $e) {
+                echo "\nINTERNAL ERROR:\n",
+                DebugUtils::jsonEncode([
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'context' => $e->context()
+                ]),
+                "\n";
+                var_dump($e->context());
+                throw new Exception(previous: $e);
             } finally {
                 // Free parser
-                xml_parser_free($parser);
+                $parser?->free();
             }
-            $errors = libxml_get_errors();
-            foreach ($errors as $error) {
-                // TODO
-            }
+          
+            return $this->context->getTaskRes();
+        }
+
+        private function unsupportedConstruct(BaseXMLParser $parser,string $constructName): void
+        {
+
+            $errorData = XMLUnsupportedConstructErrorData::create();
+
+            $parser
+                ->getPos(
+                    column: $errorData->column,
+                    line: $errorData->line,
+                    byteIndex: $errorData->byteIndex
+                );
+
+            throw new XMLUnsupportedConstructException(
+                constructName: $constructName,
+                errorData: $errorData
+                    ->setSupportedConstructs($this->supportedConstructs)
+            );
         }
     }
 }

@@ -16,8 +16,8 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  */
 class Request extends ClassStructure
 {
-    /** @var Data */
-    public $data;
+    /** @var Task */
+    public $task;
 
     /**
      * @param Properties|static $properties
@@ -25,7 +25,7 @@ class Request extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->data = Data::schema();
+        $properties->task = Task::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
@@ -36,13 +36,13 @@ class Request extends ClassStructure
     }
 
     /**
-     * @param Data $data
+     * @param Task $task
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setData(Data $data)
+    public function setTask(Task $task)
     {
-        $this->data = $data;
+        $this->task = $task;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

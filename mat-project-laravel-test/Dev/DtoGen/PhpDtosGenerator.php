@@ -3,12 +3,15 @@
 namespace Dev\DtoGen {
 
     use Illuminate\Support\Str;
+    use Swaggest\JsonSchema\JsonSchema;
+    use Swaggest\PhpCodeBuilder\PhpFunction;
+    use Swaggest\PhpCodeBuilder\PhpStdType;
 
     class PhpDtosGenerator
     {
         const DEFS = "defs";
 
-        public static function generate(mixed $schemaData, string $rootName, string $basePath, string $baseNameSpace, string $schemaFilePath = null, string $separator = DIRECTORY_SEPARATOR)
+        public static function generate(mixed $schemaData, string $rootName, string $basePath, string $baseNameSpace,string $relResolverDir = null, string $schemaFilePath = null, string $separator = DIRECTORY_SEPARATOR)
         {
             if ($schemaFilePath) {
                 $schemaFilePath = realpath($schemaFilePath);
@@ -17,7 +20,14 @@ namespace Dev\DtoGen {
                 }
             }
             echo "\n!!Generating dtos... !!\n";
-            $swaggerSchema = \Swaggest\JsonSchema\Schema::import($schemaData);
+            $relResolverDir ??= MyFileInfo::dirname($schemaFilePath);
+
+            $remoteRefProvider = $relResolverDir ? 
+             new RelativeSchemaRefResolver($relResolverDir) 
+            : null;
+
+            $schemaContext = new \Swaggest\JsonSchema\Context($remoteRefProvider);
+            $swaggerSchema = \Swaggest\JsonSchema\Schema::import($schemaData,$schemaContext);
 
             $appPath = $basePath;
             $appNs = MyFileInfo::omitAllExtensions($baseNameSpace);
@@ -26,6 +36,7 @@ namespace Dev\DtoGen {
             $app->setNamespaceRoot($appNs, '.');
 
             $builder = new \Swaggest\PhpCodeBuilder\JsonSchema\PhpBuilder();
+            $builder->namesFromDescriptions =true;
             $builder->buildSetters = true;
             $builder->makeEnumConstants = true;
 
@@ -33,7 +44,8 @@ namespace Dev\DtoGen {
             $quotedSeparator = null;
 
             $builder->classCreatedHook = new \Swaggest\PhpCodeBuilder\JsonSchema\ClassHookCallback(
-                function (\Swaggest\PhpCodeBuilder\PhpClass $class, $path, $schema) use ($app, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator) {
+                function (\Swaggest\PhpCodeBuilder\PhpClass $class,string $path,JsonSchema $schema) 
+                use ($app, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator) {
                     $desc = '';
                     if ($schema->title) {
                         $desc = $schema->title;
@@ -46,16 +58,38 @@ namespace Dev\DtoGen {
                     }
 
                     $class->setDescription(trim($desc));
-
+                    $createFuncBody = <<<'EOF'
+                $instance = parent::create();
+                EOF;
+                $hasConstants = false;
+                   $props = $schema->properties;
+                   foreach($props as $name => $value){
+                   $const = $value->const;
+                   if($const){
+                    $hasConstants = true;
+                    if(!is_numeric($const)){
+                        $const = "\"$const\"";
+                    }
+                    $createFuncBody.="\n\$instance->$name = $const;";
+                   }
+                   }
+                
+                
+                   if($hasConstants){
+                    $createFuncBody.="\nreturn \$instance;";
+                $createFunc = new PhpFunction(name:'create',visibility:'public',isStatic:true);
+                $createFunc->setResult(PhpStdType::tStatic())
+                ->setBody($createFuncBody);
+                $class->addMethod($createFunc);
+                   }
+                  
                     $class->setNamespace($appNs);
                     if ('#' === $path) {
                         $class->setName($rootName); // Class name for root schema
-                        echo "set ";
                     } elseif (strpos($path, "#/" . PhpDtosGenerator::DEFS . "/") === 0) {
                         $class->setName(\Swaggest\PhpCodeBuilder\PhpCode::makePhpClassName(
                             substr($path, strlen("#/" . PhpDtosGenerator::DEFS . "/"))
                         ));
-                        echo "make ";
                     } else {
                         $className = $class->getName();
                     //     echo "Class " . $className."\n";
@@ -65,17 +99,16 @@ namespace Dev\DtoGen {
                     //     var_dump($class);
                     //     var_dump($path);
                         if($schema->title){
-                            echo "Titles: " . $schema->title. "\n";
                             $className = $schema->title;
                         }
                         else if ($path && mb_strlen($className) > 15) {
-                            echo "PATH " . $path."\n";
+                      //    echo "PATH " . $path."\n";
                             $path = Str::remove(['$', '[', ']', '(', ')'], $path);
-                            $pathParts = preg_split("/->|#/", $path);
+                            $pathParts = preg_split("/->|#/u", $path);
                             if (!$pathParts) {
                                 $pathParts = [$path];
                             }
-                            if ($schemaFilePath) {
+                            if ($schemaFilePath && !Str::startsWith($path,'#')) {
                                 $i = 0;
                                 $len = min(strlen($path), strlen($schemaFilePath));
                                 for (; $i < $len && $path[$i] === $schemaFilePath[$i]; ++$i);
@@ -112,16 +145,15 @@ END;
                                 }
                             }
                         } 
+                       
                         echo "Class: " . $className . "\n";
                         $class->setName(\Swaggest\PhpCodeBuilder\PhpCode::makePhpClassName(
                             $className
                         ));
                     }
-
                     $app->addClass($class);
                 }
             );
-
             $builder->getType($swaggerSchema);
             $app->clearOldFiles($appPath);
             $app->store($appPath);

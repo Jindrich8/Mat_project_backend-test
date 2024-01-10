@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-use App\Dtos\ErrorResponse;
+use App\Dtos\Errors\ErrorResponse\ErrorResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use LogicException;
@@ -68,10 +68,10 @@ class InternalException extends LogicException
         
         if(($errorData = $this->getUserErrorData()))$error->setErrorData($errorData);
 
-        $response =  ErrorResponse\ErrorResponse::create()
+        $response =  ErrorResponse::create()
         ->setError($error);
         return response(
-            json_encode(ErrorResponse\ErrorResponse::export($response))
+            json_encode(ErrorResponse::export($response))
         , $this->getUserStatus());
     }
 }

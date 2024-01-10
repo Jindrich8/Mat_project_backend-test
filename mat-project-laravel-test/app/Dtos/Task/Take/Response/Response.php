@@ -34,48 +34,39 @@ class Response extends ClassStructure
         );
         $ownerSchema->defs = (object)[
             'exercise' => (object)[
-                'allOf' => [
-                    (object)[
+                'required' => [
+                    'type',
+                    'instructions',
+                    'details',
+                ],
+                'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'exercise',
+                    ],
+                    'instructions' => (object)[
                         'required' => [
-                            'exerType',
-                            'instructions',
                             'content',
                         ],
                         'properties' => (object)[
-                            'type' => (object)[
-                                'const' => 'exercise',
-                            ],
-                            'exerType' => (object)[
-                                'type' => 'string',
-                            ],
-                            'instructions' => (object)[
-                                'required' => [
-                                    'content',
-                                ],
-                                'properties' => (object)[
-                                    'content' => (object)[
-                                        'type' => 'string',
-                                    ],
-                                ],
-                                'type' => 'object',
-                            ],
                             'content' => (object)[
-                                'type' => 'object',
+                                'type' => 'string',
                             ],
                         ],
                         'type' => 'object',
                     ],
-                    (object)[
+                    'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
                             ],
                         ],
                     ],
                 ],
+                'type' => 'object',
             ],
             'group' => (object)[
                 'required' => [
@@ -84,6 +75,7 @@ class Response extends ClassStructure
                 ],
                 'properties' => (object)[
                     'type' => (object)[
+                        'type' => 'string',
                         'const' => 'group',
                     ],
                     'resources' => (object)[
@@ -117,10 +109,17 @@ class Response extends ClassStructure
                 'type' => 'object',
             ],
             'cmb' => (object)[
+                'title' => 'Combobox',
+                'description' => 'Combobox of Fill in blanks exercise.',
                 'required' => [
+                    'type',
                     'values',
                 ],
                 'properties' => (object)[
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'cmb',
+                    ],
                     'values' => (object)[
                         'items' => (object)[
                             'type' => 'object',
@@ -144,12 +143,15 @@ class Response extends ClassStructure
                 'type' => 'object',
             ],
             'txtI' => (object)[
+                'title' => 'Text input',
+                'description' => 'Text input of Fill in blanks exercise.',
+                'required' => [
+                    'type',
+                ],
                 'properties' => (object)[
-                    'value' => (object)[
-                        'type' => [
-                            'string',
-                            'null',
-                        ],
+                    'type' => (object)[
+                        'type' => 'string',
+                        'const' => 'txtI',
                     ],
                 ],
                 'type' => 'object',

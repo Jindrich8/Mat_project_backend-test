@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Helpers\ExerciseType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Exercise extends Model
+class Exercise extends BaseModel
 {
     use HasFactory;
 
@@ -18,5 +18,9 @@ const INSTRUCTIONS = 'instructions';
 const TASK_ID = 'task_id';
 const CREATED_AT='created_at';
 const UPDATED_AT = 'updated_at';
+
+public static function getExerciseType(Exercise $exercise):ExerciseType{
+    return ExerciseType::from($exercise->exerciseable_type);
+}
 
 }

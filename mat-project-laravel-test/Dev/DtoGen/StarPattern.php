@@ -3,6 +3,7 @@
 namespace Dev\DtoGen {
 
     use Dev\DtoGen\PathHelper;
+    use Directory;
     use Dotenv\Exception\InvalidPathException;
     use Illuminate\Support\Str;
 
@@ -48,6 +49,7 @@ namespace Dev\DtoGen {
             while (($part = array_shift($parts))) {
                 $depth = 0;
                 $unlimitedDepth = false;
+               // echo "Part: " . $part . "\n";
                 switch ($part) {
                     case "**":
                         $unlimitedDepth = true;
@@ -81,11 +83,12 @@ namespace Dev\DtoGen {
                                     break 2;
                             }
                         }
-
+                       // echo "Finder parts\n";
                         // $part should never be null, because $parts must end with non pattern part
-                        $finderParts = [$part];
+                        $finderParts = [self::toPart($part)];
                         while (true) {
                             $part = array_shift($parts);
+                           // echo "Possible finder part: $part\n";
                             switch ($part) {
                                 case '*':
                                 case '**':
@@ -93,22 +96,92 @@ namespace Dev\DtoGen {
                                     break 2;
 
                                 default:
-                                    $finderParts[] = $part;
+                                    echo "Finder part $part\n";
+                                    $finderParts[] =self::toPart($part);
                                     continue 2;
                             }
                         }
+                        
                         $expandedPaths = self::getEntries($expandedPaths, $finderParts, $depth, $unlimitedDepth);
                         break;
 
                     default:
-                        for ($i = count($expandedPaths) - 1; $i >= 0; --$i) {
-                            $expandedPaths[$i] .= DIRECTORY_SEPARATOR . $part;
+                        $newExpandedPaths = [];
+                        $explodedPart = self::toPart($part);
+
+                        if (!is_array($explodedPart)) {
+                            $expandedPaths = array_map(
+                                fn ($path) => PathHelper::concatPaths($path, $part),
+                                $expandedPaths
+                            );
+                        } else {
+                            echo "Special case \n";
+                            foreach ($expandedPaths as $expandedPath) {
+                                $entries = PathHelper::getNamesOfAllEntriesInDir($expandedPath);
+                                $newEntries = [];
+                                foreach ($entries as $entry) {
+                                   if(self::matchesPart($explodedPart,$entry)){
+                                    $newEntries[] = $entry;
+                                   }
+                                }
+
+                                array_push(
+                                    $newExpandedPaths,
+                                    ...array_map(
+                                        fn ($newEntry) => PathHelper::concatPaths($expandedPath, $newEntry),
+                                        $newEntries
+                                    )
+                                );
+                            }
+                            $expandedPaths = $newExpandedPaths;
                         }
                         break;
                 }
             }
             return $expandedPaths;
         }
+
+        static function toPart(string $part):array|string{
+           $exploded = explode('*',$part);
+           if($exploded && count($exploded) > 1){
+            return $exploded;
+           }
+           return $part;
+        }
+
+        static function matchesPart(array|string $explodedPart, string $entry)
+        {
+            if(!is_array($explodedPart)){
+                return $explodedPart === $entry;
+            }
+            //echo "Special match for entry $entry: \n";
+            //var_dump($explodedPart);
+            $pos = 0;
+            $skip = false;
+            $count = count($explodedPart);
+            for ($i = 0; $i < $count; ++$i) {
+                if ($explodedPart[$i] === '') {
+                    if (($nextPart = $explodedPart[$i + 1] ?? null) !== null) {
+                        $nextPartI = Str::position($entry, $nextPart, offset: $pos);
+                        if ($nextPartI === false || $nextPartI < 0) {
+                            $skip = true;
+                            break;
+                        }
+                        $pos = $nextPartI + Str::length($nextPart);
+                        ++$i;
+                    }
+                } else {
+                    if (!Str::startsWith(Str::substr($entry, $pos), $explodedPart[$i])) {
+                        $skip = true;
+                        break;
+                    }
+                    $pos += Str::length($explodedPart[$i]);
+                }
+            }
+          //  echo "skip $entry - $skip\n";
+            return !$skip;
+        }
+
 
         static function getEntriesSParts(array &$dirs, array &$parts, int $i)
         {
@@ -121,14 +194,14 @@ namespace Dev\DtoGen {
 
                     default:
                         $newI = 0;
-                        if ($parts[$i] === Str::afterLast($dir,DIRECTORY_SEPARATOR)) {
+                        if (self::matchesPart($parts[$i],Str::afterLast($dir, DIRECTORY_SEPARATOR))) {
                             if ($i === count($parts) - 1) {
                                 $newDirs[] = $dir;
                                 break;
                             }
                             $newI = $i + 1;
                         }
-                        if(is_dir($dir)){
+                        if (is_dir($dir)) {
                             $newDirsNew = PathHelper::getAllEntriesInDir($dir);
                             array_push($newDirs, ...self::getEntriesSParts($newDirsNew, $parts, $newI));
                         }
@@ -149,11 +222,10 @@ namespace Dev\DtoGen {
                             continue 2;
 
                         default:
-                        $newDirsNew = [];
-                            if($minDepth === 0){
+                            $newDirsNew = [];
+                            if ($minDepth === 0) {
                                 $newDirsNew = PathHelper::getAllEntriesInDir($dir);
-                            }
-                            else{
+                            } else {
                                 $newDirsNew = PathHelper::getAllSubdirsInDir($dir);
                             }
                             array_push(
@@ -164,7 +236,6 @@ namespace Dev\DtoGen {
                     }
                 }
                 $dirs = $newDirs;
-               
             }
             if (!$unlimitedDepth) {
                 foreach ($parts as $part) {
@@ -176,13 +247,12 @@ namespace Dev\DtoGen {
                                 continue 2;
 
                             default:
-                                if ($part === Str::afterLast($dir,DIRECTORY_SEPARATOR)) {
-                                   if(is_dir($dir)){
-                                    array_push($newDirs,...PathHelper::getAllEntriesInDir($dir));
-                                   }
-                                   else{
-                                    $newDirs[]=$dir;
-                                   }
+                                if (self::matchesPart($part,Str::afterLast($dir, DIRECTORY_SEPARATOR))) {
+                                    if (is_dir($dir)) {
+                                        array_push($newDirs, ...PathHelper::getAllEntriesInDir($dir));
+                                    } else {
+                                        $newDirs[] = $dir;
+                                    }
                                 }
                                 break;
                         }

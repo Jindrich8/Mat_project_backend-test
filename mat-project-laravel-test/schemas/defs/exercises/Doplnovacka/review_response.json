@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "$defs": {
+        "value": {
+            "type": "string"
+        },
+        "txtI": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": [
+                        "string"
+                    ]
+                }
+            }
+        },
+        "cmb": {
+            "type": "object",
+            "properties": {
+                "userValue": {
+                    "type": "string"
+                },
+                "correctValue": {
+                    "type": [
+                        "string"
+                    ]
+                }
+            },
+            "required": [
+                "userValue"
+            ]
+        }
+    },
+    "properties": {
+        "exerType": {
+            "type": "string",
+            "const": "Doplnovacka"
+        },
+        "content": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "$ref": "#/$defs/cmb"
+                    },
+                    {
+                        "$ref": "#/$defs/txtI"
+                    },
+                    {
+                        "$ref": "#/$defs/value"
+                    }
+                ],
+                "minItems": 1,
+                "contains": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/cmb"
+                        },
+                        {
+                            "$ref": "#/$defs/txtI"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "required": [
+        "exerType",
+        "content"
+    ]
+}

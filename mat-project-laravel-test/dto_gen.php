@@ -23,14 +23,17 @@ $TargetNamespace = 'App' . DIRECTORY_SEPARATOR
 $PathSeparator = DIRECTORY_SEPARATOR;
 $ExludeSchemas = "defs";
 $ForceRegenerate = false;
+$SchemaNamePattern = <<<'EOF'
+/(request|response)\.json$/
+EOF;
 
-echo "\n\n-------",MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
+echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
 if (ScriptArgsBuilder::create()
     ->optionSet(name: "dir", set: function ($value) use (&$SchemasDir) {
-        $SchemasDir = parsePath($value,real:true);
+        $SchemasDir = parsePath($value, real: true);
     })
     ->optionSet(name: "targetDir", set: function ($value) use (&$TargetDir) {
-        $TargetDir = parsePath($value,real:true);
+        $TargetDir = parsePath($value, real: true);
     })
     ->optionSet(name: "targetNamespace", set: function ($value) use (&$TargetNamespace) {
         $TargetNamespace = parsePath($value);
@@ -39,7 +42,9 @@ if (ScriptArgsBuilder::create()
     ->optionSet(name: 'excludeRelDir', set: function ($value) use (&$ExludeSchemas) {
         $ExludeSchemas = parsePath($value, sep: '/');
     })
+    ->option(name: "schemaNamePattern", var: $SchemaNamePattern)
     ->flag(name: "force", var: $ForceRegenerate)
+
     ->fetchScriptArguments()
     ->showPassedOptions()
     ->showInvalidOptions()
@@ -48,7 +53,7 @@ if (ScriptArgsBuilder::create()
 ) return;
 
 $finder = PathHelper::getFinderForReadableEntries($SchemasDir)
-    ->name('/(request|response)\.json$/')
+    ->name($SchemaNamePattern)
     ->notPath($ExludeSchemas)
     ->files();
 
@@ -78,12 +83,22 @@ foreach ($finder as $file) {
                     if ($generate) {
                         $targetNamespace = PathHelper::concatPaths($TargetNamespace, $parsedRelPathNoExtensions);
 
-                        echo "generating... $fileName",
+                        echo "\n\ngenerating... $fileName",
                         "\ntarget path: $targetRelPath",
                         "\ntarget namespace: $targetNamespace\n";
-                        PhpDtosGenerator::generate($schema, $fileName, $targetPath, $targetNamespace, separator: $PathSeparator);
+                        $fileDir = MyFileInfo::dirname($path);
+                        echo "FilePath: $path\n FileDir: $fileDir\n";
+                        PhpDtosGenerator::generate(
+                            schemaData: $schema,
+                            rootName: $fileName,
+                            basePath: $targetPath,
+                            baseNameSpace: $targetNamespace,
+                            schemaFilePath: $path,
+                            relResolverDir: $fileDir,
+                            separator: $PathSeparator
+                        );
                     } else {
-                        echo "skipping... $fileName",
+                        echo "\n\nskipping... $fileName",
                         "\ntarget path: $targetRelPath\n";
                     }
                 }

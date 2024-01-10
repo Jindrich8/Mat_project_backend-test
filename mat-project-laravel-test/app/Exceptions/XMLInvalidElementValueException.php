@@ -1,40 +1,38 @@
 <?php
 namespace App\Exceptions{
 
-    use App\Types\Coords;
-    use App\Types\XMLParserOffest;
-    use App\Types\XMLReadonlyParserPos;
-    use DOMDocument;
-use phpDocumentor\Reflection\Types\ClassString;
-use Throwable;
-use XMLReader;
+    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
+    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValue;
+    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValueErrorData;
 
 class XMLInvalidElementValueException extends XMLParsingException{
 
-    /**
-     * @param XMLReadonlyParserPos $pos
-     * @param string $element
-     * @param string $message
-     * @param string $description
-     * @param bool $appendAt
-     */
+  
     public function __construct(
-        XMLReadonlyParserPos $pos,
         string $element,
+        XMLInvalidElementValueErrorData $errorData,
         string $message = "",
-        string $description = "",
-        bool $appendAt = true
+        string $description = ""
         )
     {
+
         if(!$message){
-        $message = "Element '$element' has invalid value";
-        }
+            $message = "Element '$element' has invalid value";
+            }
+
+            $message = self::formatMessage($message,
+                column:$errorData->eColumn,
+            line:$errorData->eLine
+        );
 
         parent::__construct(
-            pos:$pos,
-            message:$message,
-            description:$description,
-            appendAt:$appendAt
+            ApplicationErrorObject::create()
+            ->setMessage($message)
+            ->setDescription($description)
+            ->setDetails(
+                XMLInvalidElementValue::create()
+            ->setErrorData($errorData)
+            )
         );
     }
 }

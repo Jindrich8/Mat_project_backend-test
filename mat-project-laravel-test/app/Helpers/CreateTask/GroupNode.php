@@ -2,53 +2,159 @@
 
 namespace App\Helpers\CreateTask {
 
+    use App\Exceptions\InternalException;
+    use App\Helpers\CreateTask\Document\DocumentContent;
     use App\Helpers\CreateTask\TaskRes;
     use App\Helpers\CreateTask\XMLNoValueNode;
     use App\Helpers\CreateTask\XMLOneUseNode;
+    use App\MyConfigs\TaskSrcConfig;
     use App\TableSpecificData\TaskDisplay;
+    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XMLNoValueNodeTrait;
+    use App\Types\XMLNodeBase;
+    use App\Types\XMLChildren;
+    use App\Types\XMLContextBase;
+    use App\Types\XMLNodeValueType;
     use App\Utils\Utils;
     use Illuminate\Support\Str;
 
     class GroupNode extends XMLNodeBase{
-        private int $depth;
+        use XMLNoValueNodeTrait;
+
+        private XMLNodeBase $parent;
+        private ?GroupMembersNode $members;
+        private ?GroupResourcesNode $resources;
+
         /**
          * @var int[] $indexes
          */
         private array $indexes;
-        public function __construct()
-        {
-            parent::__construct('group',children:[
-                new XMLOneUseNode(
-                    'resources',
-                    validateStart:function(XMLOneUseNode $thisNode,iterable $attributes,TaskRes $taskRes,?string $name)use($this){
-                        
-                        if(Utils::lastArrayValue($this->indexes) !== null)
-                        $taskRes->groups[Utils::lastArrayValue($this->indexes)];
-                    }
-                )
-                ]);
+
+        public static function create(DocumentContent $parent){
+            $node = new self($parent);
+            
+            
+            $members = GroupMembersNode::create($node);
+            $node->members = $members;
+            array_push($node->indexes,[1]);
+            ($members->children ??= new XMLChildren())->addChildWithPossiblyDifferentParent($node);
+            $node->indexes = [];
+
+            
+            $node->setChildren(
+                XMLChildren::construct()
+                ->addChild(GroupResourcesNode::create($node))
+                ->addChild($members)
+            );
+            
+            return $node;
         }
 
-        function getRequiredAttributes(): array
+        private function __construct(DocumentContent $parent)
         {
-            // TODO:
-            throw null;
+            $config = TaskSrcConfig::get();
+            parent::__construct(
+                name:$config->groupName,
+            );
+            $this->parent = $parent;
+                $this->indexes = [];
+                $this->members = null;
         }
 
-        function getNonRequiredAttributes(): array
-        {
-            // TODO
-            throw null;
-        }
-       function appendValue(string $value, TaskRes $taskRes, callable $getParserPosition): void
-       {
-        throw null;
-       }
-
-        function validate(TaskRes $taskRes): void
-        {
-            throw null;
+        private function getGroupMembers(){
+           $members = $this->members;
+           if(!$members){
+            throw new InternalException(
+                "GroupNode should have a group members node as child!",
+            context:['groupNode'=>$this]
+        );
+           }
+           return $members;
         }
 
+        private function getGroupResources(){
+            $resources = $this->resources;
+            if(!$resources){
+             throw new InternalException(
+                 "GroupNode should have a group resources node as child!",
+             context:['groupNode'=>$this]
+         );
+            }
+            return $resources;
+         }
+
+        public function reset()
+        {
+            parent::reset();
+        }
+
+        private function getParent():XMLNodeBase{
+            return $this->indexes ? $this->getGroupMembers() : $this->parent;
+        }
+
+        public function getParentObjectId(): object
+        {
+            return $this->getParent();
+        }
+
+        protected function moveUp(XMLContextBase $context): XMLNodeBase
+        {
+            $taskRes = $context->getTaskRes();
+            /**
+             * @var ?int $newGroupIndex
+             */
+            $newGroupIndex = array_pop($this->indexes);
+            $taskRes->setCurrentGroupIndex($newGroupIndex);
+            return $newGroupIndex !== null ? $this->getGroupMembers() : $this->parent;
+        }
+
+        protected function getParentName(): ?string
+        {
+            return $this->getParent()->name;
+        }
+
+        
+
+
+        public function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
+        {
+            parent::validateStart($attributes, $context, $name);
+           $config = TaskSrcConfig::get();
+            $taskRes = $context->getTaskRes();
+            if(count($this->indexes) >= $config->maxGroupDepth){
+                $this->invalidElement(
+                    getPosCallback:$context,
+                description:"Max group depth '{$config->maxGroupDepth}' exceeded"
+            );
+            }
+
+            $prevIndex = $taskRes->addGroup();
+            if ($prevIndex !== null && Utils::lastArrayValue($this->indexes) !== $prevIndex) {
+                array_push($this->indexes, $prevIndex);
+            }
+
+            
+        }
+
+        protected function validate(XMLContextBase $context): void
+        {
+            parent::validate($context);
+            $taskRes = $context->getTaskRes();
+            if($taskRes->getNumOfResourcesInCurrentGroup() < 1){
+                $this->missingRequiredElements(
+                    [$this->getGroupResources()->name],
+                    $context
+                );
+            }
+            $group = $taskRes->getCurrentGroup();
+            $exerciseCount = $taskRes->getExerciseCount();
+            if($group->start >= $exerciseCount){
+                $this->missingRequiredElements(
+                    missingElements:[$this->getGroupMembers()->getName()],
+                    getPosCallback:$context
+                );
+            }
+            $group->length = $exerciseCount - $group->start;
+        }
 }
 }

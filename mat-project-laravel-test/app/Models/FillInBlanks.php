@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class FillInBlanks extends Model
+class FillInBlanks extends BaseModel
 {
     use HasFactory;
+
+    const CONTENT = 'content';
+    const ID = 'exerciseable_id';
 }

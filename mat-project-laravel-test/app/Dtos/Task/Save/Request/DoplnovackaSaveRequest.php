@@ -13,7 +13,7 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 /**
  * Doplnovacka save request
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/save_request.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/save_request.json
  */
 class DoplnovackaSaveRequest extends ClassStructure
 {
@@ -34,9 +34,10 @@ class DoplnovackaSaveRequest extends ClassStructure
         $properties->content->items->oneOf[1] = Schema::string();
         $properties->content->minItems = 1;
         $ownerSchema->type = Schema::OBJECT;
+        $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
         $ownerSchema->title = "Doplnovacka save request";
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/task/defs/exercises/Doplnovacka/save_request.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/save_request.json');
     }
 
     /**
