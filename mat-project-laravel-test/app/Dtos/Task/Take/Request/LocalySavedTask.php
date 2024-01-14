@@ -11,10 +11,10 @@ use Swaggest\JsonSchema\Schema;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
-class Data extends ClassStructure
+class LocalySavedTask extends ClassStructure
 {
-    /** @var DataLocalySavedTask */
-    public $localySavedTask;
+    /** @var string */
+    public $timestamp;
 
     /**
      * @param Properties|static $properties
@@ -22,22 +22,23 @@ class Data extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->localySavedTask = DataLocalySavedTask::schema();
+        $properties->timestamp = Schema::string();
+        $properties->timestamp->format = "date-time";
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->additionalProperties = false;
         $ownerSchema->required = array(
-            self::names()->localySavedTask,
+            self::names()->timestamp,
         );
     }
 
     /**
-     * @param DataLocalySavedTask $localySavedTask
+     * @param string $timestamp
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setLocalySavedTask(DataLocalySavedTask $localySavedTask)
+    public function setTimestamp($timestamp)
     {
-        $this->localySavedTask = $localySavedTask;
+        $this->timestamp = $timestamp;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

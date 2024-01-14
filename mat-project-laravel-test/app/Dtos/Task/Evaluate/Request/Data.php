@@ -13,7 +13,7 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 class Data extends ClassStructure
 {
-    /** @var DoplnovackaEvaluateRequest[]|HledaniChybEvaluateRequest[]|array */
+    /** @var FillInBlanksEvaluateRequest[]|HledaniChybEvaluateRequest[]|array */
     public $exercises;
 
     /**
@@ -24,7 +24,7 @@ class Data extends ClassStructure
     {
         $properties->exercises = Schema::arr();
         $properties->exercises->items = new Schema();
-        $properties->exercises->items->anyOf[0] = DoplnovackaEvaluateRequest::schema();
+        $properties->exercises->items->anyOf[0] = FillInBlanksEvaluateRequest::schema();
         $properties->exercises->items->anyOf[1] = HledaniChybEvaluateRequest::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->additionalProperties = false;
@@ -34,7 +34,7 @@ class Data extends ClassStructure
     }
 
     /**
-     * @param DoplnovackaEvaluateRequest[]|HledaniChybEvaluateRequest[]|array $exercises
+     * @param FillInBlanksEvaluateRequest[]|HledaniChybEvaluateRequest[]|array $exercises
      * @return $this
      * @codeCoverageIgnoreStart
      */

@@ -65,6 +65,7 @@ namespace App\Helpers\CreateTask\ParseEntry {
 
         public function elementStartHandler(BaseXMLParser $parser, string $name, array $attributes): void
         {
+            dump("START - ".$this->node->getName()." -> $name");
             if (!$this->start) {
                 $this->node = $this->node->getChild($name, $this->context);
             } else {
@@ -81,6 +82,7 @@ namespace App\Helpers\CreateTask\ParseEntry {
         public function elementEndHandler(BaseXMLParser $parser, string $name): void
         {
             $node = $this->node->validateAndMoveUp($this->context);
+            dump("END - ".$name." -> ".$this->node->getName());
             if(!$node){
                 dump("Node '".$this->node->getName()."' does not have parent node");
                 dump($this->node);

@@ -36,6 +36,7 @@ namespace App\Helpers\CreateTask {
             $node->setChildren(
                 XMLChildren::construct()
                 ->addChild($node->exerciseNode)
+                ->addChildWithPossiblyDifferentParent($parent)
             );
             return $node;
         }

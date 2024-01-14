@@ -22,7 +22,7 @@ class DefsExercise extends ClassStructure
     /** @var DefsExerciseInstructions */
     public $instructions;
 
-    /** @var DoplnovackaReviewResponse|HledaniChybReviewResponse */
+    /** @var FillInBlanksReviewResponse|FixErrorsReviewResponse */
     public $details;
 
     /**
@@ -45,8 +45,8 @@ class DefsExercise extends ClassStructure
         $properties->type->const = "exercise";
         $properties->instructions = DefsExerciseInstructions::schema();
         $properties->details = new Schema();
-        $properties->details->anyOf[0] = DoplnovackaReviewResponse::schema();
-        $properties->details->anyOf[1] = HledaniChybReviewResponse::schema();
+        $properties->details->anyOf[0] = FillInBlanksReviewResponse::schema();
+        $properties->details->anyOf[1] = FixErrorsReviewResponse::schema();
         $properties->details->defs = (object)[
             'cmb' => (object)[
                 'required' => [
@@ -143,7 +143,7 @@ class DefsExercise extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param DoplnovackaReviewResponse|HledaniChybReviewResponse $details
+     * @param FillInBlanksReviewResponse|FixErrorsReviewResponse $details
      * @return $this
      * @codeCoverageIgnoreStart
      */

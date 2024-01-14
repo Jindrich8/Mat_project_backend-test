@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('task_id')->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('start');
             $table->unsignedTinyInteger('length');
-            $table->timestamps();
+            $table->autoTimestamps();
         });
     }
 

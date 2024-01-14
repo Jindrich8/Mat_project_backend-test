@@ -15,7 +15,6 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  * Combobox
  * Combobox of Fill in blanks exercise.
  * Built from #/$defs/cmb
- * @property int|null $selectedIndex
  */
 class Combobox extends ClassStructure
 {
@@ -24,6 +23,9 @@ class Combobox extends ClassStructure
 
     /** @var array */
     public $values;
+
+    /** @var int */
+    public $selectedIndex;
 
     /**
      * @return static
@@ -46,12 +48,10 @@ class Combobox extends ClassStructure
         $properties->values = Schema::arr();
         $properties->values->items = Schema::object();
         $properties->values->minItems = 1;
-        $properties->selectedIndex = new Schema();
-        $propertiesSelectedIndexOneOf0 = Schema::integer();
-        $propertiesSelectedIndexOneOf0->minimum = 0;
-        $properties->selectedIndex->oneOf[0] = $propertiesSelectedIndexOneOf0;
-        $properties->selectedIndex->oneOf[1] = Schema::null();
-        $properties->selectedIndex->comment = "Outside of bounds of the values array = same as if it was null, i.e. no item is selected";
+        $properties->selectedIndex = Schema::integer();
+        $properties->selectedIndex->title = "User selected index";
+        $properties->selectedIndex->minimum = 0;
+        $properties->selectedIndex->comment = "Outside of bounds of the values array = no item is selected";
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->title = "Combobox";
         $ownerSchema->description = "Combobox of Fill in blanks exercise.";
@@ -87,7 +87,7 @@ class Combobox extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param int|null $selectedIndex
+     * @param int $selectedIndex
      * @return $this
      * @codeCoverageIgnoreStart
      */

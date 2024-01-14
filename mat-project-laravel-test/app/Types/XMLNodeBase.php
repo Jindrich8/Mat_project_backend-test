@@ -108,6 +108,7 @@ namespace App\Types {
 
         public function getChild(string $name, GetXMLParserPosition $getParserPosition): XMLNodeBase
         {
+            dump("'{$this->name}' - GETTING CHILD '$name'");
             $child = $this->children->tryGetChild($name);
             if ($child === false) {
                 echo "\nCHILD '$name' NOT FOUND IN {$this->name} - THIS: ";
@@ -179,6 +180,7 @@ namespace App\Types {
 
         public function validateAndMoveUp(XMLContextBase $context):?XMLNodeBase{
             $this->validate($context);
+            dump("'{$this->name}' moving up to '".$this->getParentName()."'.");
             return $this->moveUp($context);
         }
 
@@ -348,16 +350,32 @@ namespace App\Types {
         protected function invalidElement(GetXMLParserPosition $getPosCallback,?string $elementName = null,string $message = '', string $description = '')
         {
             $name = $this->name;
+            $parentName = $elementName ? $name : $this->getParentName();
             if(!$description){
             $description = "";
             if ($elementName === null) {
                 $description = "Expected element with name '{$name}'.";
             } else {
-                $children = $this->getChildrenNames();
+                $children = $this->children;
                 if ($children) {
+                    $expectedChildrenNames = [];
+                    foreach($this->children->getChildren() as $name => $childAndIsReq){
+                        $child = $childAndIsReq[0];
+                        dump("Child: {$child->name}, count: {$child->count} maxCount: {$child->maxCount}");
+                        if($child->count < $child->maxCount){
+                            $expectedChildrenNames[]=$child->getName();
+                        }
+                    }
+                    if($expectedChildrenNames){
+                        if(count($expectedChildrenNames) > 1){
                     $description = "Expected one of these elements: "
-                        . Utils::arrayToStr($children)
+                        . Utils::arrayToStr($expectedChildrenNames)
                         . ".";
+                        }
+                        else{
+                            $description = "Expected '".$expectedChildrenNames[0]."'.";
+                        }
+                    }
                 } else {
                     $description = "Element '{$name}' does not have any children.";
                 }
@@ -367,7 +385,7 @@ namespace App\Types {
 
             throw new XMLInvalidElementException(
                 element: $elementName ?? $name,
-                parent: $this->getParentName(),
+                parent: $parentName,
                 message:$message,
                 description: $description,
                 errorData: XMLInvalidElementErrorData::create()

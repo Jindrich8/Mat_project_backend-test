@@ -12,9 +12,9 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json
  */
-class DoplnovackaTakeResponse extends ClassStructure
+class FillInBlanksTakeResponse extends ClassStructure
 {
     /** @var string */
     public $exerType;
@@ -28,7 +28,7 @@ class DoplnovackaTakeResponse extends ClassStructure
     public static function create()
     {
         $instance = parent::create();
-        $instance->exerType = "Doplnovacka";
+        $instance->exerType = "Fill in blanks";
         return $instance;
     }
 
@@ -39,7 +39,7 @@ class DoplnovackaTakeResponse extends ClassStructure
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
         $properties->exerType = Schema::string();
-        $properties->exerType->const = "Doplnovacka";
+        $properties->exerType->const = "Fill in blanks";
         $properties->content = Schema::arr();
         $properties->content->items = new Schema();
         $properties->content->items->oneOf[0] = Combobox::schema();
@@ -68,16 +68,10 @@ class DoplnovackaTakeResponse extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -92,6 +86,10 @@ class DoplnovackaTakeResponse extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -132,16 +130,10 @@ class DoplnovackaTakeResponse extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -156,6 +148,10 @@ class DoplnovackaTakeResponse extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -185,6 +181,10 @@ class DoplnovackaTakeResponse extends ClassStructure
                         'type' => 'string',
                         'const' => 'txtI',
                     ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
+                    ],
                 ],
                 'type' => 'object',
             ],
@@ -208,22 +208,16 @@ class DoplnovackaTakeResponse extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
             ],
         ];
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json');
     }
 
     /**

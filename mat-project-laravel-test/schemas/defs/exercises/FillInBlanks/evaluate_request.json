@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Doplnovacka save request",
+    "title": "Fill in blanks evaluate request",
     "type": "object",
     "additionalProperties": false,
     "properties": {

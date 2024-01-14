@@ -22,7 +22,7 @@ class DefsExercise extends ClassStructure
     /** @var DefsExerciseInstructions */
     public $instructions;
 
-    /** @var DoplnovackaTakeResponse|HledaniChybTakeResponse */
+    /** @var FillInBlanksTakeResponse|FixErrorsTakeResponse */
     public $details;
 
     /**
@@ -45,8 +45,8 @@ class DefsExercise extends ClassStructure
         $properties->type->const = "exercise";
         $properties->instructions = DefsExerciseInstructions::schema();
         $properties->details = new Schema();
-        $properties->details->anyOf[0] = DoplnovackaTakeResponse::schema();
-        $properties->details->anyOf[1] = HledaniChybTakeResponse::schema();
+        $properties->details->anyOf[0] = FillInBlanksTakeResponse::schema();
+        $properties->details->anyOf[1] = FixErrorsTakeResponse::schema();
         $properties->details->defs = (object)[
             'cmb' => (object)[
                 'title' => 'Combobox',
@@ -68,16 +68,10 @@ class DefsExercise extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -92,6 +86,10 @@ class DefsExercise extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -127,16 +125,10 @@ class DefsExercise extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -151,6 +143,10 @@ class DefsExercise extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -187,7 +183,7 @@ class DefsExercise extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param DoplnovackaTakeResponse|HledaniChybTakeResponse $details
+     * @param FillInBlanksTakeResponse|FixErrorsTakeResponse $details
      * @return $this
      * @codeCoverageIgnoreStart
      */

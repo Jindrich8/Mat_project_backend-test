@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('description',2040);
             $table->unsignedInteger('version');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
+            $table->autoTimestamps();
         });
     }
     

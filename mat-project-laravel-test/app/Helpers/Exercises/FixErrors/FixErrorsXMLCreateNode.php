@@ -58,7 +58,6 @@ namespace App\Helpers\Exercises\FixErrors {
 
         protected function __construct(){
             parent::__construct("FixErrorsCreateNode",
-            valueType:XMLNodeValueType::NO_VALUE,
         maxCount:1);
         $this->parent = null;
         $this->content = null;

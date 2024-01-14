@@ -29,7 +29,7 @@ namespace App\Helpers\CreateTask {
 
         public function getContentNode(XMLContextBase $context): XMLNodeBase
         {
-            return $context->getTaskRes()->getExerciseContentNode(name:$this->getName(),parent:$this);
+            return $context->getTaskRes()->getExerciseContentNode(name:$this->getName(),parent:$this->parent);
         }
 }
 }

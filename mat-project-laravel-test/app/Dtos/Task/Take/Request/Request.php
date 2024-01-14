@@ -16,8 +16,8 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  */
 class Request extends ClassStructure
 {
-    /** @var Data */
-    public $data;
+    /** @var LocalySavedTask */
+    public $localySavedTask;
 
     /**
      * @param Properties|static $properties
@@ -25,23 +25,24 @@ class Request extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->data = Data::schema();
+        $properties->localySavedTask = LocalySavedTask::schema();
         $ownerSchema->type = Schema::OBJECT;
+        $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema";
         $ownerSchema->title = "Take task request";
         $ownerSchema->required = array(
-            self::names()->data,
+            self::names()->localySavedTask,
         );
     }
 
     /**
-     * @param Data $data
+     * @param LocalySavedTask $localySavedTask
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setData(Data $data)
+    public function setLocalySavedTask(LocalySavedTask $localySavedTask)
     {
-        $this->data = $data;
+        $this->localySavedTask = $localySavedTask;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

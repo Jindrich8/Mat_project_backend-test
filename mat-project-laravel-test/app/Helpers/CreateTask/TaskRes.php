@@ -3,7 +3,7 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\InternalException;
-    use App\Helper\Database\PgDB;
+    use App\Helpers\Database\PgDB;
     use App\Helpers\CCreateExerciseHelper;
     use App\Helpers\ExerciseHelper;
     use App\Helpers\ExerciseType;
@@ -208,20 +208,23 @@ namespace App\Helpers\CreateTask {
             return $helper;
         }
 
-        public function insert()
+        public function insert(): int
         {
             $this->tryToGetHelper(addCurrentExercise: true);
-            DB::transaction(function () {
+            /**
+             * @var int $taskId
+             */
+            $taskId = DB::transaction(function () {
                 // insert task and tags
                 {
-                    if($this->tagsIds){
-                    $this->task->tags()->attach($this->tagsIds);
+                    if ($this->tagsIds) {
+                        $this->task->tags()->attach($this->tagsIds);
                     }
                     $success = $this->task->save();
                     if (!$success) {
                         throw new InternalException(
                             "Could not insert task and its tags.",
-                        context:['tags'=>$this->tagsIds,'task'=>$this->task]
+                            context: ['tags' => $this->tagsIds, 'task' => $this->task]
                         );
                     }
                 }
@@ -273,11 +276,11 @@ namespace App\Helpers\CreateTask {
                                 if (!$success) {
                                     // TODO: implement
                                     throw new InternalException(
-                                        message:"Could not insert resources.",
-                                        context:[
-                                            'resources'=>$insertResourcesAssocData
+                                        message: "Could not insert resources.",
+                                        context: [
+                                            'resources' => $insertResourcesAssocData
                                         ]
-                                        );
+                                    );
                                 }
                             }
                         }
@@ -314,7 +317,10 @@ namespace App\Helpers\CreateTask {
                         }
                     }
                 }
+                return $taskId;
             });
+
+            return $taskId;
         }
     }
 }

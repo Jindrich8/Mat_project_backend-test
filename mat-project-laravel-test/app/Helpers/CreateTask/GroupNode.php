@@ -36,14 +36,17 @@ namespace App\Helpers\CreateTask {
             
             $members = GroupMembersNode::create($node);
             $node->members = $members;
-            array_push($node->indexes,[1]);
-            ($members->children ??= new XMLChildren())->addChildWithPossiblyDifferentParent($node);
-            $node->indexes = [];
+            $resources = GroupResourcesNode::create($node);
+            $node->resources = $resources;
+            // $node->members = $members;
+            // array_push($node->indexes,[1]);
+            // ($members->children ??= new XMLChildren())->addChildWithPossiblyDifferentParent($node);
+            // $node->indexes = [];
 
             
             $node->setChildren(
                 XMLChildren::construct()
-                ->addChild(GroupResourcesNode::create($node))
+                ->addChild($resources)
                 ->addChild($members)
             );
             

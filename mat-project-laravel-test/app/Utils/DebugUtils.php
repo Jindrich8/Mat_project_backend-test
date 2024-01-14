@@ -2,8 +2,25 @@
 
 namespace App\Utils {
 
+    use BackedEnum;
+    use UnitEnum;
+
     class DebugUtils
     {
+        public static function enumToStr(UnitEnum|BackedEnum $enum)
+        {
+            return $enum instanceof BackedEnum ?
+            self::backedEnumToStr($enum)
+            : self::unitEnumToStr($enum);
+        }
+        
+        public static function unitEnumToStr(UnitEnum $unitEnum){
+            return $unitEnum::class."::$unitEnum->name";
+        }
+    
+        public static function backedEnumToStr(BackedEnum $backedEnum){
+            return $backedEnum::class."::{$backedEnum->name} => '$backedEnum->value'";
+        }
 
         public static function printStackTrace(){
             $e = new \Exception();

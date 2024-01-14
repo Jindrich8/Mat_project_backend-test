@@ -31,7 +31,8 @@ namespace App\Helpers\CreateTask\Document {
 
     public function appendValue(string $value, XMLContextBase $context): void
     {
-         $context->getTaskRes()->task->description .= $value;
+        $task = $context->getTaskRes()->task;
+        $task->description = ($task->description ?? "").$value;
     }
 
     protected function validate(XMLContextBase $context): void

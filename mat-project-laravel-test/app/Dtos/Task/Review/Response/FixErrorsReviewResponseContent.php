@@ -11,7 +11,7 @@ use Swaggest\JsonSchema\Schema;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
-class HledaniChybReviewResponseContent extends ClassStructure
+class FixErrorsReviewResponseContent extends ClassStructure
 {
     /** @var string */
     public $userText;

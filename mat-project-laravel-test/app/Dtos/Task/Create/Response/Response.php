@@ -4,17 +4,20 @@
  * Please consider to NOT put any emotional human-generated modifications as the splendid AI will throw them away with no mercy.
  */
 
-namespace App\Dtos\Task\Take\Request;
+namespace App\Dtos\Task\Create\Response;
 
 use Swaggest\JsonSchema\Constraint\Properties;
 use Swaggest\JsonSchema\Schema;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
-class DataLocalySavedTask extends ClassStructure
+/**
+ * Task create response
+ */
+class Response extends ClassStructure
 {
-    /** @var string */
-    public $timestamp;
+    /** @var int */
+    public $taskId;
 
     /**
      * @param Properties|static $properties
@@ -22,23 +25,23 @@ class DataLocalySavedTask extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->timestamp = Schema::string();
-        $properties->timestamp->format = "date-time";
+        $properties->taskId = Schema::integer();
         $ownerSchema->type = Schema::OBJECT;
-        $ownerSchema->additionalProperties = false;
+        $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
+        $ownerSchema->title = "Task create response";
         $ownerSchema->required = array(
-            self::names()->timestamp,
+            self::names()->taskId,
         );
     }
 
     /**
-     * @param string $timestamp
+     * @param int $taskId
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setTimestamp($timestamp)
+    public function setTaskId($taskId)
     {
-        $this->timestamp = $timestamp;
+        $this->taskId = $taskId;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

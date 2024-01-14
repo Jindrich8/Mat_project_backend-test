@@ -2,20 +2,21 @@
 
 namespace App\Helpers\Exercises\FixErrors;
 
+use App\Dtos\Task\Take\Response\DefsExercise;
 use App\Helpers\CTakeExercise;
+use App\Dtos\Task\Take\Response;
 
 class TakeFixErrorsExercise implements CTakeExercise
 {
+    private Response\FixErrorsTakeResponse $response;
 
-
-    public function setSavedValue($value): void
+    public function __construct(Response\FixErrorsTakeResponse $response)
     {
-        // TODO: Implement setSavedValue() method.
+        $this->response = $response;
     }
 
-    public function toArray()
+    public function setAsContentTo(DefsExercise $exercise): void
     {
-        // TODO: Implement toArray() method.
-        return [];
+        $exercise->setDetails($this->response);
     }
 }

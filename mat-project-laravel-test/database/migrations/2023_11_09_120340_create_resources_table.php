@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('group_id')->constrained();
             $table->text('content');
-            $table->timestamps();
+            $table->autoTimestamps();
         });
     }
 

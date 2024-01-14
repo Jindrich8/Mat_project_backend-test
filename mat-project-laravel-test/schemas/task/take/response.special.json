@@ -17,17 +17,23 @@
               "type": "string"
             }
           },
-          "required":["content"]
+          "required": [
+            "content"
+          ]
         },
-          "details":{
-            "anyOf": [
-              {
-                "$ref": "../../defs/exercises/*/take_response.json"
-              }
-            ]
-          }
+        "details": {
+          "anyOf": [
+            {
+              "$ref": "../../defs/exercises/*/take_response.json"
+            }
+          ]
+        }
       },
-      "required":["type","instructions","details"]
+      "required": [
+        "type",
+        "instructions",
+        "details"
+      ]
     },
     "group": {
       "type": "object",
@@ -71,51 +77,44 @@
     }
   },
   "properties": {
-    "data": {
+    "task": {
       "type": "object",
       "properties": {
-        "task": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "display": {
-              "enum": [
-                "vertical",
-                "horizontal"
-              ]
-            },
-            "description": {
-              "type": "string"
-            },
-            "entries": {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "$ref": "#/$defs/group"
-                  },
-                  {
-                    "$ref": "#/$defs/exercise"
-                  }
-                ]
-              }
-            }
-          },
-          "required": [
-            "name",
-            "description",
-            "entries"
+        "name": {
+          "type": "string"
+        },
+        "display": {
+          "type":"string",
+          "enum": [
+            "vertical",
+            "horizontal"
           ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/group"
+              },
+              {
+                "$ref": "#/$defs/exercise"
+              }
+            ]
+          }
         }
       },
       "required": [
-        "task"
+        "name",
+        "description",
+        "entries"
       ]
     }
   },
   "required": [
-    "data"
+    "task"
   ]
 }

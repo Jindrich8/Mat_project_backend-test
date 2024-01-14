@@ -29,7 +29,7 @@ namespace App\Helpers\CreateTask {
     {
         $taskRes = $context->getTaskRes();
         $lastExercise = $taskRes->getLastExercise();
-        $lastExercise->instructions  .= $value;
+        $lastExercise->instructions =($lastExercise->instructions ?? "").$value;
     }
 
     protected function validate(XMLContextBase $context): void

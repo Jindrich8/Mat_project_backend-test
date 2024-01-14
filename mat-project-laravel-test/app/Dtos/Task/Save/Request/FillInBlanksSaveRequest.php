@@ -12,10 +12,10 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Doplnovacka save request
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/save_request.json
+ * Fill in blanks save request
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/save_request.json
  */
-class DoplnovackaSaveRequest extends ClassStructure
+class FillInBlanksSaveRequest extends ClassStructure
 {
     /** @var int[]|string[]|array */
     public $content;
@@ -36,8 +36,8 @@ class DoplnovackaSaveRequest extends ClassStructure
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
-        $ownerSchema->title = "Doplnovacka save request";
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/save_request.json');
+        $ownerSchema->title = "Fill in blanks save request";
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/save_request.json');
     }
 
     /**

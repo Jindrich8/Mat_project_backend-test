@@ -12,14 +12,14 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/review_response.json
  */
-class HledaniChybReviewResponse extends ClassStructure
+class FixErrorsReviewResponse extends ClassStructure
 {
     /** @var string */
     public $exerType;
 
-    /** @var HledaniChybReviewResponseContent */
+    /** @var FixErrorsReviewResponseContent */
     public $content;
 
     /**
@@ -40,14 +40,14 @@ class HledaniChybReviewResponse extends ClassStructure
     {
         $properties->exerType = Schema::string();
         $properties->exerType->const = "HledaniChyb";
-        $properties->content = HledaniChybReviewResponseContent::schema();
+        $properties->content = FixErrorsReviewResponseContent::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema";
         $ownerSchema->required = array(
             self::names()->exerType,
             self::names()->content,
         );
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/review_response.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/review_response.json');
     }
 
     /**
@@ -63,11 +63,11 @@ class HledaniChybReviewResponse extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param HledaniChybReviewResponseContent $content
+     * @param FixErrorsReviewResponseContent $content
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setContent(HledaniChybReviewResponseContent $content)
+    public function setContent(FixErrorsReviewResponseContent $content)
     {
         $this->content = $content;
         return $this;

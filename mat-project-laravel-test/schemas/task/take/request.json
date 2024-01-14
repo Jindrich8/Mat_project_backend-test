@@ -2,31 +2,23 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Take task request",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
-        "data": {
+        "localySavedTask": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-                "localySavedTask": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                        "timestamp": {
-                            "type": "string",
-                            "format": "date-time"
-                        }
-                    },
-                    "required": [
-                        "timestamp"
-                    ]
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
                 }
             },
             "required": [
-                "localySavedTask"
+                "timestamp"
             ]
         }
     },
     "required": [
-        "data"
+        "localySavedTask"
     ]
 }

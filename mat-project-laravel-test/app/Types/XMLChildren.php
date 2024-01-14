@@ -161,7 +161,7 @@ namespace App\Types {
         }
 
          /**
-         * @return iterable<string,array{XMLNodeBase,bool}>
+         * @return iterable<string,array{0:XMLNodeBase,1:bool}>
          * bool - means required
          */
         public function getChildren():iterable{

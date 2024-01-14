@@ -11,7 +11,7 @@ use Swaggest\JsonSchema\Schema;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
-class HledaniChybTakeResponseContent extends ClassStructure
+class FixErrorsTakeResponseContent extends ClassStructure
 {
     /** @var string */
     public $defaultText;

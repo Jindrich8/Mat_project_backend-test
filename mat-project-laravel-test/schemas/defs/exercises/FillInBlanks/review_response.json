@@ -35,7 +35,7 @@
     "properties": {
         "exerType": {
             "type": "string",
-            "const": "Doplnovacka"
+            "const": "Fill in blanks"
         },
         "content": {
             "type": "array",

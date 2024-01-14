@@ -13,7 +13,7 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 /**
  * HledaniChyb save request
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/save_request.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/save_request.json
  */
 class HledaniChybSaveRequest extends ClassStructure
 {
@@ -31,7 +31,7 @@ class HledaniChybSaveRequest extends ClassStructure
         $ownerSchema->additionalProperties = false;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema#";
         $ownerSchema->title = "HledaniChyb save request";
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/save_request.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/save_request.json');
     }
 
     /**

@@ -34,8 +34,11 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
         $content = FixErrorsContent::create();
         $this->contents[]=$content;
         $this->createNode ??= FixErrorsXMLCreateNode::create();
+        /* 
+        The order of change and setContent methods is importnat,
+         because change calls reset, which sets the content to null*/
+         $this->createNode->change($parent,$name);
         $this->createNode->setContent($content);
-        $this->createNode->change($parent,$name);
         return $this->createNode;
         
     }

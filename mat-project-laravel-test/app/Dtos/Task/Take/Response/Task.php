@@ -11,7 +11,7 @@ use Swaggest\JsonSchema\Schema;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
-class DataTask extends ClassStructure
+class Task extends ClassStructure
 {
     const VERTICAL = 'vertical';
 
@@ -20,7 +20,7 @@ class DataTask extends ClassStructure
     /** @var string */
     public $name;
 
-    /** @var mixed */
+    /** @var string */
     public $display;
 
     /** @var string */
@@ -36,7 +36,7 @@ class DataTask extends ClassStructure
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
         $properties->name = Schema::string();
-        $properties->display = new Schema();
+        $properties->display = Schema::string();
         $properties->display->enum = array(
             self::VERTICAL,
             self::HORIZONTAL,
@@ -112,10 +112,10 @@ class DataTask extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -142,16 +142,10 @@ class DataTask extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -166,6 +160,10 @@ class DataTask extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -240,10 +238,10 @@ class DataTask extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -270,16 +268,10 @@ class DataTask extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -294,6 +286,10 @@ class DataTask extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -374,10 +370,10 @@ class DataTask extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -404,16 +400,10 @@ class DataTask extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -428,6 +418,10 @@ class DataTask extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -451,7 +445,7 @@ class DataTask extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param mixed $display
+     * @param string $display
      * @return $this
      * @codeCoverageIgnoreStart
      */

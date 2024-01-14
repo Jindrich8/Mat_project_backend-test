@@ -16,8 +16,8 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
  */
 class Response extends ClassStructure
 {
-    /** @var Data */
-    public $data;
+    /** @var Task */
+    public $task;
 
     /**
      * @param Properties|static $properties
@@ -25,12 +25,12 @@ class Response extends ClassStructure
      */
     public static function setUpProperties($properties, Schema $ownerSchema)
     {
-        $properties->data = Data::schema();
+        $properties->task = Task::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema";
         $ownerSchema->title = "Take task response";
         $ownerSchema->required = array(
-            self::names()->data,
+            self::names()->task,
         );
         $ownerSchema->defs = (object)[
             'exercise' => (object)[
@@ -58,10 +58,10 @@ class Response extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -128,16 +128,10 @@ class Response extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -153,6 +147,10 @@ class Response extends ClassStructure
                         'type' => 'string',
                         'const' => 'txtI',
                     ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
+                    ],
                 ],
                 'type' => 'object',
             ],
@@ -163,13 +161,13 @@ class Response extends ClassStructure
     }
 
     /**
-     * @param Data $data
+     * @param Task $task
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setData(Data $data)
+    public function setTask(Task $task)
     {
-        $this->data = $data;
+        $this->task = $task;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

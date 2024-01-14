@@ -12,11 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('fix_errors', function (Blueprint $table) {
-            $table->unsignedBigInteger('exerciseable_id')->primary();
-            $table->string('correct_text',2040);
-            $table->string('wrong_text',2040);
-            $table->foreign('exerciseable_id')->references('id')->on('exercises');
-            $table->timestamps();
+            $table->pkFKColumn(
+                'exerciseable_id',
+                references: 'id',
+                onTable: 'exercises'
+            );
+
+            $table->string('correct_text', 2040);
+            $table->string('wrong_text', 2040);
+            $table->autoTimestamps();
         });
     }
 

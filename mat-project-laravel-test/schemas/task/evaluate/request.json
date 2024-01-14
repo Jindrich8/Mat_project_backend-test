@@ -12,10 +12,10 @@
                     "items": {
                         "anyOf": [
                             {
-                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/evaluate_request.json"
+                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/evaluate_request.json"
                             },
                             {
-                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/evaluate_request.json"
+                                "$ref": "C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/evaluate_request.json"
                             }
                         ]
                     }

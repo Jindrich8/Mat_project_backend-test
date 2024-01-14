@@ -75,10 +75,10 @@ class DefsGroup extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -105,16 +105,10 @@ class DefsGroup extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -129,6 +123,10 @@ class DefsGroup extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -196,10 +194,10 @@ class DefsGroup extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -226,16 +224,10 @@ class DefsGroup extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -250,6 +242,10 @@ class DefsGroup extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',
@@ -319,10 +315,10 @@ class DefsGroup extends ClassStructure
                     'details' => (object)[
                         'anyOf' => [
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/Doplnovacka/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FillInBlanks/take_response.json',
                             ],
                             (object)[
-                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json',
+                                '$ref' => 'C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json',
                             ],
                         ],
                     ],
@@ -349,16 +345,10 @@ class DefsGroup extends ClassStructure
                         'type' => 'array',
                     ],
                     'selectedIndex' => (object)[
-                        'oneOf' => [
-                            (object)[
-                                'minimum' => 0,
-                                'type' => 'integer',
-                            ],
-                            (object)[
-                                'type' => 'null',
-                            ],
-                        ],
-                        '$comment' => 'Outside of bounds of the values array = same as if it was null, i.e. no item is selected',
+                        'title' => 'User selected index',
+                        'minimum' => 0,
+                        'type' => 'integer',
+                        '$comment' => 'Outside of bounds of the values array = no item is selected',
                     ],
                 ],
                 'type' => 'object',
@@ -373,6 +363,10 @@ class DefsGroup extends ClassStructure
                     'type' => (object)[
                         'type' => 'string',
                         'const' => 'txtI',
+                    ],
+                    'text' => (object)[
+                        'title' => 'User filled text',
+                        'type' => 'string',
                     ],
                 ],
                 'type' => 'object',

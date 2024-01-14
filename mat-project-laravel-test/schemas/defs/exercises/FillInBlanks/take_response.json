@@ -13,6 +13,10 @@
                 "type": {
                     "type": "string",
                     "const": "txtI"
+                },
+                "text":{
+                    "title":"User filled text",
+                    "type": "string"
                 }
             },
             "required": [
@@ -36,16 +40,10 @@
                     "minItems": 1
                 },
                 "selectedIndex": {
-                    "$comment": "Outside of bounds of the values array = same as if it was null, i.e. no item is selected",
-                    "oneOf": [
-                        {
-                            "type": "integer",
-                            "minimum": 0
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
+                    "title":"User selected index",
+                    "$comment": "Outside of bounds of the values array = no item is selected",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -57,7 +55,7 @@
     "properties": {
         "exerType": {
             "type": "string",
-            "const": "Doplnovacka"
+            "const": "Fill in blanks"
         },
         "content": {
             "type": "array",

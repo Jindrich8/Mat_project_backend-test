@@ -12,10 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('fill_in_blanks', function (Blueprint $table) {
-            $table->unsignedBigInteger('exerciseable_id')->primary();
+            $table->pkFKColumn(
+                'exerciseable_id',
+                references: 'id',
+                onTable: 'exercises'
+            );
+
             $table->json("content");
-            $table->foreign('exerciseable_id')->references('id')->on('exercises');
-            $table->timestamps();
+            $table->autoTimestamps();
         });
     }
 

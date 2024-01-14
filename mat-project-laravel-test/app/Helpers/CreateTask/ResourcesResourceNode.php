@@ -41,7 +41,8 @@ namespace App\Helpers\CreateTask {
     public function appendValue(string $value, XMLContextBase $context): void
     {
         $taskRes = $context->getTaskRes();
-        $taskRes->getLastResourceOfCurrentGroup()->content.=$value;
+       $resource = $taskRes->getLastResourceOfCurrentGroup();
+       $resource->content = ($resource->content ?? "").$value;
     }
 
     protected function validate(XMLContextBase $context): void

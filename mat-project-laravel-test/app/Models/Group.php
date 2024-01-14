@@ -16,12 +16,6 @@ class Group extends BaseModel
     public const LENGTH = 'length';
     public const TASK_ID = 'task_id';
 
-
-    public function __construct(array $attributes = []){
-        $this->table = self::getTableName();
-        parent::__construct($attributes);
-    }
-
     public function resources(): HasMany
     {
         return $this->hasMany(Resource::class);

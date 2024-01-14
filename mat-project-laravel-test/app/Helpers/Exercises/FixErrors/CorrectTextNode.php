@@ -24,16 +24,15 @@ namespace App\Helpers\Exercises\FixErrors {
            $config = TaskSrcConfig::get()->getFixErrorsConfig();
             parent::__construct(
                 name:$config->correctTextName,
-                valueType:XMLNodeValueType::NON_EMPTY_VALUE,
                 parent:$parent,
                 maxCount:1
             );
         }
 
-        protected function appendPreprocessedValue(string $value, XMLContextBase $context): void
+        public function appendValue(string $value, XMLContextBase $context): void
         {
            $content = $this->parent->getContent();
-           $content->correctText.=$value;
+           $content->correctText = ($content->correctText ?? "").$value;
         }
     }
 }

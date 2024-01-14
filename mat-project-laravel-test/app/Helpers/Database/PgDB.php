@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helper\Database {
+namespace App\Helpers\Database {
 
     use App\Exceptions\InternalException;
     use DB;

@@ -238,7 +238,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
 
         private function addCurrentComboboxToContent()
         {
-            shuffle($this->cmbValues);
+            sort($this->cmbValues,SORT_STRING);
             /**
              * @var int|false $index
              * This needs to be integer, because shuffle transforms underlying array to list
@@ -306,6 +306,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                 $byteOffset = strlen($ch);
                 ++$column;
             }
+            $escaping = false;
 
             dump("VALUE: '$input'");
             $token = "";
@@ -316,6 +317,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
                         line: $line,
                         byteIndex: $byteIndex + $byteOffset
                     );
+                    $byteOffset+=strlen($token);
+                    ++$column;
                     $this->prevToken = $token;
                     if($token !== $this->escapeToken){
                         $this->prevNotEscTokenPos
@@ -326,8 +329,11 @@ namespace App\Helpers\Exercises\FillInBlanks {
                             $this->hasPrevCmpStartToken = true;
                         }
                     }
-                    $byteOffset+=strlen($token);
-                    ++$column;
+                    else{
+                        $ch=StrUtils::utf8GetCharAtIndex($input,0,$byteOffset);
+                        $byteOffset+=strlen($ch);
+                        ++$column;
+                    }
                 }
                 dump("Byte offset: '$byteOffset'");
                 dump($this->tokens);
@@ -361,9 +367,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                             byteLength:strlen($token)+strlen($nextChar)
                         );
                     }
-                    $this->prevText .= StrUtils::substrAsciiBetween($input,$textByteOffset,$byteOffset);
-                    $byteOffset += strlen($nextChar);
-                    ++$column;
+                    $this->prevText .= StrUtils::substrAsciiBetween($input, $textByteOffset,$byteOffset);
                 } else if ($token === $this->cmpStartToken) {
                     if ($this->state === State::CMP) {
                         // invalid open sequence
@@ -392,8 +396,9 @@ namespace App\Helpers\Exercises\FillInBlanks {
                             ]
                         );
                     }
-
+                    
                     $text = StrUtils::substrAsciiBetween($input, $textByteOffset, $byteOffset);
+                    dump("Adding option: prevText:'{$this->prevText}' text: '$text'");
                     $this->addComboboxOptionWithoutPrevText(
                         text: $text,
                         endByteIndex: $byteIndex + $byteOffset

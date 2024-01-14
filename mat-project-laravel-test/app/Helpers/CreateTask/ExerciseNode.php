@@ -57,7 +57,7 @@ namespace App\Helpers\CreateTask {
                     getPosCallback:$context
                 );
                }
-               $context->getTaskRes()->getLastExercise()->exerciseable_type = $type->value;
+               $context->getTaskRes()->getLastExercise()->exerciseType = $type;
             })
             ->addAttribute(
                 name:$config->exerciseWeightAttr->name,

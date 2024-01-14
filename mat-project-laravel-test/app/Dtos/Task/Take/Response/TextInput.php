@@ -21,6 +21,9 @@ class TextInput extends ClassStructure
     /** @var string */
     public $type;
 
+    /** @var string */
+    public $text;
+
     /**
      * @return static
      */
@@ -39,6 +42,8 @@ class TextInput extends ClassStructure
     {
         $properties->type = Schema::string();
         $properties->type->const = "txtI";
+        $properties->text = Schema::string();
+        $properties->text->title = "User filled text";
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->title = "Text input";
         $ownerSchema->description = "Text input of Fill in blanks exercise.";
@@ -56,6 +61,18 @@ class TextInput extends ClassStructure
     public function setType($type)
     {
         $this->type = $type;
+        return $this;
+    }
+    /** @codeCoverageIgnoreEnd */
+
+    /**
+     * @param string $text
+     * @return $this
+     * @codeCoverageIgnoreStart
+     */
+    public function setText($text)
+    {
+        $this->text = $text;
         return $this;
     }
     /** @codeCoverageIgnoreEnd */

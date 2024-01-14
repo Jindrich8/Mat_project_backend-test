@@ -12,14 +12,14 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 
 /**
- * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json
+ * Built from C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json
  */
-class HledaniChybTakeResponse extends ClassStructure
+class FixErrorsTakeResponse extends ClassStructure
 {
     /** @var string */
     public $exerType;
 
-    /** @var HledaniChybTakeResponseContent */
+    /** @var FixErrorsTakeResponseContent */
     public $content;
 
     /**
@@ -40,14 +40,14 @@ class HledaniChybTakeResponse extends ClassStructure
     {
         $properties->exerType = Schema::string();
         $properties->exerType->const = "HledaniChyb";
-        $properties->content = HledaniChybTakeResponseContent::schema();
+        $properties->content = FixErrorsTakeResponseContent::schema();
         $ownerSchema->type = Schema::OBJECT;
         $ownerSchema->schema = "http://json-schema.org/draft-07/schema";
         $ownerSchema->required = array(
             self::names()->exerType,
             self::names()->content,
         );
-        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/HledaniChyb/take_response.json');
+        $ownerSchema->setFromRef('C:/Users/Jindra/source/repos/JS/Mat_project_backend-test/mat-project-laravel-test/schemas/defs/exercises/FixErrors/take_response.json');
     }
 
     /**
@@ -63,11 +63,11 @@ class HledaniChybTakeResponse extends ClassStructure
     /** @codeCoverageIgnoreEnd */
 
     /**
-     * @param HledaniChybTakeResponseContent $content
+     * @param FixErrorsTakeResponseContent $content
      * @return $this
      * @codeCoverageIgnoreStart
      */
-    public function setContent(HledaniChybTakeResponseContent $content)
+    public function setContent(FixErrorsTakeResponseContent $content)
     {
         $this->content = $content;
         return $this;

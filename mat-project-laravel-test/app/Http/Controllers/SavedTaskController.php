@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tags;
-use App\Http\Requests\StoreTagsRequest;
-use App\Http\Requests\UpdateTagsRequest;
+use App\Models\SavedTask;
+use App\Http\Requests\StoreSavedTaskRequest;
+use App\Http\Requests\UpdateSavedTaskRequest;
 
-class TagsController extends Controller
+class SavedTaskController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class TagsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTagsRequest $request)
+    public function store(StoreSavedTaskRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class TagsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Tags $tags)
+    public function show(SavedTask $savedTask)
     {
         //
     }
@@ -43,7 +43,7 @@ class TagsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Tags $tags)
+    public function edit(SavedTask $savedTask)
     {
         //
     }
@@ -51,7 +51,7 @@ class TagsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateTagsRequest $request, Tags $tags)
+    public function update(UpdateSavedTaskRequest $request, SavedTask $savedTask)
     {
         //
     }
@@ -59,7 +59,7 @@ class TagsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tags $tags)
+    public function destroy(SavedTask $savedTask)
     {
         //
     }

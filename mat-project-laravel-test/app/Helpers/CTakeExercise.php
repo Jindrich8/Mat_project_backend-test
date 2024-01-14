@@ -2,15 +2,11 @@
 
 namespace App\Helpers;
 
-
+use App\Dtos\Task\Take\Response\DefsExercise;
 use App\Exceptions\InternalException;
-use Illuminate\Contracts\Support\Arrayable;
 
-interface CTakeExercise extends Arrayable
+interface CTakeExercise
 {
-    /**
-     * @throws InternalException
-     * @param $value
-     */
-    public function setSavedValue($value):void;
+
+    public function setAsContentTo(DefsExercise $exercise):void;
 }
