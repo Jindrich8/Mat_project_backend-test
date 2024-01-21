@@ -10,4 +10,6 @@ class FillInBlanks extends BaseModel
 
     const CONTENT = 'content';
     const ID = 'exerciseable_id';
+
+    public $primaryKey = self::ID;
 }

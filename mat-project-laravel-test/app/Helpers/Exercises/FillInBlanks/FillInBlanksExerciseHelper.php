@@ -25,6 +25,8 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
 
     public function fetchTake(array $ids,array $savedValues): array
     {
+        echo "IDS: ";
+        dump($ids);
         $table = FillInBlanks::getTableName();
         $idName = FillInBlanks::getPrimaryKeyName();
        $exercises = DB::table($table)
@@ -35,19 +37,19 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         $takeExercises = [];
         while(($exercise = $exercises->pop()) !== null){
             $decodedContent = DBJsonHelper::decode(
-                json:$exercise[FillInBlanks::CONTENT],
+                json:Utils::access($exercise,FillInBlanks::CONTENT),
             table:$table,
             column:FillInBlanks::CONTENT,
-            id:$exercise[$idName]
+            id:Utils::access($exercise,$idName)
             );
         
-           $content = FillInBlanksContent\FillInBlanksContent::import([
-                'structure'=>$decodedContent
+           $content = FillInBlanksContent\FillInBlanksContent::import((object)[
+                FillInBlanksContent\FillInBlanksContent::CONTENT=>$decodedContent
             ]);
             $takeParts = [];
             $savedValue = null;
             $getNextSavedValue = true;
-            while(($part = Utils::arrayShift($content->structure)) !== null){
+            while(($part = Utils::arrayShift($content->content)) !== null){
                 if($getNextSavedValue && $savedValues){
                     $savedValue = Utils::arrayShift($savedValues);
                 }
@@ -85,7 +87,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
 
           $takeExercise =  new TakeFillInBlanksExercise(FillInBlanksTakeResponse::create()
             ->setContent($takeParts));
-            $takeExercises[$exercise[$idName]]=$takeExercise;
+            $takeExercises[Utils::access($exercise,$idName)]=$takeExercise;
         }
         return $takeExercises;
     }

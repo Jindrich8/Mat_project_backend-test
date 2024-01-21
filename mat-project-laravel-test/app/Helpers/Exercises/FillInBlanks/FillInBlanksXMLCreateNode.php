@@ -16,7 +16,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
 
         public function setContent(FillInBlanksContent $content)
         {
-            $this->content = $content->setStructure([]);
+            $this->content = $content->setContent([]);
         }
 
         public static function create()

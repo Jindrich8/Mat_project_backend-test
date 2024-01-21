@@ -152,7 +152,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                 }
                 $this->addItemToContent($this->prevText);
             }
-            if (!$this->content->structure) {
+            if (!$this->content->content) {
                 $this->valueShouldNotBeEmpty(
                     description: "Fill in blanks exercise content should not be empty"
                 );
@@ -196,8 +196,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
                 // empty string
                 return;
             }
-            $this->content->structure ??= [];
-            $this->content->structure[] = $item;
+            $this->content->content ??= [];
+            $this->content->content[] = $item;
         }
 
         private function currentCmpIsCombobox(): bool

@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    // 'api/*', 'sanctum/csrf-cookie'
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
@@ -29,6 +30,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    // TODO: CHANGE THIS TO TRUE
+    'supports_credentials' => false,
 
 ];

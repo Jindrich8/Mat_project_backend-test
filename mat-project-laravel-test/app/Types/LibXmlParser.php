@@ -5,13 +5,22 @@ namespace App\Types {
     use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstruct;
     use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
-    use App\Helpers\CreateTask\ParseEntry\XMLParserEntryType;
     use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Closure;
     use Illuminate\Support\Str;
     use IntlBreakIterator;
     use XMLParser;
+
+    enum XMLParserEntryType
+    {
+        case ELEMENT_START;
+        case ELEMENT_END;
+        case ELEMENT_VALUE;
+        case COMMENT;
+        case ERROR;
+        case UNSUPPORTED_ENTITY;
+    }
 
     class LibXmlParser implements BaseXMLParser
     {
@@ -316,7 +325,7 @@ namespace App\Types {
 
         private function printValidPosInfo(){
             $pos = $this->lastValidPos;
-            $ch = $this->getCharAtByteIndex($pos[2]);
+            $ch = $this->getCharAtByteIndex($pos[2],emptyIfError:true);
             echo "\n: ($ch)" . $pos[0].", " . $pos[1].", " . $pos[2];
         }
 
@@ -335,7 +344,7 @@ namespace App\Types {
             );
             $entryTypeName = $this->nextEntryType?->name ?? "NULL";
             $isByteIndexValid = $this->isByteIndexValid($this->nextEntryType, $byteIndex);
-            $char = $this->getCharAtByteIndex($byteIndex);
+            $char = $this->getCharAtByteIndex($byteIndex,emptyIfError:true);
             echo "\n({$entryTypeName}) :$line, $column, $byteIndex BYTE INDEX IS VALID ($char): '"
             .($isByteIndexValid ? "true" : "false"), "'\n";
             if ($isByteIndexValid) {
@@ -497,24 +506,34 @@ namespace App\Types {
             }
         }
 
-        private function getCharAtByteIndex(int $byteIndex): string
+        private function getCharAtByteIndex(int $byteIndex,bool $emptyIfError = false): string
         {
             $this->getLastValidPosition($lastPosColumn, $lastPosLine, $lastPosByteIndex);
             $relByteIndex = $byteIndex - $lastPosByteIndex;
-            $char = $this->getCharAtRelByteIndex($relByteIndex);
+            $char = $this->getCharAtRelByteIndex(
+                relByteIndex:$relByteIndex,
+            emptyIfError:$emptyIfError
+        );
             return $char;
         }
 
-        private function getCharAtRelByteIndex(int $relByteIndex): string
+        private function getCharAtRelByteIndex(int $relByteIndex,bool $emptyIfError = false): string
         {
             $this->shiftData();
             $currentByteOffset = $this->dataByteIndex;
             for ($i = 0;; ++$i) {
-                $dataPart = $this->data[$i] ??
+                $dataPart = $this->data[$i] ?? null;
+                if($dataPart === null){
+                   if($emptyIfError){
+                        return "";
+                   }
+                   else{
                     $this->dataShouldHaveAtLeastNDataParts(
                         minDataLen: $i + 1,
                         context: ['relByteIndex' => $relByteIndex]
                     );
+                }
+                }
                 $dataPartLen = strlen($dataPart);
                 $restDataPartLen = $dataPartLen - $currentByteOffset;
                 if ($relByteIndex >= $restDataPartLen) {
@@ -538,14 +557,22 @@ namespace App\Types {
 
         private function shiftData()
         {
-            while (true) {
-                $dataPart = $this->data[0] ?? $this->dataShouldNotBeEmpty();
-                $dataPartLen = strlen($dataPart);
-                if ($this->dataByteIndex < $dataPartLen) {
-                    return;
+            if ($this->dataByteIndex > 0) {
+                while (true) {
+                    $dataPart = $this->data[0] ?? null;
+                    if ($dataPart === null) {
+                        if ($this->dataByteIndex === 0) {
+                            return;
+                        } 
+                        $this->dataShouldNotBeEmpty();
+                    }
+                    $dataPartLen = strlen($dataPart);
+                    if ($this->dataByteIndex < $dataPartLen) {
+                        return;
+                    }
+                    $this->dataByteIndex -= $dataPartLen;
+                    array_shift($this->data);
                 }
-                $this->dataByteIndex -= $dataPartLen;
-                array_shift($this->data);
             }
         }
 
@@ -586,5 +613,7 @@ namespace App\Types {
                 $message ? $message : "Data should not be empty"
             );
         }
+
+        
     }
 }

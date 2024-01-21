@@ -50,7 +50,7 @@ class ExerciseHelper
      */
   public static function fetchRealExercises(int $taskId, callable $fetchConcreteOnes, callable $toClass,?Carbon $localySavedTaskUtcTimestamp = null,bool $shouldFetchInstructions = true):array
   {
-    if(!$localySavedTaskUtcTimestamp->isUtc()){
+    if($localySavedTaskUtcTimestamp?->isUtc() === false){
         $localySavedTaskUtcTimestamp->setTimezone(DateTimeZone::UTC);
     }
 
@@ -60,7 +60,7 @@ class ExerciseHelper
           $columns[]=Exercise::INSTRUCTIONS;
       }
       /**
-       * @var array<array> $exercises
+       * @var array<array|\stdClass> $exercises
        */
       $exercises = DB::table(Exercise::getTableName())
           ->select($columns)
@@ -68,16 +68,22 @@ class ExerciseHelper
           ->orderBy(Exercise::ORDER)
           ->get()
           ->toArray();
+          echo "Exercises: ";
+          dump($exercises);
       $user = Auth::user();
       $savedExercises = [];
        if($user !== null){
         $savedTaskTable = SavedTask::getTableName();
-        $savedTaskData = DB::table($savedTaskTable)
+         $builder = DB::table($savedTaskTable)
         ->select([SavedTask::DATA])
         ->where(SavedTask::USER_ID,'=',$user->id)
-        ->where(SavedTask::TASK_ID,'=',$taskId)
-        ->where(SavedTask::UPDATED_AT,'>',$localySavedTaskUtcTimestamp,boolean:'or')
-        ->where(SavedTask::CREATED_AT,'>',$localySavedTaskUtcTimestamp)
+        ->where(SavedTask::TASK_ID,'=',$taskId);
+        if($localySavedTaskUtcTimestamp){
+         $builder = $builder
+         ->where(SavedTask::UPDATED_AT,'>',$localySavedTaskUtcTimestamp,boolean:'or')
+          ->where(SavedTask::CREATED_AT,'>',$localySavedTaskUtcTimestamp);
+        }
+        $savedTaskData = $builder
         ->value(SavedTask::DATA);
         if($savedTaskData){
            $decodedSavedData = DBJsonHelper::decode($savedTaskData,
@@ -106,11 +112,11 @@ class ExerciseHelper
       $exercisesCount = count($exercises);
       for($i = 0;$i <$exercisesCount;++$i) {
         $exercise = $exercises[$i];
-        $exerciseType = $exercise[Exercise::EXERCISEABLE_TYPE];
+        $exerciseType = Utils::access($exercise,Exercise::EXERCISEABLE_TYPE);
         /**
          * @var int $exerciseId
          */
-        $exerciseId = $exercise[$exerciseIDName];
+        $exerciseId = Utils::access($exercise,$exerciseIDName);
         
           $map[$exerciseType][0][] = $exerciseId;
           $map[$exerciseType][1][] = $savedExercises ? Utils::arrayShift($savedExercises) : null;
@@ -120,6 +126,8 @@ class ExerciseHelper
        * @var array<string,array{int[],mixed[]}> $map
        */
       foreach ($map as $exerciseType => $idsAndSavedValues) {
+        echo "Ids and saved values for {$exerciseType} ";
+        dump($idsAndSavedValues);
           $cExercises += $fetchConcreteOnes(
             ExerciseHelper::getHelper(ExerciseType::from($exerciseType)),
              $idsAndSavedValues[0],
@@ -132,10 +140,11 @@ class ExerciseHelper
        */
       $result = [];
       while(($exercise = Utils::arrayShift($exercises))) {
+        $exerciseId = Utils::access($exercise,$exerciseIDName);
           $result[] = $toClass(
-              $exercise[$exerciseIDName],
-              $exercise[Exercise::INSTRUCTIONS] ?? null,
-              $cExercises[$exercise[$exerciseIDName]]
+              $exerciseId,
+              Utils::tryToAccess($exercise,Exercise::INSTRUCTIONS,default:null),
+              $cExercises[$exerciseId]
             );
     }
       return $result;

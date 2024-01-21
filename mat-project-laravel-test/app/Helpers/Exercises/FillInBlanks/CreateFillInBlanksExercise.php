@@ -9,9 +9,12 @@ use App\Models\FillInBlanks;
 use App\Types\CCreateExerciseHelperState;
 use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
+use App\Utils\DtoUtils;
+use App\Utils\StrUtils;
 use DB;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Swaggest\JsonSchema\Context;
+use Swaggest\JsonSchema\Structure\ClassStructure;
 use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class CreateFillInBlanksExercise implements CCreateExerciseHelper
@@ -59,12 +62,25 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
         }
         $data = [];
         for($i = 0; $i < $count; ++$i){
+            $content = $this->contents[$i];
+            if(!($content instanceof ClassStructure)){
+                throw new InternalException("ARE YOU KIDDING ME!!???\nWHAT THE HACK IS GOING ON!!??!???",
+            context:[
+                'contents'=>$this->contents,
+            ]);
+            }
+            //echo "Content: ";
+           // dump($content);
             $data[]=[
                 FillInBlanks::ID => $ids[$i],
-                FillInBlanks::CONTENT => FillInBlanksContent::export($this->contents[$i])['structure']
+                FillInBlanks::CONTENT => DtoUtils::dtoToJson($content,FillInBlanksContent::CONTENT)
             ];
         }
-       if(!FillInBlanks::insert($data)){
+        echo "Data: ";
+        dump($data);
+        $success = DB::table(FillInBlanks::getTableName())
+                                ->insert($data);
+       if(!$success){
         throw new InternalException(
             "Failed to insert Fill in blanks contents to database",
         context:['data'=>$data]

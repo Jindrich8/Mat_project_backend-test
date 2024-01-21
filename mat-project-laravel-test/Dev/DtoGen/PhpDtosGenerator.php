@@ -4,6 +4,7 @@ namespace Dev\DtoGen {
 
     use Illuminate\Support\Str;
     use Swaggest\JsonSchema\JsonSchema;
+    use Swaggest\PhpCodeBuilder\PhpConstant;
     use Swaggest\PhpCodeBuilder\PhpFunction;
     use Swaggest\PhpCodeBuilder\PhpStdType;
 
@@ -56,7 +57,7 @@ namespace Dev\DtoGen {
                     if ($fromRefs = $schema->getFromRefs()) {
                         $desc .= "\nBuilt from " . implode("\n" . ' <- ', $fromRefs);
                     }
-
+                    
                     $class->setDescription(trim($desc));
                     $createFuncBody = <<<'EOF'
                 $instance = parent::create();
@@ -64,6 +65,7 @@ namespace Dev\DtoGen {
                 $hasConstants = false;
                    $props = $schema->properties;
                    foreach($props as $name => $value){
+                    $class->addConstant(new PhpConstant(Str::upper(Str::snake($name)),$name));
                    $const = $value->const;
                    if($const){
                     $hasConstants = true;

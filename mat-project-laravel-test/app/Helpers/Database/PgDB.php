@@ -3,6 +3,7 @@
 namespace App\Helpers\Database {
 
     use App\Exceptions\InternalException;
+    use App\Utils\Utils;
     use DB;
 
     class PgDB extends DB
@@ -19,8 +20,10 @@ namespace App\Helpers\Database {
             $bindings = [];
             $valuesCount = count($values);
             $columnsCount = count($columns);
-            $query ="INSERT INTO $tableName (" . implode(",", $columns) . ") VALUES (?,?,?)"
-            . str_repeat(",(?,?,?)", count($values) - 1)
+            $rowBindingTemplate = '(?'.str_repeat(',?',$columnsCount-1).')';
+            
+            $query ="INSERT INTO $tableName (" . Utils::wrapAndImplode('"',",",$columns) . ") VALUES $rowBindingTemplate"
+            . str_repeat(",$rowBindingTemplate", count($values) - 1)
                         . "RETURNING $primaryKeyName";
             unset($columns);
 
@@ -35,13 +38,15 @@ namespace App\Helpers\Database {
                     'values' => $values
                 ]);
                 }
-                $bindings[]=$value;
+                array_push($bindings,...$value);
                 if($unsetValuesArray){
                     unset($values[$i]);
                 }
             }
+            echo "bindings:";
+            dump($bindings);
             $ids = DB::select(
-                DB::raw($query),
+                $query,
                 bindings: $bindings,
                 useReadPdo: false
             );
@@ -59,6 +64,14 @@ namespace App\Helpers\Database {
                 'values' => $values,
                 'unsetValuesArray'=>$unsetValuesArray
             ]);
+            }
+            for($i = 0; $i < $valuesCount; ++$i){
+                $id = $ids[$i];
+                if(!is_int($id)){
+                    $ids[$i] = is_object($id) ? 
+                    $id->{$primaryKeyName} 
+                    : $id[$primaryKeyName];
+                }
             }
             return $ids;
         }

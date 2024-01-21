@@ -59,7 +59,7 @@
         "entries": {
           "type": "array",
           "items": {
-            "oneOf": [
+            "anyOf": [
               {
                 "$ref": "#/$defs/exercise"
               },
@@ -71,6 +71,7 @@
         }
       },
       "required": [
+        "type",
         "resources",
         "entries"
       ]
@@ -96,7 +97,7 @@
         "entries": {
           "type": "array",
           "items": {
-            "oneOf": [
+            "anyOf": [
               {
                 "$ref": "#/$defs/group"
               },
@@ -109,6 +110,7 @@
       },
       "required": [
         "name",
+        "display",
         "description",
         "entries"
       ]

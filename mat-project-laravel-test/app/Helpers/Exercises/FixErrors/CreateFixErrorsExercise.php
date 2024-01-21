@@ -9,8 +9,10 @@ use App\Models\FixErrors;
 use App\Types\CCreateExerciseHelperState;
 use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
+use App\Utils\DtoUtils;
 use DB;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Swaggest\JsonSchema\Context;
 use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class CreateFixErrorsExercise implements CCreateExerciseHelper
@@ -60,11 +62,11 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
         }
         $data = [];
         for($i = 0; $i < $count; ++$i){
-            $exportedContent = FixErrorsContent::export($this->contents[$i]);
+            $exportedContent = DtoUtils::exportDto($this->contents[$i]);
             $data[]=[
                 FixErrors::ID => $ids[$i],
-                FixErrors::CORRECT_TEXT =>$exportedContent['correctText'],
-                FixErrors::WRONG_TEXT =>$exportedContent['wrongText']
+                FixErrors::CORRECT_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::CORRECT_TEXT),
+                FixErrors::WRONG_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::WRONG_TEXT),
             ];
         }
        if(!FixErrors::insert($data)){

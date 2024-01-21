@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers\CreateTask\ParseEntry {
+namespace App\Helpers\CreateTask {
 
     use App\Dtos\Errors\ErrorResponse\BytePositionForGivenLineAndColumn;
     use App\Dtos\Errors\ErrorResponse\ErrorResponse;
@@ -28,20 +28,11 @@ namespace App\Helpers\CreateTask\ParseEntry {
     use App\Types\XMLParserEvents;
     use App\Types\XMLUnsupportedConstructType;
     use App\Utils\DebugUtils;
+    use App\Utils\DtoUtils;
     use App\Utils\StrUtils;
     use Exception;
     use Illuminate\Support\Str;
     use XMLParser;
-
-    enum XMLParserEntryType
-    {
-        case ELEMENT_START;
-        case ELEMENT_END;
-        case ELEMENT_VALUE;
-        case COMMENT;
-        case ERROR;
-        case UNSUPPORTED_ENTITY;
-    }
 
     class ParseEntry implements XMLParserEvents
     {
@@ -82,7 +73,7 @@ namespace App\Helpers\CreateTask\ParseEntry {
         public function elementEndHandler(BaseXMLParser $parser, string $name): void
         {
             $node = $this->node->validateAndMoveUp($this->context);
-            dump("END - ".$name." -> ".$this->node->getName());
+            dump("END - ".$name." -> ".$node?->getName());
             if(!$node){
                 dump("Node '".$this->node->getName()."' does not have parent node");
                 dump($this->node);
@@ -154,7 +145,7 @@ namespace App\Helpers\CreateTask\ParseEntry {
                 // TODO: REMOVE THIS catch
                 $errorResponse = $e->getErrorResponse();
                 echo "\nAPP ERROR:\n",
-                DebugUtils::jsonEncode(ErrorResponse::export($errorResponse)),
+                DtoUtils::dtoToJson($errorResponse,otherJsonOptions:JSON_PRETTY_PRINT),
                 "\n";
                 $errorData = $errorResponse->error->details?->errorData;
                 if ($errorData) {

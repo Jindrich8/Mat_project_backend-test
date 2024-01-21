@@ -20,3 +20,7 @@ _ide_helper_models.php
 /.fleet
 /.idea
 /.vscode
+/app/Dtos
+/schemas/**/*.json
+!/schemas/**/*.special.json
+*.lock

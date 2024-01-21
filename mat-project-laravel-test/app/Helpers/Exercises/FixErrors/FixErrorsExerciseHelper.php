@@ -9,6 +9,7 @@ use App\Helpers\CExerciseHelper;
 use App\Helpers\CTakeExercise;
 use App\Helpers\Exercises\FixErrors\CreateFixErrorsExercise;
 use App\Models\FixErrors;
+use App\Utils\Utils;
 use Illuminate\Support\Facades\DB;
 
 class FixErrorsExerciseHelper implements CExerciseHelper
@@ -29,10 +30,12 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         ->get();
         $takeExercises = [];
         while(($exercise = $exercises->pop())){
-          $takeExercises[$exercise[$idName]]= new  TakeFixErrorsExercise(
+            $exerciseId = Utils::access($exercise,$idName);
+
+          $takeExercises[$exerciseId]= new  TakeFixErrorsExercise(
             FixErrorsTakeResponse::create()
             ->setContent(FixErrorsTakeResponseContent::create()
-            ->setDefaultText($exercise[FixErrors::WRONG_TEXT]))
+            ->setDefaultText(Utils::access($exercise,FixErrors::WRONG_TEXT)))
            );
         }
         return $takeExercises;

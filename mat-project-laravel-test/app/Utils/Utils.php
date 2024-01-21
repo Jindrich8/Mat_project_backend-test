@@ -4,10 +4,67 @@ namespace App\Utils;
 use BackedEnum;
 use Closure;
 use ReflectionFunction;
+use stdClass;
 use UnitEnum;
 
 class Utils{
+    /**
+     * @template T
+     * @return mixed|T
+     */
+     public static function tryToAccess(array|object $data,string $key,mixed $default = null):mixed{
+        return is_object($data) ? $data->{$key} ?? $default : $data[$key] ?? $default;
+    }
 
+    public static function access(array|object $data,string $key):mixed{
+        return is_object($data) ? $data->{$key} : $data[$key];
+    }
+
+    public static function set(array|object $data,string $key,mixed $value):void{
+        if(is_object($data)){
+            $data->{$key} = $value;
+        }
+        else{
+            $data[$key] = $value;
+        }
+    }
+
+    public static function recursiveAssocArrayToStdClass(array &$arr,bool $canChange=false){
+        $rootObj = new stdClass;
+        $stack = [];
+        $obj = $rootObj;
+        $myArr = &$arr;
+        if(!$canChange){
+            $temp = $arr;
+            $myArr = &$temp;
+        }
+       while(true){
+       $arrKey = Utils::arrayFirstKey($myArr);
+       if($arrKey === null){
+        $stackKey = Utils::arrayLastKey($stack);
+        if($stackKey === null){
+           break;
+        }
+        [$obj,&$myArr] = $stack[$stackKey];
+        unset($stack[$stackKey]);
+        continue;
+       }
+       $value = &$myArr[$arrKey];
+       unset($myArr[$arrKey]);
+       if(Utils::isArray($value) && !Utils::isList($value)){
+        $newObj = new stdClass();
+        $obj->{$arrKey} = $newObj;
+         $stack[]=[$obj,&$myArr];
+        
+         $myArr = &$value;
+         $obj = $newObj;
+       }
+       else{
+        $obj->{$arrKey} = $value;
+       }
+       }
+       return $obj;
+    }
       /**
      * @param mixed &$arr
      * @phpstan-assert-if-true array $arr
@@ -40,6 +97,15 @@ class Utils{
     public static function arrayShift(array &$arr):mixed{
         return array_shift($arr);
     }
+
+      /**
+     * @template T
+     * @param array<T,mixed> &$arr
+     * @return T|null
+     */
+    public static function arrayLastKey(array &$arr):string|int|null{
+        return array_key_last($arr);
+    }
   
     /**
      * @template T
@@ -65,7 +131,7 @@ class Utils{
 
     public static function wrapAndImplode(string $wrapStr,string $separator,array &$array):string{
         if(!$array) return "";
-        return $wrapStr.implode($wrapStr.$separator,$array).$wrapStr;
+        return $wrapStr.implode($wrapStr.$separator.$wrapStr,$array).$wrapStr;
     }
 
     public static function arrayToStr(array &$array):string{

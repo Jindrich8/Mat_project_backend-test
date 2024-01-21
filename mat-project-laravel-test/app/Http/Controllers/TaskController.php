@@ -7,7 +7,7 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Dtos\Task as TaskDto;
 use App\Dtos\Task\Create;
-use App\Helpers\CreateTask\ParseEntry\ParseEntry;
+use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
 use Illuminate\Http\Request as HttpRequest;
 use App\Dtos\Task\Take;
@@ -22,6 +22,7 @@ use App\Models\Group;
 use App\Models\Resource;
 use App\Utils\Utils;
 use Carbon\Carbon;
+use DateTime;
 use DateTimeZone;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
@@ -35,7 +36,7 @@ class TaskController extends Controller
     
     public function take(HttpRequest $request, int $id): Take\Response\Response
     {
-        $requestData = Take\Request\Request::import(RequestHelper::getData($request));
+        $requestData = Take\Request\Request::import(RequestHelper::getQuery($request));
         $taskId = $id;
         $responseTask = Take\Response\Task::create();
         $task = Task::whereId($id)->get()->firstOrFail();
@@ -49,12 +50,20 @@ class TaskController extends Controller
             TaskDisplay::VERTICAL => Take\Response\Task::VERTICAL,
             default => throw new UnsupportedVariantException($taskDisplay)
         });
-
-        $localySavedTaskTimeStamp = Carbon::createFromTimestamp(
-            timestamp:$requestData->localySavedTask->timestamp,
-            tz:DateTimeZone::UTC
-        )->setTimezone(DateTimeZone::UTC);
-        $exercises = ExerciseHelper::take($taskId,localySavedTaskUtcTimestamp:$localySavedTaskTimeStamp);
+        echo "timestamp: ";
+        dump($requestData->localySavedTask?->timestamp);
+        $localySavedTaskTimeStamp =$requestData->localySavedTask ? 
+        Carbon::createFromFormat(
+            DateTime::ATOM,
+            $requestData->localySavedTask->timestamp,
+            new DateTimeZone('UTC')
+        ) : null;
+        echo "localySavedTaskTimeStamp: ";
+        dump($localySavedTaskTimeStamp);
+        $exercises = ExerciseHelper::take(
+            taskId:$taskId,
+            localySavedTaskUtcTimestamp:$localySavedTaskTimeStamp
+        );
 
         $groupIdName = Group::getPrimaryKeyName();
         $groups = DB::table(Group::getTableName())
@@ -66,7 +75,7 @@ class TaskController extends Controller
 
         $resources = DB::table(Resource::getTableName())
             ->select([Resource::GROUP_ID, Resource::CONTENT])
-            ->whereIn(Resource::GROUP_ID, [$groups->keys()])
+            ->whereIn(Resource::GROUP_ID, $groups->keys())
             ->get();
         /**
          * @var array<mixed,string[]> $resourcesByGroupId
@@ -76,11 +85,11 @@ class TaskController extends Controller
             /**
              * @var mixed $groupId
              */
-            $groupId = $resource[Resource::GROUP_ID];
+            $groupId = Utils::access($resource,Resource::GROUP_ID);
             /**
              * @var string $content
              */
-            $content = $resource[Resource::CONTENT];
+            $content = Utils::access($resource,Resource::CONTENT);
             $resourcesByGroupId[$groupId][] = $content;
         }
 
@@ -119,18 +128,18 @@ class TaskController extends Controller
                 [$exerciseEnd, &$dest] =  $stack[$stackEntryKey];
                 unset($stack[$stackEntryKey]);
             }
-            if ($exI === $nextGroup[Group::START]) {
-                $groupId = $nextGroup[$groupIdName];
+            if ($exI === Utils::access($nextGroup,Group::START)) {
+                $groupId = Utils::access($nextGroup,$groupIdName);
                 $groupDto = Take\Response\DefsGroup::create()
                     ->setResources(array_map(fn (string $resource) =>
                     Take\Response\DefsGroupResourcesItems::create()
-                        ->setContent($resource), $resourcesByGroupId[$groupId]));
+                        ->setContent($resource), $resourcesByGroupId[$groupId] ?? []));
                 unset($resourcesByGroupId[$groupId]);
 
                 $dest[] = $groupDto;
                 $stack[] = [$exerciseEnd, &$dest];
                 $dest = &$groupDto->entries;
-                $exerciseEnd = $exI + $nextGroup[Group::LENGTH];
+                $exerciseEnd = $exI + Utils::access($nextGroup,Group::LENGTH);
             }
             $exerciseDto = Take\Response\DefsExercise::create()
                 ->setInstructions(Take\Response\DefsExerciseInstructions::create()
@@ -147,7 +156,9 @@ class TaskController extends Controller
      */
     public function store(HttpRequest $request): Create\Response\Response
     {
+        echo "STORE";
       $requestData = Create\Request\Request::import(RequestHelper::getData($request));
+      echo "PARSERENTRY";
        $parseEnty = new ParseEntry();
       $taskRes = $parseEnty->parse([$requestData->task->source]);
       $taskRes->tagsIds = $requestData->task->tags;

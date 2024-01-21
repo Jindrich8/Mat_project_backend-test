@@ -17,8 +17,7 @@ class TakeFillInBlanksExercise implements CTakeExercise
     }
 
     public function setAsContentTo(DefsExercise $exercise):void{
-        $exercise->setDetails(Response\FillInBlanksTakeResponse::create()
-        ->setContent($this->response));
+        $exercise->setDetails($this->response);
     }
 
     

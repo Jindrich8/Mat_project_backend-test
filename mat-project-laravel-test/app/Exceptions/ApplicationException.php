@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Dtos\Errors\ErrorResponse\ErrorResponse;
+use App\Utils\DtoUtils;
 use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ abstract class ApplicationException extends \Exception
     public function render(Request $request): Response
     {
         return response(
-         ErrorResponse::export($this->userResponse)
+         DtoUtils::dtoToJson($this->userResponse)
         , $this->userStatus);
     }
 }

@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Fix errors's content structure",
+    "description": "Represents the content structure of Fix errors exercise.",
+    "type": "object",
+    "properties": {
+        "correctText": {
+            "title": "Correct text",
+            "description": "Represents correct text to which should be wrongText corrected.",
+            "type": "string",
+            "minLength": 1
+        },
+        "wrongText": {
+            "title": "Wrong starting text",
+            "description": "Represents starting text with errors, that should be corrected to match correctText",
+            "type": "string",
+            "minLength": 1
+        }
+    },
+    "required": [
+        "correctText",
+        "wrongText"
+    ]
+}

@@ -2,6 +2,7 @@
 
 namespace App\Helpers {
 
+    use App\Utils\DtoUtils;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class ResponseHelper
@@ -9,10 +10,7 @@ namespace App\Helpers {
         public static function success(ClassStructure $data)
         {
            return response(
-                content: json_encode(
-                    value: ['data' => ClassStructure::export($data)],
-                    flags: JSON_UNESCAPED_UNICODE
-                )
+                content: DtoUtils::dtoToJson($data,wrap:'data')
             );
         }
     }

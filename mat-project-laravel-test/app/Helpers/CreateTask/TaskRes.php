@@ -17,8 +17,10 @@ namespace App\Helpers\CreateTask {
     use App\Helpers\BareModels\BareResource;
     use App\Models\Resource;
     use App\Models\Tag;
+    use App\Models\User;
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
+    use Auth;
     use Illuminate\Database\Eloquent\ModelNotFoundException;
     use DB;
 
@@ -217,7 +219,16 @@ namespace App\Helpers\CreateTask {
             $taskId = DB::transaction(function () {
                 // insert task and tags
                 {
+                    //TODO: change line below to Auth::getUser()->id;
+                    $this->task->user_id = User::all()->firstOrFail()->id;//Auth::getUser()->id;
                     if ($this->tagsIds) {
+                        $success = $this->task->save();
+                        if (!$success) {
+                            throw new InternalException(
+                                "Could not insert task and its tags.",
+                                context: ['tags' => $this->tagsIds, 'task' => $this->task]
+                            );
+                        }
                         $this->task->tags()->attach($this->tagsIds);
                     }
                     $success = $this->task->save();
@@ -228,7 +239,7 @@ namespace App\Helpers\CreateTask {
                         );
                     }
                 }
-
+                echo "\nTask successfully inserted\n";
                 $taskId = $this->task->id;
                 // insert groups and resources
                 {
@@ -247,6 +258,8 @@ namespace App\Helpers\CreateTask {
                             values: $insertGroupsBindings,
                             unsetValuesArray: true
                         );
+                        echo "Group ids: ";
+                        dump($groupIds);
 
                         // insert resources associated with groups
                         {
@@ -259,7 +272,7 @@ namespace App\Helpers\CreateTask {
                                 $resources = &$this->groupsAndResources[$i][1];
                                 array_push(
                                     $insertResourcesAssocData,
-                                    array_map(
+                                    ...array_map(
                                         fn (BareResource $resource) => [
                                             Resource::GROUP_ID => $groupId,
                                             Resource::CONTENT => $resource->content
@@ -269,12 +282,15 @@ namespace App\Helpers\CreateTask {
                                 );
                             }
                             if ($insertResourcesAssocData) {
-                                /**
-                                 * @var bool $success
-                                 */
-                                $success = Resource::insert($insertResourcesAssocData);
+                                echo "Resources: ";
+                                dump($insertResourcesAssocData);
+                                $success = DB::table(Resource::getTableName())
+                                ->insert($insertResourcesAssocData);
+                                // /**
+                                //  * @var bool $success
+                                //  */
+                                // $success = Resource::insert($insertResourcesAssocData);
                                 if (!$success) {
-                                    // TODO: implement
                                     throw new InternalException(
                                         message: "Could not insert resources.",
                                         context: [
@@ -284,6 +300,7 @@ namespace App\Helpers\CreateTask {
                                 }
                             }
                         }
+                        echo "\nResources were successfully inserted.\n";
                     }
                 }
 
@@ -306,6 +323,8 @@ namespace App\Helpers\CreateTask {
                             ];
                         }
                         if ($exerciseBindings) {
+                            echo "Exercise bindings: ";
+                            dump($exerciseBindings);
                             $ids =  PgDB::insertAndGetIds(
                                 Exercise::getTableName(),
                                 Exercise::getPrimaryKeyName(),

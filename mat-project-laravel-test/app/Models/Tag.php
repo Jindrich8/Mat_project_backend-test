@@ -11,7 +11,7 @@ class Tag extends BaseModel
     use HasFactory;
     public const NAME = 'name';
 
-    public function tags():BelongsToMany{
+    public function tasks():BelongsToMany{
         return $this->belongsToMany(Task::class);
     }
 }
