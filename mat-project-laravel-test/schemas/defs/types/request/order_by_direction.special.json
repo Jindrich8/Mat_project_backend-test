@@ -1,0 +1,7 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Order by direction",
+    "description": "Reepresents order by direction type",
+    "type":"string",
+    "enum":["ASC","DESC"]
+}

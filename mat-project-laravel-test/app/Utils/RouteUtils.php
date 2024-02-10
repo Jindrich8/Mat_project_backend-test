@@ -19,7 +19,7 @@ namespace App\Utils {
             ));
         }
 
-        public static function put(string $uri,callable $action){
+        public static function put(string $uri,callable $action){a
             return Route::put($uri,fn(...$args)=>ResponseHelper::success(
                 $action(...$args)
             ));

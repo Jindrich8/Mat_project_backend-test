@@ -5,9 +5,49 @@ namespace App\Helpers\Database {
     use App\Exceptions\InternalException;
     use App\Utils\Utils;
     use DB;
+    use Illuminate\Database\Query\Builder;
 
     class DBHelper
     {
+        public static function addOrReplaceSelectColumnsWAliases(Builder $builder,array &$columnsToAliases,bool $add = false):Builder{
+            $columns = [];
+            while($columnsToAliases){
+                $column = Utils::arrayFirstKey($columnsToAliases);
+                $alias = array_shift($columnsToAliases);
+                if(is_integer($column)){
+                    $columns[]=$alias;
+                }
+                else{
+                    $columns[]="$column AS $alias";
+                }
+            }
+            if($add){
+                $builder->addSelect($columns);
+            }
+            else{
+                $builder->select($columns);
+            }
+            return $builder;
+        }
+
+
+        public static function selectColumnsWAliases(Builder $builder,array &$columnsToAliases):Builder{
+           return self::addOrReplaceSelectColumnsWAliases($builder,$columnsToAliases,add:false);
+        }
+
+        public static function addSelectColumnsWAliases(Builder $builder,array &$columnsToAliases):Builder{
+            return self::addOrReplaceSelectColumnsWAliases($builder,$columnsToAliases,add:true);
+         }
+
+         public static function colFromTableAsCol(string $table,string $col):string{
+            return $table . $col . ' AS ' . $col;
+        }
+
+        public static function colExpression(string $column,string $table = '',string $as = ''):string{
+            return ($table ? $table . '.' : '') . $column . ($as ?' AS ' . $as : '');
+        }
+
+
         /**
          * @param array<string,mixed> $pk
          * @param bool $try
