@@ -2,6 +2,7 @@
 
 namespace App\Helpers\CreateTask\Document {
 
+    use App\Exceptions\InternalException;
     use App\Exceptions\XMLInvalidElementException;
     use App\Helpers\CreateTask\ExerciseNode;
     use App\Helpers\CreateTask\TaskRes;
@@ -24,16 +25,21 @@ namespace App\Helpers\CreateTask\Document {
         use XMLNoValueNodeTrait;
 
         public static function create():Document{
+            //report(new InternalException('Document create function'));
             $doc = new self();
+            //report(new InternalException('Document instanted'));
             $docDesc = DocumentDescription::create($doc);
+           // report(new InternalException('Document description created'));
             if($docDesc->getParentObjectId() === null){
-                dump("DOCUMENT DESCRIPTION DOES NOT HAVE PARENT!!!");
+                // dump("DOCUMENT DESCRIPTION DOES NOT HAVE PARENT!!!");
             }
+           // report(new InternalException('Document setChildren'));
             $doc->setChildren(
                 XMLChildren::construct()
             ->addChild($docDesc,required:true)
             ->addChild(DocumentContent::create($doc),required:true)
         );
+        //report(new InternalException('Document create function end'));
         return $doc;
         }
 

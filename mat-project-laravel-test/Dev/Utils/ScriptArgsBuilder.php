@@ -36,7 +36,7 @@ namespace Dev\Utils {
          * @param false &$var
          * @param bool $shortOption
          */
-        public function flag(string $name,false &$var,bool $shortOption = false){
+        public function flag(string $name,bool &$var,bool $shortOption = false){
             self::checkOptionName($name,$shortOption);
 
            if($shortOption){
@@ -202,7 +202,6 @@ namespace Dev\Utils {
             $validOptions = getopt($this->shortOptions,$this->longOptions,$restIndex);
             $validOptionsCount = 0;
             $argv = $_SERVER["argv"];
-            
             if ($validOptions) {
                 if(($validOptions['help'] ?? $validOptions['h']  ?? null) !== null){
                     echo "\n---------HELP------------\n";
@@ -212,6 +211,7 @@ namespace Dev\Utils {
                 $validOptionsCount = count($validOptions);
                 foreach($validOptions as $argumentName => $argumentValue){
                     if($argumentValue === false){
+                        $validOptions[$argumentName] = true;
                         $this->flagOptionToVarMap[$argumentName] = true;
                     }
                     else{

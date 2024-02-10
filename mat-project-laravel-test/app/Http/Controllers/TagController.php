@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Defs\Types\Response\ResponseEnumElement;
 use App\Models\Tags;
 use App\Http\Requests\StoreTagsRequest;
 use App\Http\Requests\UpdateTagsRequest;
 use App\Models\Tag;
 use App\Dtos\Tags\All\Response;
+use App\Helpers\RequestHelper;
+use App\Helpers\ResponseHelper;
+use App\Utils\Utils;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
 
@@ -25,12 +29,12 @@ class TagController extends Controller
         ->select([$tagIdName,Tag::NAME])
         ->get();
 
-       $response = Response\Response::create()
+       $response = Response::create()
         ->setTags(
-            $tags->map(fn($tag)=>Response\Tag::create()
-        ->setName($tag[Tag::NAME])
-        ->setId($tag[$tagIdName])
-        )
+            $tags->map(fn($tag)=>ResponseEnumElement::create()
+        ->setName(Utils::access($tag,Tag::NAME))
+        ->setId(ResponseHelper::translateIdForUser(Utils::access($tag,$tagIdName)))
+        )->all()
         );
 
         return $response;
