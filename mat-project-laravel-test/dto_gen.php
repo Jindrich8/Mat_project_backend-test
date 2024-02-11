@@ -15,10 +15,10 @@ $SchemasDir = __DIR__ . DIRECTORY_SEPARATOR . 'schemas';
 $TargetDir = __DIR__ . DIRECTORY_SEPARATOR
     . 'app' . DIRECTORY_SEPARATOR
     . 'Dtos' . DIRECTORY_SEPARATOR
-    . 'Task';
+    . 'TaskInfo';
 $TargetNamespace = 'App' . DIRECTORY_SEPARATOR
     . 'Dtos' . DIRECTORY_SEPARATOR
-    . 'Task';
+    . 'TaskInfo';
 
 $PathSeparator = DIRECTORY_SEPARATOR;
 $ExludeSchemas = "defs";
@@ -92,7 +92,7 @@ foreach ($finder as $file) {
                             schemaData: $schema,
                             rootName: $fileName,
                             basePath: $targetPath,
-                            baseNameSpace: $targetNamespace,
+                            baseNameSpace: "App\\Dtos", //$targetNamespace,
                             schemaFilePath: $path,
                             relResolverDir: $fileDir,
                             separator: $PathSeparator

@@ -2,28 +2,24 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Evaluate task request",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "data": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "exercises": {
-          "type": "array",
-          "items": {
-            "anyOf": [
-              {
-                "$ref": "../../defs/exercises/*/evaluate_request.json"
-              }
-            ]
+    "version":{
+      "$ref":"@/defs/types/id.json"
+    },
+    "exercises": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "@/defs/exercises/*/evaluate_request.json"
           }
-        }
-      },
-      "required": [
-        "exercises"
-      ]
+        ]
+      }
     }
   },
   "required": [
-    "data"
+    "version",
+    "exercises"
   ]
 }

@@ -21,13 +21,11 @@ namespace App\Models {
         public static function getPrimaryKeyName():string{
             return self::getInfo()[1];
         }
-
         
         private static function getInfo(){
             return (self::$dict[static::class]??= self::getModelInfo(new static));
         }
 
-   
         private static function getModelInfo(BaseModel $model){
             return [$model->getTable(),$model->getKeyName()];
         }

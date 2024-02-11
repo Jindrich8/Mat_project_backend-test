@@ -12,6 +12,6 @@ class Tag extends BaseModel
     public const NAME = 'name';
 
     public function tasks():BelongsToMany{
-        return $this->belongsToMany(Task::class);
+        return $this->belongsToMany(TaskInfo::class);
     }
 }

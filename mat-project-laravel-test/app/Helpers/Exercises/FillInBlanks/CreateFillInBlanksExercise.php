@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Exercises\FillInBlanks;
 
-use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent;
+use App\Dtos\InternalTypes\FillInBlanksContent;
 use App\Exceptions\InternalException;
 use App\Helpers\CCreateExerciseHelper;
 use App\Models\FillInBlanks;
@@ -69,15 +69,11 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
                 'contents'=>$this->contents,
             ]);
             }
-            //echo "Content: ";
-           // dump($content);
             $data[]=[
                 FillInBlanks::ID => $ids[$i],
                 FillInBlanks::CONTENT => DtoUtils::dtoToJson($content,FillInBlanksContent::CONTENT)
             ];
         }
-        echo "Data: ";
-        dump($data);
         $success = DB::table(FillInBlanks::getTableName())
                                 ->insert($data);
        if(!$success){

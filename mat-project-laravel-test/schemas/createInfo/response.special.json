@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Create info response",
+    "description": "Represents all informations needed for task creation",
+    "type": "object",
+    "properties": {
+        "tags": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "@/defs/types/response/enum_element.json"
+            }
+        },
+        "difficulties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "@/defs/types/response/ordered_enum_element.json"
+            }
+        },
+        "classes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+                "$ref": "@/defs/types/response/ordered_enum_element.json"
+            }
+        }
+    },
+    "required": [
+        "tags",
+        "difficulties",
+        "classes"
+    ]
+}

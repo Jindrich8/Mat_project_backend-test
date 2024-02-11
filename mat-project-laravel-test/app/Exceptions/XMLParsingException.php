@@ -1,6 +1,7 @@
 <?php
 namespace App\Exceptions;
 
+use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
 use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
 use App\Dtos\Errors\ErrorResponse\ErrorResponse;
 use Dev\DtoGen\StrUtils;
@@ -9,10 +10,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class XMLParsingException extends ApplicationException{
   
-   function __construct(ApplicationErrorObject $errorResponse,int $userStatus = Response::HTTP_BAD_REQUEST)
+   function __construct(ErrorsErrorResponse $errorResponse,int $userStatus = Response::HTTP_BAD_REQUEST)
    {
      parent::__construct($userStatus,
-     ErrorResponse::create()->setError($errorResponse)
+     $errorResponse
     );
    }
 

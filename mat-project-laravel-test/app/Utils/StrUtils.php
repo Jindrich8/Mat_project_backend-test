@@ -14,6 +14,11 @@ namespace App\Utils {
 
     class StrUtils
     {
+
+        public static function generateEnumStr(string $prefix,int $minIncl,int $maxIncl,string $sep = ','):string{
+            return $prefix.implode($sep.$prefix,range($minIncl,$maxIncl+1));
+        }
+
         /**
          * @return string
          * Returns first set key or empty string if not found

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('resources', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('group_id')->constrained();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             $table->autoTimestamps();
         });

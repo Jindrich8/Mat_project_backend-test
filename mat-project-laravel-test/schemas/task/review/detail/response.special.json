@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title":"Task review detail response",
+    "description": "Represents a task review detail response.",
+    "properties": {
+        "id": {
+            "$ref": "@/defs/types/id.json"
+        },
+        "points":{
+            "$ref":"@/defs/types/review/points.json"
+        },
+        "evaluation_timestamp":{
+            "type":"string",
+            "format":"timestamp"
+        },
+        "task_detail":{
+            "$ref":"@/defs/types/task/detail_info.json"
+        }
+    },
+    "required": [
+        "id",
+        "points",
+        "evaluation_timestamp",
+        "task_detail"
+    ]
+}
