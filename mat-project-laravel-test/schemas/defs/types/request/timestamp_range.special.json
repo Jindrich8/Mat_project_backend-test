@@ -1,0 +1,15 @@
+{
+    "title":"Timestamp range",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "min": {
+            "type": "string",
+            "format": "timestamp"
+        },
+        "max": {
+            "type": "string",
+            "format": "timestamp"
+        }
+    }
+}

@@ -25,6 +25,7 @@ namespace App\Types {
     use App\Utils\Utils;
     use App\Types\XMLContextWOffset;
     use App\Types\XMLSimpleContext;
+    use App\Utils\DebugUtils;
 
     abstract class XMLNodeBase
     {
@@ -108,12 +109,9 @@ namespace App\Types {
 
         public function getChild(string $name, GetXMLParserPosition $getParserPosition): XMLNodeBase
         {
-            dump("'{$this->name}' - GETTING CHILD '$name'");
             $child = $this->children->tryGetChild($name);
             if ($child === false) {
-                echo "\nCHILD '$name' NOT FOUND IN {$this->name} - THIS: ";
-                var_dump($this);
-                echo "\n";
+                DebugUtils::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS",$this);
                 $this->invalidElement($getParserPosition,elementName:$name);
             }
             return $child;
@@ -137,7 +135,7 @@ namespace App\Types {
                 $this->tooManyElements($context,$this->maxCount);
             }
             $this->handleAttributes($attributes, $context);
-            dump("validateStart - {$this->name}");
+            // dump("validateStart - {$this->name}");
             $this->elementStartPos ??= new XMLValidParserPosition();
             $this->elementStartPos->setPosFromProvider($context);
             $this->hasStartPos = true;
@@ -180,7 +178,7 @@ namespace App\Types {
 
         public function validateAndMoveUp(XMLContextBase $context):?XMLNodeBase{
             $this->validate($context);
-            dump("'{$this->name}' moving up to '".$this->getParentName()."'.");
+            // dump("'{$this->name}' moving up to '".$this->getParentName()."'.");
             return $this->moveUp($context);
         }
 
@@ -318,9 +316,6 @@ namespace App\Types {
         protected function invalidAttributeValue(string $attribute, string $description, GetXMLParserPosition $getPosCallback)
         {
             $getPosCallback->getPos($column, $line, $byteIndex);
-            echo "\nGET POS CALLBACK: column: $column, line: $line, byteIndex: $byteIndex: ";
-            var_dump($getPosCallback);
-            echo "\n";
             throw new XMLInvalidAttributeValueException(
                 element: $this->name,
                 errorData: XMLInvalidAttributeValueErrorData::create()
@@ -361,7 +356,7 @@ namespace App\Types {
                     $expectedChildrenNames = [];
                     foreach($this->children->getChildren() as $name => $childAndIsReq){
                         $child = $childAndIsReq[0];
-                        dump("Child: {$child->name}, count: {$child->count} maxCount: {$child->maxCount}");
+                        // dump("Child: {$child->name}, count: {$child->count} maxCount: {$child->maxCount}");
                         if($child->count < $child->maxCount){
                             $expectedChildrenNames[]=$child->getName();
                         }

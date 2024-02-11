@@ -1,0 +1,71 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "List my tasks request",
+    "description": "Request containing search filters for my tasks.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "filters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "@/defs/types/id.json"
+                    }
+                },
+                "creation_timestamp_range":{
+                   "$ref":"@/defs/types/request/timestamp_range.json"
+                },
+                "modification_timestamp_range":{
+                    "$ref":"@/defs/types/request/timestamp_range.json"
+                },
+                "difficulty_range": {
+                    "$ref":"@/defs/types/request/ordered_enum_range.json"
+                },
+                "class_range": {
+                    "$ref": "@/defs/types/request/ordered_enum_range.json"
+                }
+            }
+        },
+        "order_by": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "filter_name": {
+                        "type": "string",
+                        "enum": [
+                            "name",
+                            "creation_timestamp",
+                            "modification_timestamp",
+                            "difficulty",
+                            "class_range"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "ASC",
+                            "DESC"
+                        ]
+                    }
+                },
+                "required": [
+                    "filter_name",
+                    "type"
+                ]
+            }
+        }
+    },
+    "required": [
+        "filters",
+        "order_by"
+    ]
+}

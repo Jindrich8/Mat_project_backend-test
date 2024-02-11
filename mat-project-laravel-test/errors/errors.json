@@ -1,0 +1,27 @@
+{
+    "../schemas": {
+        "$posfix":"#properties/code/const",
+        "defs/errors": {
+            "-1": "general.json",
+            "XML": {
+                "-100": "InvalidAttribute.json",
+                "-101": "InvalidAttributeValue.json",
+                "-102": "InvalidElement.json",
+                "-103": "InvalidElementValue.json",
+                "-104": "InvalidElementValuePart.json",
+                "-105": "MissingRequiredAttributes.json",
+                "-106": "MissingRequiredElements.json",
+                "-107": "SyntaxError.json",
+                "-108": "UnsupportedConstruct.json"
+            }
+        },
+        "task": {
+            "list/errors": {
+                "1": "form.json"
+            },
+            "evaluate/errors": {
+                "1":"task_changed.json"
+            }
+        }
+    }
+}
