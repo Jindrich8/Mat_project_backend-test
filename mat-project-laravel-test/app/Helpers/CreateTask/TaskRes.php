@@ -20,6 +20,7 @@ namespace App\Helpers\CreateTask {
     use App\Models\User;
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
+    use App\Utils\DebugUtils;
     use Auth;
     use Illuminate\Database\Eloquent\ModelNotFoundException;
     use DB;
@@ -65,13 +66,12 @@ namespace App\Helpers\CreateTask {
          */
         public function addGroup(): ?int
         {
-            echo "\nAdding new group: ";
             $preGroupIndex = $this->currentGroupIndex;
             $this->currentGroupIndex = count($this->groupsAndResources);
             $group = new BareGroup();
             $group->start = $this->getExerciseCount();
             $this->groupsAndResources[] = [$group, []];
-            dump($this->groupsAndResources);
+            // dump($this->groupsAndResources);
             return $preGroupIndex;
         }
 
@@ -98,7 +98,6 @@ namespace App\Helpers\CreateTask {
 
         public function addResourceToCurrentGroup(): void
         {
-            echo "\nAdding resource to current group\n";
             $this->checkCurrentGroupAndItsResources();
             $this->groupsAndResources[$this->currentGroupIndex][1][] = new BareResource();
         }
@@ -201,6 +200,7 @@ namespace App\Helpers\CreateTask {
                     //     context: ['taskRes' => $this]
                     // );
                     $this->exerciseHelpers[$type->name] = [ExerciseHelper::getHelper($type)->getCreateHelper(), []];
+                    $helperAndExercises = &$this->exerciseHelpers[$type->name];
                 }
                 if ($addCurrentExercise) {
                     $helperAndExercises[1][] = $this->currentExercise;
@@ -239,7 +239,7 @@ namespace App\Helpers\CreateTask {
                         );
                     }
                 }
-                echo "\nTask successfully inserted\n";
+                DebugUtils::log("Task successfully inserted",['taskId' => $this->task->id]);
                 $taskId = $this->task->id;
                 // insert groups and resources
                 {
@@ -256,10 +256,9 @@ namespace App\Helpers\CreateTask {
                             Group::getPrimaryKeyName(),
                             columns: [Group::TASK_ID, Group::START, Group::LENGTH],
                             values: $insertGroupsBindings,
-                            unsetValuesArray: true
+                            unsetValuesArray: false
                         );
-                        echo "Group ids: ";
-                        dump($groupIds);
+                        DebugUtils::log("Group ids",$groupIds);
 
                         // insert resources associated with groups
                         {
@@ -282,8 +281,7 @@ namespace App\Helpers\CreateTask {
                                 );
                             }
                             if ($insertResourcesAssocData) {
-                                echo "Resources: ";
-                                dump($insertResourcesAssocData);
+                                DebugUtils::log("Resources",$insertResourcesAssocData);
                                 $success = DB::table(Resource::getTableName())
                                 ->insert($insertResourcesAssocData);
                                 // /**
@@ -300,46 +298,186 @@ namespace App\Helpers\CreateTask {
                                 }
                             }
                         }
-                        echo "\nResources were successfully inserted.\n";
+                        DebugUtils::log("Resources were successfully inserted.");
                     }
                 }
 
                 // insert exercises
                 {
-                    foreach ($this->exerciseHelpers as $exercisesAndHelper) {
-                        $exercises = $exercisesAndHelper[1];
-                        $helper = $exercisesAndHelper[0];
+                    $exerciseBindings = [];
+                    {
+                    $exerciseI = 0;
+                    foreach ($this->exerciseHelpers as $helperAndExercises) {
+                        $exercises = $helperAndExercises[1];
 
-                        $exerciseBindings = [];
-                        $exercisesCount = count($exercises);
-                        for ($i = 0; $i < $exercisesCount; ++$i) {
-                            $exercise = $exercises[$i];
+                        foreach($exercises as $exercise){
                             $exerciseBindings[] = [
                                 $taskId,
-                                $i,
+                                $exerciseI++,
                                 $exercise->instructions,
                                 $exercise->weight,
                                 $exercise->exerciseType->value
                             ];
                         }
+                    }
+                }
                         if ($exerciseBindings) {
-                            echo "Exercise bindings: ";
-                            dump($exerciseBindings);
+                            DebugUtils::log("Exercise bindings",$exerciseBindings);
                             $ids =  PgDB::insertAndGetIds(
                                 Exercise::getTableName(),
                                 Exercise::getPrimaryKeyName(),
                                 columns: [Exercise::TASK_ID, Exercise::ORDER, Exercise::INSTRUCTIONS, Exercise::WEIGHT, Exercise::EXERCISEABLE_TYPE],
                                 values: $exerciseBindings,
-                                unsetValuesArray: true
+                                unsetValuesArray: false
                             );
-                            $helper->insertAll($ids);
+                            foreach($this->exerciseHelpers as $helperAndExercises){
+                                $helper = $helperAndExercises[0];
+                                $exerciseCount = count($helperAndExercises[1]);
+                                $helper->insertAll(array_slice($ids,0,$exerciseCount));
+                                array_splice($ids,0,$exerciseCount);
+                            }
                         }
-                    }
+                    
                 }
                 return $taskId;
             });
 
             return $taskId;
+        }
+
+        public function update(){
+            $this->tryToGetHelper(addCurrentExercise: true);
+            DB::transaction(function () {
+                // insert task and tags
+                {
+                    
+                    $success = $this->task->update();
+                    if (!$success) {
+                        throw new InternalException(
+                            "Could not update task.",
+                            context: ['task' => $this->task]
+                        );
+                    }
+                }
+                if ($this->tagsIds) {
+                    $this->task->tags()->sync($this->tagsIds);
+                }
+                DebugUtils::log("Task successfully updated",['taskId' => $this->task->id]);
+                if(!DB::table(Group::getTableName())
+                ->where(Group::TASK_ID,'=',$this->task->id)
+                ->delete()){
+                    throw new InternalException("Could not delete task groups!",['taskId' => $this->task->id]);
+                }
+                // Resources should be deleted by cascade, so we do not need to delete them here
+
+                $taskId = $this->task->id;
+                // update groups and resources
+                {
+                    $insertGroupsBindings = [];
+                    foreach ($this->groupsAndResources as $groupAndResource) {
+                        $group = &$groupAndResource[0];
+                        $insertGroupsBindings[] = [$taskId, $group->start, $group->length];
+                    }
+                    
+
+                    if ($insertGroupsBindings) {
+                        $groupIds = PgDB::insertAndGetIds(
+                            Group::getTableName(),
+                            Group::getPrimaryKeyName(),
+                            columns: [Group::TASK_ID, Group::START, Group::LENGTH],
+                            values: $insertGroupsBindings,
+                            unsetValuesArray: false
+                        );
+                        DebugUtils::log("Group ids",$groupIds);
+
+                        // insert resources associated with groups
+                        {
+                            /**
+                             * @var array<array<string,mixed>> $insertResourcesAssocData
+                             */
+                            $insertResourcesAssocData = [];
+                            for ($i = 0; $i < count($groupIds); ++$i) {
+                                $groupId = $groupIds[$i];
+                                $resources = &$this->groupsAndResources[$i][1];
+                                array_push(
+                                    $insertResourcesAssocData,
+                                    ...array_map(
+                                        fn (BareResource $resource) => [
+                                            Resource::GROUP_ID => $groupId,
+                                            Resource::CONTENT => $resource->content
+                                        ],
+                                        $resources
+                                    )
+                                );
+                            }
+                            if ($insertResourcesAssocData) {
+                                DebugUtils::log("Resources",$insertResourcesAssocData);
+                                $success = DB::table(Resource::getTableName())
+                                ->insert($insertResourcesAssocData);
+                                // /**
+                                //  * @var bool $success
+                                //  */
+                                // $success = Resource::insert($insertResourcesAssocData);
+                                if (!$success) {
+                                    throw new InternalException(
+                                        message: "Could not insert resources.",
+                                        context: [
+                                            'resources' => $insertResourcesAssocData
+                                        ]
+                                    );
+                                }
+                            }
+                        }
+                        DebugUtils::log("Resources were successfully inserted.");
+                    }
+                }
+
+                if(!DB::table(Exercise::getTableName())
+                ->where(Exercise::TASK_ID,'=',$taskId)
+                ->delete()){
+                    throw new InternalException("Could not delete task exercises!",['taskId' => $taskId]);
+                }
+                // We do not need to delete actual exercises, beacuse this should be done by delete cascade
+
+                // insert exercises
+                {
+                    $exerciseBindings = [];
+                    {
+                    $exerciseI = 0;
+                    foreach ($this->exerciseHelpers as $helperAndExercises) {
+                        $exercises = $helperAndExercises[1];
+
+                        foreach($exercises as $exercise){
+                            $exerciseBindings[] = [
+                                $taskId,
+                                $exerciseI++,
+                                $exercise->instructions,
+                                $exercise->weight,
+                                $exercise->exerciseType->value
+                            ];
+                        }
+                    }
+                }
+                        if ($exerciseBindings) {
+                            DebugUtils::log("Exercise bindings",$exerciseBindings);
+                            $ids =  PgDB::insertAndGetIds(
+                                Exercise::getTableName(),
+                                Exercise::getPrimaryKeyName(),
+                                columns: [Exercise::TASK_ID, Exercise::ORDER, Exercise::INSTRUCTIONS, Exercise::WEIGHT, Exercise::EXERCISEABLE_TYPE],
+                                values: $exerciseBindings,
+                                unsetValuesArray: false
+                            );
+                            foreach($this->exerciseHelpers as $helperAndExercises){
+                                $helper = $helperAndExercises[0];
+                                $exerciseCount = count($helperAndExercises[1]);
+                                $helper->insertAll(array_slice($ids,0,$exerciseCount));
+                                array_splice($ids,0,$exerciseCount);
+                            }
+                        }
+                    
+                }
+            });
+
         }
     }
 }

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('groups', function (Blueprint $table) {
-            $table->id();
+            $table->id()->generatedAs()->always();
             $table->foreignId('task_id')->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('start');
             $table->unsignedTinyInteger('length');

@@ -54,6 +54,11 @@ RouteUtils::get('/my_task/list',fn(Request $request) =>
     ->myList($request)
 );
 
+RouteUtils::get('/my_task/{id}/detail',fn(Request $request,string $id)=>
+    TaskController::construct()
+    ->myDetail($request,RequestHelper::translateId($id))
+);
+
 
 #endregion Teacher
 
@@ -65,7 +70,7 @@ RouteUtils::get('/review/list',fn(Request $request) =>
 );
 
 RouteUtils::get('/review/{id}/detail',fn(Request $request,string $id) =>
-    data:ReviewController::construct()
+    ReviewController::construct()
     ->detail($request,RequestHelper::translateId($id))
 );
 

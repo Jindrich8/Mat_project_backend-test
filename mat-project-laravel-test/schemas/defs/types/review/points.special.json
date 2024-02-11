@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type":"object",
+    "title": "Exercise points",
+    "description": "It illustrates both the points earned and the potential maximum points achievable for the given exercise.",
+    "properties": {
+        "has":{
+            "type":"number",
+            "minimum": 0
+        },
+        "max":{
+            "type":"number",
+            "exclusiveMinimum": 0
+        }
+    },
+    "required": ["has", "max"]
+}

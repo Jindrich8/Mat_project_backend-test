@@ -92,7 +92,7 @@ foreach ($finder as $file) {
                             schemaData: $schema,
                             rootName: $fileName,
                             basePath: $targetPath,
-                            baseNameSpace: $targetNamespace,
+                            baseNameSpace: "App\\Dtos", //$targetNamespace,
                             schemaFilePath: $path,
                             relResolverDir: $fileDir,
                             separator: $PathSeparator

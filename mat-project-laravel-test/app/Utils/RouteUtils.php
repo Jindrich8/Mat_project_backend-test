@@ -25,6 +25,12 @@ namespace App\Utils {
             ));
         }
 
+        public static function delete(string $uri,callable $action){
+            return Route::delete($uri,fn(...$args)=>ResponseHelper::success(
+                $action(...$args)
+            ));
+        }
+
         public static function patch(string $uri,callable $action){
             return Route::patch($uri,fn(...$args)=>ResponseHelper::success(
                 $action(...$args)

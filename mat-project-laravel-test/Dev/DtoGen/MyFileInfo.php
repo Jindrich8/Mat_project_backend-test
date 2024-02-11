@@ -46,11 +46,26 @@ class MyFileInfo{
         : $path;
     }
 
-    public static function omitAllExtensions(string $path){
-       $path = PathHelper::getPotentialyNonExistentAbsolutePath($path);
-       $newPath = Str::before($path,'.');
+    public static function omitAllExtensions(string $path,string $separator = DIRECTORY_SEPARATOR){
+       $path = PathHelper::getPotentialyNonExistentAbsolutePath($path,separator:$separator);
+       $newPath = Str::before(ltrim($path,'.'),'.');
        if($newPath === false) return $path;
        return $newPath;
+    }
+    public static function getExtensionsPart(string $path){
+      $extensions = mb_strstr($path,'.',encoding:'UTF-8');
+       if(!$extensions){
+        $extensions = '';
+       }
+       return $extensions;
+    }
+
+     public static function dirnameWSep(string $path,string $sep = DIRECTORY_SEPARATOR){
+        $dirSepPos = mb_strrpos($path,$sep);
+        if($dirSepPos === false){
+            return '.';
+        }
+       return mb_substr($path,0,$dirSepPos);
     }
 
     public static function dirname(string $path){
