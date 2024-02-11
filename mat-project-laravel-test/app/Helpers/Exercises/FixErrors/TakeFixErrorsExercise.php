@@ -2,15 +2,15 @@
 
 namespace App\Helpers\Exercises\FixErrors;
 
-use App\Dtos\Task\Take\Response\DefsExercise;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponse;
+use App\Dtos\Task\Take\DefsExercise;
 use App\Helpers\CTakeExercise;
-use App\Dtos\Task\Take\Response;
 
 class TakeFixErrorsExercise implements CTakeExercise
 {
-    private Response\FixErrorsTakeResponse $response;
+    private FixErrorsTakeResponse $response;
 
-    public function __construct(Response\FixErrorsTakeResponse $response)
+    public function __construct(FixErrorsTakeResponse $response)
     {
         $this->response = $response;
     }

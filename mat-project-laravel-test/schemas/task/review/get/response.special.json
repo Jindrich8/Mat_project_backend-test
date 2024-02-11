@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Review task response",
+  "description": "Represents task review response.",
   "type": "object",
   "$defs": {
     "exercise": {
@@ -9,6 +10,9 @@
         "type": {
           "type": "string",
           "const": "exercise"
+        },
+        "points":{
+          "$ref":"@/defs/types/review/points.json"
         },
         "instructions": {
           "type": "object",
@@ -24,13 +28,14 @@
         "details": {
           "anyOf": [
             {
-              "$ref": "../../defs/exercises/*/review_response.json"
+              "$ref": "@/defs/exercises/*/review_response.json"
             }
           ]
         }
       },
       "required": [
         "type",
+        "points",
         "instructions",
         "details"
       ]
@@ -80,17 +85,26 @@
     "task": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
+        "id":{
+          "$ref":"@/defs/types/id.json"
+        },
+        "name":{
+          "type":"string",
+          "minLength":1
+        },
+        "points": {
+          "$ref":"@/defs/types/review/points.json"
+        },
+        "evaluation_timestamp":{
+          "type":"string",
+          "format":"timestamp"
         },
         "display": {
+          "type":"string",
           "enum": [
             "vertical",
             "horizontal"
           ]
-        },
-        "description": {
-          "type": "string"
         },
         "entries": {
           "type": "array",
@@ -107,8 +121,10 @@
         }
       },
       "required": [
-        "name",
-        "description",
+        "task_detail",
+        "evaluation_timestamp",
+        "display",
+        "points",
         "entries"
       ]
     }

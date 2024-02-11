@@ -2,6 +2,8 @@
 
 namespace Dev\DtoGen {
 
+    use App\Utils\StrUtils;
+    use App\Utils\Utils;
     use Illuminate\Support\Str;
     use Swaggest\JsonSchema\JsonSchema;
     use Swaggest\PhpCodeBuilder\PhpConstant;
@@ -21,6 +23,9 @@ namespace Dev\DtoGen {
                 }
             }
             echo "\n!!Generating dtos... !!\n";
+            $schemaBase = <<<'EOF'
+            C:\Users\Jindra\source\repos\JS\Mat_project_backend-test\mat-project-laravel-test\schemas
+            EOF;
             $relResolverDir ??= MyFileInfo::dirname($schemaFilePath);
 
             $remoteRefProvider = $relResolverDir ? 
@@ -31,9 +36,13 @@ namespace Dev\DtoGen {
             $swaggerSchema = \Swaggest\JsonSchema\Schema::import($schemaData,$schemaContext);
 
             $appPath = $basePath;
+            $appPath = <<<'EOF'
+            C:\Users\Jindra\source\repos\JS\Mat_project_backend-test\mat-project-laravel-test\app\Dtos
+            EOF;
+            echo "AppPath: " . $appPath."\n";
             $appNs = MyFileInfo::omitAllExtensions($baseNameSpace);
             echo "AppNS: " . $appNs . "\n";
-            $app = new \Swaggest\PhpCodeBuilder\App\PhpApp();
+            $app = new MyApp();
             $app->setNamespaceRoot($appNs, '.');
 
             $builder = new \Swaggest\PhpCodeBuilder\JsonSchema\PhpBuilder();
@@ -42,11 +51,16 @@ namespace Dev\DtoGen {
             $builder->makeEnumConstants = true;
 
             $rootName = Str::studly($rootName);
+            echo "RelResolverDir: '$relResolverDir'\n";
             $quotedSeparator = null;
-
             $builder->classCreatedHook = new \Swaggest\PhpCodeBuilder\JsonSchema\ClassHookCallback(
                 function (\Swaggest\PhpCodeBuilder\PhpClass $class,string $path,JsonSchema $schema) 
-                use ($app, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator) {
+                use ($app,$appPath, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator,$relResolverDir,$schemaBase) {
+                    $classSchemaFilePath = Str::before($path,'#');
+                    if(!$classSchemaFilePath){
+                        $classSchemaFilePath = $schemaFilePath;
+                    }
+                    echo "classSchemaFilePath: ".$classSchemaFilePath."\n";
                     $desc = '';
                     if ($schema->title) {
                         $desc = $schema->title;
@@ -84,8 +98,20 @@ namespace Dev\DtoGen {
                 ->setBody($createFuncBody);
                 $class->addMethod($createFunc);
                    }
-                  
-                    $class->setNamespace($appNs);
+                    $namespace = $class->getNamespace();
+                    echo "classSchemaFilePath '$classSchemaFilePath' starts with '$schemaBase'\n";
+                    if(Str::startsWith($classSchemaFilePath,$schemaBase)){
+                        echo "TRUE\n";
+                        
+                   $namespace = implode('\\',array_map(fn($part)=>Str::studly($part),explode('\\',Str::replace(
+                    search:['/','\\'],
+                   replace:'\\',
+                   subject:MyFileInfo::dirname(Str::replaceStart($schemaBase,'',$classSchemaFilePath))
+                ))));
+                    }
+
+                    $class->setNamespace(PathHelper::concatPaths($appNs,$namespace));
+                    echo "Namespace: ".PathHelper::concatPaths($appNs,$namespace)."\n";
                     if ('#' === $path) {
                         $class->setName($rootName); // Class name for root schema
                     } elseif (strpos($path, "#/" . PhpDtosGenerator::DEFS . "/") === 0) {
@@ -147,18 +173,18 @@ END;
                                 }
                             }
                         } 
-                       
-                        echo "Class: " . $className . "\n";
                         $class->setName(\Swaggest\PhpCodeBuilder\PhpCode::makePhpClassName(
                             $className
                         ));
+                        echo "Class: " . $class->getFullyQualifiedName() . "\n";
+                       
                     }
                     $app->addClass($class);
                 }
             );
             $builder->getType($swaggerSchema);
-            $app->clearOldFiles($appPath);
-            $app->store($appPath);
+           // $app->clearOldFiles($appPath);
+            $app->storeNoClear($appPath);
         }
     }
 }

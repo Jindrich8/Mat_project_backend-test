@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Types\DBCascadeType;
+use App\Utils\DBUtils;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,19 +37,30 @@ class AppServiceProvider extends ServiceProvider
             ->default(null);
         });
 
+        Blueprint::macro('pgEnum',function (string $enumName,string $columnName){
+            $this->addColumn(DBUtils::getPGEnumTypeName($enumName),$columnName);
+        });
+
         Blueprint::macro('pkFKColumn',
         /**
          * @param string $keyName Name of PK FK column
          * @param string $references PK key that is referenced by this PK FK key
          * @param string $onTable Table on which is referenced key located
+         * @param \App\Types\DBCascadeType|null $cascadeType Whether to cascade on delete or update or never
          * Creates a PK FK column that references specified PK column on specified table
          */
-        function(string $keyName,string $references,string $onTable){
+        function(string $keyName,string $references,string $onTable,DBCascadeType|null $cascadeType = null){
                /**
              * @var Blueprint $this
              */
             $this->unsignedBigInteger($keyName)->primary();
-            $this->foreign($keyName)->references($references)->on($onTable);
+          $foreign =  $this->foreign($keyName)->references($references)->on($onTable);
+          if($cascadeType === DBCascadeType::DELETE){
+            $foreign->cascadeOnDelete();
+          }
+          else if($cascadeType === DBCascadeType::UPDATE){
+            $foreign->cascadeOnUpdate();
+          }
         });
     }
 }

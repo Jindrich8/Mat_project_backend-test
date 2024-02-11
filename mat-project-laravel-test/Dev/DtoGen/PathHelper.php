@@ -33,11 +33,12 @@ namespace Dev\DtoGen {
             return $subdirs;
         }
 
-         /**
+        /**
          * @param string $dir
          * @return string[]
          */
-        public static function getNamesOfAllEntriesInDir(string $dir): array{
+        public static function getNamesOfAllEntriesInDir(string $dir): array
+        {
             $entries = array_diff(scandir($dir), ['.', '..']);
             return $entries;
         }
@@ -46,12 +47,13 @@ namespace Dev\DtoGen {
          * @param string $dir
          * @return string[]
          */
-        public static function getNamesOfAllSubdirsInDir(string $dir): array{
+        public static function getNamesOfAllSubdirsInDir(string $dir): array
+        {
             $names = array_filter(
                 self::getNamesOfAllEntriesInDir($dir),
-            fn($entry)=>
-            is_dir(PathHelper::concatPaths($dir, $entry))
-        );
+                fn ($entry) =>
+                is_dir(PathHelper::concatPaths($dir, $entry))
+            );
             return $names;
         }
 
@@ -75,13 +77,17 @@ namespace Dev\DtoGen {
          */
         public static function concatPaths(string $path1, string $path2, string $separator = DIRECTORY_SEPARATOR): string
         {
-            $first = Str::endsWith($path1, $separator);
-            if ($first) {
-                return $path1 . Str::replaceStart($separator, '', $path2);
-            } else if (!Str::startsWith($path2, $separator)) {
-                return $path1 . $separator . $path2;
-            } else {
-                return $path1 . $path2;
+            if ($path1) {
+                $first = Str::endsWith($path1, $separator);
+                if (!$path2) {
+                    return $first ? substr($path1, 0, strlen($path1) - strlen($separator)) : $path1;
+                } else if (Str::startsWith($path2, $separator)) {
+                    return $path1 .  ($first ? substr($path2, strlen($separator)) : $path2);
+                } else {
+                    return $path1 . ($first ? $path2 : $separator . $path2);
+                }
+            } else if ($path2) {
+                return Str::replaceStart($path2, '', $separator);
             }
         }
 
@@ -118,13 +124,13 @@ namespace Dev\DtoGen {
 
 
 
-        public static function isRelative(string $path): bool
+        public static function isRelative(string $path,string $sep = DIRECTORY_SEPARATOR): bool
         {
             return Str::startsWith($path, '.')
                 || !(
                     windows_os() ?
                     Str::charAt($path, 1) === ':'
-                    : Str::startsWith($path, '/')
+                    : Str::startsWith($path, $sep)
                 );
         }
     }

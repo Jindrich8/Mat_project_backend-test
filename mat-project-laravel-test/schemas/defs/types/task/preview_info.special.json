@@ -1,0 +1,36 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "id": {
+            "$ref": "../id.json"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "difficulty": {
+            "$ref": "../response/ordered_enum_element.json"
+        },
+        "class_range": {
+            "$ref": "../response/ordered_enum_range.json"
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "$ref": "../response/enum_element.json"
+            }
+        },
+        "author": {
+            "$ref":"@/defs/types/task/author_info.json"
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "difficulty",
+        "class_range",
+        "tags",
+        "author"
+    ]
+}

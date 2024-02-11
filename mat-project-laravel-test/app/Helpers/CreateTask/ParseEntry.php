@@ -49,14 +49,18 @@ namespace App\Helpers\CreateTask {
 
         public function __construct()
         {
+            report(new InternalException('ParseEntry constructor'));
             $this->context = null;
+            report(new InternalException('Document::create'));
             $this->node = Document::create();
+            report(new InternalException('Document::created'));
             $this->start = true;
+            report(new InternalException('ParseEntry constructor end'));
         }
 
         public function elementStartHandler(BaseXMLParser $parser, string $name, array $attributes): void
         {
-            dump("START - ".$this->node->getName()." -> $name");
+            // dump("START - ".$this->node->getName()." -> $name");
             if (!$this->start) {
                 $this->node = $this->node->getChild($name, $this->context);
             } else {
@@ -73,10 +77,10 @@ namespace App\Helpers\CreateTask {
         public function elementEndHandler(BaseXMLParser $parser, string $name): void
         {
             $node = $this->node->validateAndMoveUp($this->context);
-            dump("END - ".$name." -> ".$node?->getName());
+            // dump("END - ".$name." -> ".$node?->getName());
             if(!$node){
-                dump("Node '".$this->node->getName()."' does not have parent node");
-                dump($this->node);
+                // dump("Node '".$this->node->getName()."' does not have parent node");
+                // dump($this->node);
             }
             $this->node = $node;
         }
@@ -85,10 +89,10 @@ namespace App\Helpers\CreateTask {
         {
             if($this->node === null){
                 if(StrUtils::trimWhites($data,TrimType::TRIM_BOTH)){
-                    dump("WTF: $data");
+                    // dump("WTF: $data");
                 }
                 $parser->getPos($column,$line,$byteIndex);
-                dump(":$line, $column, $byteIndex");
+                // dump(":$line, $column, $byteIndex");
             }
             else{
             $this->node->appendValue(value: $data, context: $this->context);
@@ -123,59 +127,64 @@ namespace App\Helpers\CreateTask {
             try {
                 $parser = LibXmlParser::create($this);
                 $this->context = new XMLContext($parser,new TaskRes());
-
+                
                 $error = null;
                 // Parse
+                
                 foreach ($data as $dataPart) {
                    if(($error = $parser->parse($dataPart))){
                     break;
                    }
                 }
-
                 if($error || ($error = $parser->parse("",isFinal:true))){
-                    throw new XMLSyntaxErrorException(
+                    $e = new XMLSyntaxErrorException(
                         description:$error->errorMessage,
                         errorData:XMLSyntaxErrorErrorData::create()
                         ->setLine($error->line)
                         ->setColumn($error->column)
                         ->setByteIndex($error->byteIndex)
                     );
+                    throw $e;
                 }
             } catch (ApplicationException $e) {
                 // TODO: REMOVE THIS catch
                 $errorResponse = $e->getErrorResponse();
-                echo "\nAPP ERROR:\n",
-                DtoUtils::dtoToJson($errorResponse,otherJsonOptions:JSON_PRETTY_PRINT),
-                "\n";
+                DebugUtils::log("APP ERROR",
+                fn()=>DtoUtils::dtoToJson($errorResponse,otherJsonOptions:JSON_PRETTY_PRINT)
+            );
                 $errorData = $errorResponse->error->details?->errorData;
                 if ($errorData) {
                     $byteIndex = is_array($errorData) ? ($errorData['byteIndex'] ?? $errorData['eByteIndex'] ?? false) : ($errorData->{'byteIndex'} ?? $errorData->{'eByteIndex'} ?? false);
                     if (is_int($byteIndex) && $byteIndex >= 0) {
-                        $char = substr(implode("", $data), $byteIndex, 1);
-                        echo "\nCHAR AT BYTE INDEX '$byteIndex': '$char' (", ord($char), ")\n";
+                        DebugUtils::log("CHAR AT BYTE INDEX",
+                        fn()=>[
+                            'char' => substr(implode("", $data), $byteIndex, 1),
+                            'byteIndex' => $byteIndex
+                        ]);
                     }
                     $byteLength =  is_array($errorData) ? ($errorData['byteLength'] ?? false) : ($errorData->{'byteLength'} ?? false);
                     if(is_int($byteLength)){
-                        $str = substr(implode("", $data), $byteIndex, $byteLength);
-                        echo "\nSTRING AT BYTE INDEX '$byteIndex':\n'$str'";
+                        DebugUtils::log("STRING AT BYTE INDEX",
+                        fn()=>[
+                            'str' => substr(implode("", $data), $byteIndex, $byteLength),
+                            'byteIndex' => $byteIndex
+                        ]);
                     }
                 }
                 throw new Exception(previous: $e);
             } catch (InternalException $e) {
-                echo "\nINTERNAL ERROR:\n",
-                DebugUtils::jsonEncode([
+                DebugUtils::log("INTERNAL ERROR",
+                fn()=> DebugUtils::jsonEncode([
                     'message' => $e->getMessage(),
                     'code' => $e->getCode(),
                     'context' => $e->context()
-                ]),
-                "\n";
-                var_dump($e->context());
+                ]));
                 throw new Exception(previous: $e);
             } finally {
+                DebugUtils::log("Parser free");
                 // Free parser
                 $parser?->free();
             }
-          
             return $this->context->getTaskRes();
         }
 

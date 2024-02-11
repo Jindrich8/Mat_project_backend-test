@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('saved_tasks', function (Blueprint $table) {
-            $table->foreignId('task_id');
-            $table->foreignId('user_id');
+            $table->foreignId('task_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('task_version');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->json('data');
             $table->autoTimestamps();
             $table->primary(['task_id','user_id']);
