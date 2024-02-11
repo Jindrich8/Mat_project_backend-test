@@ -9,24 +9,24 @@ use Dev\DtoGen\PathHelper;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
-use App\Dtos\Task\Create\Request;
+use App\Dtos\TaskInfo\Create\Request;
 use App\Dtos\Errors\XML\InvalidAttribute;
 
-$request = Request\Request::create()
+$request = Request::create()
     ->setData(
         Request\Data::create()
             ->setTask(
                 Request\DataTask::create()
-                    ->setName("Task name")
-                    ->setDescription("Task description")
+                    ->setName("TaskInfo name")
+                    ->setDescription("TaskInfo description")
                     ->setOrientation('Horizontal')
-                    ->setSource('Task source')
+                    ->setSource('TaskInfo source')
             )
     );
 
 echo "\n------JSON_REQUEST-----\n",
 json_encode(
-    Request\Request::export($request),
+    Request::export($request),
     JSON_PRETTY_PRINT
 );
 

@@ -33,7 +33,7 @@ namespace App\Helpers\CreateTask {
 
         public function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
         {
-            dump("GroupResourcesNode VALIATE START");
+            // dump("GroupResourcesNode VALIATE START");
             parent::validateStart($attributes,$context,$name);
             $taskRes = $context->getTaskRes();
             if ($taskRes->getNumOfResourcesInCurrentGroup() > 0) {

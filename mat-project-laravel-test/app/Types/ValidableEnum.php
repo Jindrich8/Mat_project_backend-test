@@ -78,10 +78,7 @@ namespace App\Types {
         public function validate(string $value):BackedEnum|null{
            $translatedValue = $this->translate[$value] ?? null;
            if($translatedValue === null && $this->hasFlag(ValidableEnumFlags::ALLOW_ENUM_VALUES)){
-            echo "\nTRYING FROM ENUM VALUES\n";
            $translatedValue = $this->enum::tryFrom($value);
-           var_dump($this->enum);
-           var_dump($value);
            }
            return $translatedValue;
         }

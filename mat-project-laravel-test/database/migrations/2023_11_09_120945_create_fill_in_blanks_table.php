@@ -1,5 +1,6 @@
 <?php
 
+use App\Types\DBCascadeType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +16,8 @@ return new class extends Migration
             $table->pkFKColumn(
                 'exerciseable_id',
                 references: 'id',
-                onTable: 'exercises'
+                onTable: 'exercises',
+                cascadeType:DBCascadeType::DELETE
             );
 
             $table->json("content");

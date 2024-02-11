@@ -308,7 +308,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
             }
             $escaping = false;
 
-            dump("VALUE: '$input'");
+            // dump("VALUE: '$input'");
             $token = "";
             for (;; $textByteOffset = (int)($byteOffset + strlen($token))) {
                 if ($token) {
@@ -335,8 +335,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
                         ++$column;
                     }
                 }
-                dump("Byte offset: '$byteOffset'");
-                dump($this->tokens);
+                // dump("Byte offset: '$byteOffset'");
+                // dump($this->tokens);
                 $token = StrUtils::utf8GetFirstSetKeyAndAdvancePos(
                     str: $input,
                     set: $this->tokens,
@@ -345,7 +345,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     byteOffset: $byteOffset
                 );
                 
-                dump(":$line, $column - token: $token");
+                // dump(":$line, $column - token: $token");
 
                 if (!$token) {
                     $this->prevText .= substr($input, $textByteOffset);
@@ -398,7 +398,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     }
                     
                     $text = StrUtils::substrAsciiBetween($input, $textByteOffset, $byteOffset);
-                    dump("Adding option: prevText:'{$this->prevText}' text: '$text'");
+                    // dump("Adding option: prevText:'{$this->prevText}' text: '$text'");
                     $this->addComboboxOptionWithoutPrevText(
                         text: $text,
                         endByteIndex: $byteIndex + $byteOffset

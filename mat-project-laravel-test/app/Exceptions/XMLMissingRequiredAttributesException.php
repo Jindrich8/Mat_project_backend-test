@@ -1,9 +1,10 @@
 <?php
 namespace App\Exceptions{
 
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredAttributes;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredAttributesErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredAttributes;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredAttributesErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
     use App\Utils\Utils;
 
 class XMLMissingRequiredAttributesException extends XMLParsingException{
@@ -31,9 +32,12 @@ class XMLMissingRequiredAttributesException extends XMLParsingException{
             .".";
         }
         parent::__construct(
-           ApplicationErrorObject::create()
-           ->setMessage($message)
+           ErrorResponse::create()
+           ->setUserInfo(
+            UserSpecificPartOfAnError::create()
+            ->setMessage($message)
            ->setDescription($description)
+           )
            ->setDetails(
             XMLMissingRequiredAttributes::create()
            ->setErrorData($errorData)

@@ -5,7 +5,7 @@
     "properties": {
         "code": {
             "type": "integer",
-            "const": 104
+            "const": null
         },
         "errorData": {
             "title": "XML: Invalid element value part error data",
