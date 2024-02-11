@@ -65,8 +65,8 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
             $exportedContent = DtoUtils::exportDto($this->contents[$i]);
             $data[]=[
                 FixErrors::ID => $ids[$i],
-                FixErrors::CORRECT_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::CORRECT_TEXT),
-                FixErrors::WRONG_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::WRONG_TEXT),
+                FixErrors::CORRECT_TEXT =>DtoDBHelper::accessExportedField($exportedContent,FixErrorsContent::CORRECT_TEXT),
+                FixErrors::WRONG_TEXT =>DtoDBHelper::accessExportedField($exportedContent,FixErrorsContent::WRONG_TEXT),
             ];
         }
        if(!FixErrors::insert($data)){

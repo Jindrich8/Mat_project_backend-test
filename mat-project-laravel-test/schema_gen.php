@@ -8,56 +8,107 @@ use  Dev\DtoGen\StarPattern;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use SplFileInfo as GlobalSplFileInfo;
+use Symfony\Component\Finder\SplFileInfo;
 
 const EXPANDED_REF = '$ref';
+$Context = new Context();
 
-$SchemasDir = __DIR__ . DIRECTORY_SEPARATOR . 'schemas';
-$ExpandableRefkey = '$ref';
-$PathSeparator = DIRECTORY_SEPARATOR;
-$OutputPathSeparator = DIRECTORY_SEPARATOR;
-$SchemaNamePattern = <<<'EOF'
-/(request|response)\.special\.json$/
-EOF;
-$ForceRegenerate = false;
-
-echo "\n\n-------",MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
-if(ScriptArgsBuilder::create()
-->optionSet(name: "dir", set: function($value)use(&$SchemasDir){
-    $SchemasDir = parsePath($value,real:true);
-})
-    ->option(name: "refKey", var: $ExpandableRefkey)
-    ->option(name: "sep", var: $PathSeparator)
-    ->option(name: "outSep", var: $OutputPathSeparator)
-    ->option(name:"schemaNamePattern", var: $SchemaNamePattern)
-    ->flag(name: "force", var: $ForceRegenerate)
+echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
+if (ScriptArgsBuilder::create()
+    ->optionSet(name: "dir", set: function ($value) use ($Context) {
+        $Context->SchemasDir = parsePath($value, real: true);
+    })
+    ->option(name: "refKey", var: $Context->ExpandableRefkey)
+    ->option(name: "sep", var: $Context->PathSeparator)
+    ->option(name: "outSep", var: $Context->OutputPathSeparator)
+    ->option(name: 'specialExtension', var: $Context->SpecialExtension)
+    ->option(name: "schemaNamePattern", var: $Context->SchemaNamePattern)
+    ->flag(name: "force", var: $Context->ForceRegenerate)
     ->fetchScriptArguments()
     ->showPassedOptions()
     ->showInvalidOptions()
     ->showNoArguments()
-    ->helpRequested()) return;
+    ->helpRequested()
+) return;
 
-$finder = PathHelper::getFinderForReadableEntries($SchemasDir)
-    ->name($SchemaNamePattern)
+$finder = PathHelper::getFinderForReadableEntries($Context->SchemasDir)
+    ->name($Context->SchemaNamePattern)
     ->files();
+
+
 foreach ($finder as $file) {
     $file = new MyFileInfo($file);
+    processFile(
+        file: $file,
+        Context: $Context
+    );
+}
+class Context
+{
+    public function __construct(
+        public string $SchemasDir = __DIR__ . DIRECTORY_SEPARATOR . 'schemas',
+        public string $ExpandableRefkey = '$ref',
+        public string $PathSeparator = DIRECTORY_SEPARATOR,
+        public string $OutputPathSeparator = DIRECTORY_SEPARATOR,
+        public string $SpecialExtension = '.special',
+        public string $SchemaNamePattern = <<<'EOF'
+/(request|response)\.special\.json$/
+EOF,
+        public bool $ForceRegenerate = false,
+    ) {
+    }
+
+    public function normalFromSpecial(string $specialFilePath, string $separator = DIRECTORY_SEPARATOR)
+    {
+        return MyFileInfo::omitAllExtensions($specialFilePath, $separator) . '.json';
+    }
+
+    public function specialFromNormal(string $filePath, string $separator = DIRECTORY_SEPARATOR)
+    {
+        return MyFileInfo::omitAllExtensions($filePath, $separator) . $this->SpecialExtension . '.json';
+    }
+
+    public function normalizePathForOutput(string $path)
+    {
+        return $this->normalizePath($path, $this->OutputPathSeparator);
+    }
+
+    public function normalizePath(string $path, string $sep)
+    {
+        return Str::replace(
+            search: array_keys([
+                '/' => 0,
+                '\\' => 0,
+                DIRECTORY_SEPARATOR => 0,
+                $this->PathSeparator => 0,
+                $this->OutputPathSeparator => 0
+            ]),
+            replace: $sep,
+            subject: $path
+        );
+    }
+}
+
+function processFile(
+    MyFileInfo $file,
+    Context $Context,
+) {
     $filePath = $file->getPath();
     try {
-        if ($filePath === false) continue;
-        $pathNoExtensions = MyFileInfo::omitAllExtensions($filePath);
-        $newFilePath = $pathNoExtensions . '.json';
+        if ($filePath === false) return;
+        $newFilePath = $Context->normalFromSpecial($filePath);
         // Check if generated file needs to be updated
-        if (!$ForceRegenerate) {
+        if (!$Context->ForceRegenerate) {
             $fileMtime = $file->getInfo()->getMTime();
             if ($fileMtime !== false) {
                 $newFileMtime = filemtime($newFilePath);
                 if ($newFileMtime !== false && $newFileMtime > $fileMtime) {
-                    echo "SKIPPING: ", Str::replaceStart($SchemasDir, "", $filePath), "\n";
-                    continue;
+                    echo "SKIPPING: ", Str::replaceStart($Context->SchemasDir, "", $filePath), "\n";
+                    return;
                 }
             }
         }
-        echo "GENERATING: ", Str::replaceStart($SchemasDir, "", $newFilePath), "\n";
+        echo "GENERATING: ", Str::replaceStart($Context->SchemasDir, "", $newFilePath), "\n";
         $schema = $file->getContents();
         if (!$schema) {
             throw new Exception("Could not get content of file: " . $filePath);
@@ -66,9 +117,11 @@ foreach ($finder as $file) {
         if (!$fileEncoding) {
             throw new Exception("Could not detect encoding of file: " . $filePath);
         }
-
-        $schema = json_decode($schema, true);
+        $content = $schema;
+        $schema = json_decode($schema, true, flags: JSON_THROW_ON_ERROR);
         if ($schema === null) {
+            echo "content: ";
+            dump($content);
             throw new Exception("Could not decode schema to json for file: " . $filePath);
         }
         $dir =  MyFileInfo::dirname($newFilePath);
@@ -76,51 +129,85 @@ foreach ($finder as $file) {
 
         replaceAllArraysWKey(
             $schema,
-            $ExpandableRefkey,
+            $Context->ExpandableRefkey,
             function ($pattern)
-            use ($dir, $PathSeparator, $OutputPathSeparator) {
+            use ($dir, $Context) {
                 $filePatternAndDefPath = StrUtils::explode("#", $pattern, limit: 2, ignoreEmptyParts: false);
                 if (!$filePatternAndDefPath) {
                     throw new Exception("Could not get file pattern from ref value: $pattern");
                 }
-                $filePathPattern = $filePatternAndDefPath[0];
+                $filePathPattern = $Context->normalizePath($filePatternAndDefPath[0], '/');
                 if ($filePathPattern === "") {
                     return [EXPANDED_REF => $pattern];
                 }
-
+                $defPath = "";
                 if (array_key_exists(1, $filePatternAndDefPath)) {
-                    $filePatternAndDefPath[1] = "#" . $filePatternAndDefPath[1];
+                    $defPath = "#" . $filePatternAndDefPath[1];
                 }
+               $filePathPattern = Str::replaceStart(
+                    '@',
+                $Context->normalizePath($Context->SchemasDir, '/'),
+                $filePathPattern
+            );
+                if (PathHelper::isRelative($filePathPattern, '/')) {
+                    $filePathPattern = PathHelper::concatPaths(
+                        $Context->normalizePath($dir, '/'),
+                        $filePathPattern,
+                        separator: '/'
+                    );
+                }
+                $regex = <<<'EOF'
+                /(\\\\)*[\?\*\[]/u
+                EOF;
+                $isStarNamePattern = preg_match($regex, $filePathPattern, $matches);
+                if ($isStarNamePattern === false) {
+                    throw new Exception("Could not recognize if ref '$filePathPattern' is a glob pattern.");
+                }
+                $isStarNamePattern = (bool)$isStarNamePattern;
 
+                $expanded = array_values(
+                    array_filter(
+                        glob(PathHelper::getPotentialyNonExistentAbsolutePath($filePathPattern, '/')),
+                        fn (string $value) => MyFileInfo::getExtensionsPart($value) === '.json'
+                    )
+                );
 
-                $patternParts = StrUtils::explode($PathSeparator, $filePathPattern);
-                if (!$patternParts) {
-                    throw new Exception("Could not split pattern '$filePathPattern' by delimiter '$PathSeparator'");
-                }
-                if (mb_substr($filePathPattern, 0, 1) === '.') {
-                    array_unshift($patternParts, $dir);
-                }
-                $isStarNamePattern = false;
-                $expanded = StarPattern::expandStarNameSearchPattern($patternParts,$isStarNamePattern);
-                $jsonObjects = [];
-                foreach ($expanded as $expandedValue) {
-                    $file = new GlobalSplFileInfo($expandedValue);
-                    if ($file->isFile() && ($realPath = $file->getRealPath())) {
-                        if (DIRECTORY_SEPARATOR !== $OutputPathSeparator) {
-                            $newRealPath = StrUtils::replace(DIRECTORY_SEPARATOR, $OutputPathSeparator, $realPath);
-                            if ($newRealPath === null) {
-                                throw new Exception("Could not use '$OutputPathSeparator' as output paths delimiter."
-                                    . "\nPath: $realPath");
-                            }
-                            $realPath = $newRealPath;
-                        }
-                        $jsonObjects[] = [EXPANDED_REF => $realPath . ($filePatternAndDefPath[1] ?? "")];
+                $specialFilePath = $Context->specialFromNormal($filePathPattern, '/');
+                echo "Patterns: ";
+                dump([$filePathPattern, $specialFilePath]);
+                $specialExpanded = glob($specialFilePath);
+
+                if (count($expanded) < count($specialExpanded)) {
+                    echo "Special expanded ";
+                    dump($specialExpanded);
+                    $files = array_diff(array_map(
+                        fn ($specialPath) => $Context->normalFromSpecial($specialPath, '/'),
+                        $specialExpanded
+                    ), $expanded);
+                    foreach ($files as $preprocessFile) {
+                        processFile(
+                            new MyFileInfo(
+                                new SplFileInfo(
+                                    $Context->specialFromNormal($preprocessFile, '/'),
+                                    "",
+                                    ""
+                                )
+                            ),
+                            $Context
+                        );
                     }
+                    array_push($expanded, ...$files);
                 }
+                $jsonObjects = array_map(
+                    fn ($expandedFile) => [
+                        EXPANDED_REF => $Context->normalizePathForOutput(realpath($expandedFile)) . $defPath
+                    ],
+                    $expanded
+                );
                 if (!$jsonObjects) {
-                    throw new Exception("Pattern path does not match any file.");
+                    throw new Exception("Pattern path does not match any file.\nPattern: '$pattern'.");
                 }
-                if(!$isStarNamePattern && count($jsonObjects) === 1){
+                if (!$isStarNamePattern && count($jsonObjects) === 1) {
                     return $jsonObjects[0];
                 }
                 return $jsonObjects;
@@ -129,8 +216,10 @@ foreach ($finder as $file) {
 
         file_put_contents($newFilePath, json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     } catch (Exception $e) {
-        throw new Exception(message:"An error occured during processing file: ". $filePath. "\n",
-        previous:$e);
+        throw new Exception(
+            message: "An error occured during processing file: " . $filePath . "\n",
+            previous: $e
+        );
     }
 }
 

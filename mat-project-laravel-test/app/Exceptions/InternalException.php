@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
-use App\Dtos\Errors\ErrorResponse\ErrorResponse;
-use App\Utils\DtoUtils;
+use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+use App\Dtos\Errors\ErrorResponse;
+use App\Utils\EndpointUtils;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use LogicException;
@@ -24,6 +26,7 @@ class InternalException extends LogicException
             code:$code,
             previous:$previous
         );
+        
     }
 
     public function getUsercode(): int
@@ -41,11 +44,6 @@ class InternalException extends LogicException
         return '';
     }
 
-    public function getUserErrorData(): ?array
-    {
-        return null;
-    }
-
     public function getUserMessage():string{
         return "Internal server error";
     }
@@ -57,22 +55,19 @@ class InternalException extends LogicException
      */
     public function context(): array
     {
-        return $this->context;
+        return array_map(fn($value)=>var_export($value,return:true),$this->context);
     }
 
-    public function render(Request $request): Response
+    
+
+    public function render(Request $request): JsonResponse
     {
-        $error = ((object)(null))//ErrorResponse\Error::create()
-        ->setCode($this->getUserCode())
+        $error = UserSpecificPartOfAnError::create()
         ->setMessage($this->getUserMessage())
         ->setDescription($this->getUserDescription());
-        
-        if(($errorData = $this->getUserErrorData()))$error->setErrorData($errorData);
 
         $response =  ErrorResponse::create()
-        ->setError($error);
-        return response(
-            DtoUtils::dtoToJson($response)
-        , $this->getUserStatus());
+        ->setUserInfo($error);
+        return EndpointUtils::stdErrorJsonResponse($this->getUserStatus(),[$response]);
     }
 }

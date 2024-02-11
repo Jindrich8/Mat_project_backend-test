@@ -1,10 +1,10 @@
 <?php
 namespace App\Exceptions{
 
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\ErrorResponse;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredElements;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredElementsErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredElements;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredElementsErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
     use App\Utils\Utils;
 
 class XMLMissingRequiredElementsException extends XMLParsingException{
@@ -44,9 +44,12 @@ class XMLMissingRequiredElementsException extends XMLParsingException{
             .".";
         }
         parent::__construct(
-           ApplicationErrorObject::create()
-           ->setMessage($message)
-           ->setDescription($description)
+           ErrorResponse::create()
+           ->setUserInfo(
+            UserSpecificPartOfAnError::create()
+            ->setMessage($message)
+            ->setDescription($description)
+           )
            ->setDetails(
             XMLMissingRequiredElements::create()
            ->setErrorData($errorData)

@@ -1,9 +1,12 @@
 <?php
 namespace App\Exceptions{
 
+    use App\Dtos\Defs\Errors\XML\XMLInvalidAttribute;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
     use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
     use App\Dtos\Errors\ErrorResponse\XMLInvalidAttribute as ErrorResponseXMLInvalidAttribute;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttributeErrorData;
 
 class XMLInvalidAttributeException extends XMLParsingException{
 
@@ -24,11 +27,14 @@ class XMLInvalidAttributeException extends XMLParsingException{
             line:$errorData->eLine
         );
        parent::__construct(
-        ApplicationErrorObject::create()
-        ->setMessage($message)
+        ErrorResponse::create()
+        ->setUserInfo(
+            UserSpecificPartOfAnError::create()
+            ->setMessage($message)
         ->setDescription($description)
+            )
         ->setDetails(
-            ErrorResponseXMLInvalidAttribute::create()
+            XMLInvalidAttribute::create()
             ->setErrorData($errorData)
             )
         );

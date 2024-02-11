@@ -1,0 +1,35 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "List task reviews response",
+    "description": "Represents a list of task reviews matching requested filters.",
+    "properties": {
+        "reviews": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "$ref": "@/defs/types/id.json"
+                    },
+                    "score": {
+                        "$ref": "@/defs/types/review/score.json"
+                    },
+                    "evaluation_timestamp": {
+                        "type": "string",
+                        "format": "timestamp"
+                    },
+                    "task_preview_info": {
+                        "$ref": "@/defs/types/task/preview_info.json"
+                    }
+                },
+                "required": [
+                    "id",
+                    "score",
+                    "evaluation_timestamp",
+                    "task_preview_info"
+                ]
+            }
+        }
+    }
+}

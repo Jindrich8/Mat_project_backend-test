@@ -2,11 +2,25 @@
 
 namespace App\Utils {
 
+    use App\Exceptions\InternalException;
     use BackedEnum;
     use UnitEnum;
 
     class DebugUtils
     {
+        public static function log(string $message,mixed $value = null):void{
+            if(is_callable($value)){
+                $value = $value();
+            }
+            if(PHP_SAPI === 'cli'){
+                echo '\n'.$message;
+                dump($value);
+            }
+            else{
+                report(new InternalException("LOG: " . $message,context:['value' => $value]));
+            }
+        }
+
         public static function enumToStr(UnitEnum|BackedEnum $enum)
         {
             return $enum instanceof BackedEnum ?
@@ -24,7 +38,7 @@ namespace App\Utils {
 
         public static function printStackTrace(){
             $e = new \Exception();
-           echo "\nTrace:\n",$e->getTraceAsString(),"\n";
+           DebugUtils::log("Trace",$e->getTraceAsString());
         }
         public static function jsonEncode(mixed $value):string{
             return json_encode($value,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);

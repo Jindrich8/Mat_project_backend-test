@@ -4,8 +4,8 @@ namespace App\TableSpecificData;
 
 use App\Types\BackedEnumTrait;
 
-enum TaskDisplay:string{
+enum TaskDisplay:int{
     use BackedEnumTrait;
-    case HORIZONTAL = 'horizontal';
-    case VERTICAL = 'vertical';
+    case HORIZONTAL = 0;
+    case VERTICAL = 1;
 }

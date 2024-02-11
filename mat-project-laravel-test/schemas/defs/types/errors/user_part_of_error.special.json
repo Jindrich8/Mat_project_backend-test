@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "User-specific part of an error ",
+    "description": "Represents user-specific error information",
+    "type": "object",
+    "properties": {
+        "message": {
+            "title": "Human readable error message",
+            "type": "string",
+            "description": "Human readable error message"
+        },
+        "description": {
+            "title": "Human readable error description",
+            "type": "string",
+            "description": "Human readable details about error or help message, specifying which action should user take"
+        }
+    },
+    "required": [
+        "message",
+        "description"
+    ]
+}

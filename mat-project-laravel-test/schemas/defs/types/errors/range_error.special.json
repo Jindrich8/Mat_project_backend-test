@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Range error",
+    "description": "Represents structure of range error",
+    "type": "object",
+    "properties": {
+        "error": {
+            "anyOf":[
+                {
+                    "title": "Swapped bounds error",
+                    "type": "string",
+                    "enum":["min_max_swapped"]
+                },
+                {
+                    "type":"object",
+                    "title": "Invalid bounds error",
+                    "properties":{
+                        "invalidMin":{
+                            "type":"boolean",
+                            "const":true
+                        },
+                        "invalidMax":{
+                            "type":"boolean",
+                            "const":true
+                        }
+                    }
+                }
+            ]
+            
+        }
+    }
+}
