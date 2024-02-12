@@ -2,12 +2,10 @@
 
 namespace App\Exceptions {
 
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\ErrorResponse;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElement;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstruct;
-    use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstructErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLUnsupportedConstruct;
+    use App\Dtos\Defs\Errors\XML\XMLUnsupportedConstructErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
     use App\Utils\Utils;
 
 
@@ -36,9 +34,12 @@ namespace App\Exceptions {
             }
 
             parent::__construct(
-                ApplicationErrorObject::create()
-                    ->setMessage($message)
+                ErrorResponse::create()
+                    ->setUserInfo(
+                        UserSpecificPartOfAnError::create()
+                        ->setMessage($message)
                     ->setDescription($description)
+                    )
                     ->setDetails(
                         XMLUnsupportedConstruct::create()
                             ->setErrorData($errorData)

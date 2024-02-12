@@ -3,6 +3,7 @@
 namespace App\Helpers\Database {
 
     use App\Exceptions\InternalException;
+    use App\Utils\DebugUtils;
     use App\Utils\Utils;
     use DB;
 
@@ -43,8 +44,7 @@ namespace App\Helpers\Database {
                     unset($values[$i]);
                 }
             }
-            echo "bindings:";
-            dump($bindings);
+            DebugUtils::log("bindings",$bindings);
             $ids = DB::select(
                 $query,
                 bindings: $bindings,

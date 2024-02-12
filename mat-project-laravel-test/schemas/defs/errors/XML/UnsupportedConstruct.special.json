@@ -6,7 +6,7 @@
         "code": {
             "title": "Endpoint specific error code",
             "type": "integer",
-            "const": 107,
+            "const": null,
             "description": "Serves as identifier for action which should be triggered by app."
         },
         "errorData": {
