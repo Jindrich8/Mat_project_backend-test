@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tag_task', function (Blueprint $table) {
-            $table->id();
+        Schema::create('tag_tasks', function (Blueprint $table) {
+            $table->id()->generatedAs()->always();
             $table->foreignId('task_id')->constrained()->cascadeOnDelete();
             $table->foreignId('tag_id')->constrained()->cascadeOnDelete();
         });
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tag_task');
+        Schema::dropIfExists('tag_tasks');
     }
 };

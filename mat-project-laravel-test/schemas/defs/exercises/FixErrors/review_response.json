@@ -4,7 +4,7 @@
     "properties": {
         "exerType": {
             "type": "string",
-            "const": "HledaniChyb"
+            "const": "FixErrors"
         },
         "content": {
             "type": "object",

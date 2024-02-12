@@ -5,6 +5,7 @@ namespace App\Types {
     use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstruct;
     use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
+    use App\Utils\DebugUtils;
     use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Closure;
@@ -135,7 +136,7 @@ namespace App\Types {
                     $errorCode = $libxmlError->code;
                     $errorStr = $libxmlError->message;
                 }
-                dump("LibXmlError: ".$libxmlError->message."\nError: $errorStr\n");
+                // dump("LibXmlError: ".$libxmlError->message."\nError: $errorStr\n");
 
                 return new XMLParserError(
                     errorCode: $errorCode,
@@ -158,7 +159,7 @@ namespace App\Types {
         private function elementStartHandler(XMLParser $parser, string $name, array $attributes): void
         {
             $this->updateEntryType(XMLParserEntryType::ELEMENT_START);
-            dump("ELEMENT START - $name");
+            // dump("ELEMENT START - $name");
             $this->events->elementStartHandler($this, $name, $attributes);
             $this->updatePos();
         }
@@ -313,7 +314,7 @@ namespace App\Types {
 
         private function updateEntryType(XMLParserEntryType $entryType)
         {
-            dump("Update entry type {$entryType->name}");
+            // dump("Update entry type {$entryType->name}");
             if ($this->entryType === null && $entryType !== XMLParserEntryType::ELEMENT_START) {
                 throw new InternalException(
                     message: "XML file should start with element start, but found '" . $entryType->name . "'.",
@@ -326,7 +327,7 @@ namespace App\Types {
         private function printValidPosInfo(){
             $pos = $this->lastValidPos;
             $ch = $this->getCharAtByteIndex($pos[2],emptyIfError:true);
-            echo "\n: ($ch)" . $pos[0].", " . $pos[1].", " . $pos[2];
+            DebugUtils::log("ValidPosInfo","($ch)" . $pos[0].", " . $pos[1].", " . $pos[2]);
         }
 
         private function updatePos()
@@ -345,10 +346,10 @@ namespace App\Types {
             $entryTypeName = $this->nextEntryType?->name ?? "NULL";
             $isByteIndexValid = $this->isByteIndexValid($this->nextEntryType, $byteIndex);
             $char = $this->getCharAtByteIndex($byteIndex,emptyIfError:true);
-            echo "\n({$entryTypeName}) :$line, $column, $byteIndex BYTE INDEX IS VALID ($char): '"
-            .($isByteIndexValid ? "true" : "false"), "'\n";
+            DebugUtils::log("({$entryTypeName}) :$line, $column, $byteIndex BYTE INDEX IS VALID ($char): '",
+            ($isByteIndexValid ? "true" : "false")
+        );
             if ($isByteIndexValid) {
-                echo "\nSetting valid position";
                 $this->setValidPosition(
                     column: $column,
                     line: $line,
@@ -361,7 +362,6 @@ namespace App\Types {
             }
             $this->printValidPosInfo();
             $this->entryType = $this->nextEntryType;
-            echo "\nEND updatePos";
         }
 
         public function getPos(?int &$column, ?int &$line, ?int &$byteIndex): void
@@ -416,13 +416,12 @@ namespace App\Types {
 
         private function computeByteIndex()
         {
-            echo "\nCOMPUTING BYTE INDEX for '", $this->entryType->name, "' ";
+            DebugUtils::log("COMPUTING BYTE INDEX for ", $this->entryType->name);
 
             $this->getLastValidPosition($validCol, $validLine, $validByteIndex);
             $this->getCurrentPosition($column, $line);
-
-            echo "\nlast valid position - ':$validLine, $validCol' - byte index: '$validByteIndex'";
-            echo "\nposition: :$line, :$column";
+            DebugUtils::log("last valid position",":$validLine, $validCol' - byte index: '$validByteIndex'");
+            DebugUtils::log("Position",":$line, :$column");
 
             $byteIndex = $validByteIndex;
 
@@ -463,7 +462,7 @@ namespace App\Types {
                 }
             }
             $this->setValidPosition($column, $line, $byteIndex);
-            dump("Computed char '" . $this->getCharAtRelByteIndex(0) . "'");
+            // dump("Computed char '" . $this->getCharAtRelByteIndex(0) . "'");
         }
 
         public function positionIsValid(): bool

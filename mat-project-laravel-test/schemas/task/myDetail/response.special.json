@@ -1,0 +1,14 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "My task detail",
+    "description": "Represents owner relevant informations about task.",
+    "type":"object",
+    "properties": {
+        "task": {
+            "$ref": "@/defs/types/my_task/detail_info.json"
+        }
+    },
+    "required": [
+        "task"
+    ]
+}

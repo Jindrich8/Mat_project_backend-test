@@ -1,0 +1,80 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "List tasks request",
+    "description": "Request containing search filters for tasks.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "filters": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "evaluation_timestamp_range":{
+                    "$ref":"@/defs/types/request/timestamp_range.json"
+                },
+                "score_range":{
+                    "type":"object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "min":{
+                            "$ref":"@/defs/types/review/score.json"
+                        },
+                        "max":{
+                            "$ref":"@/defs/types/review/score.json"
+                        }
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "@/defs/types/id.json"
+                    }
+                },
+                "difficulty_range": {
+                    "$ref": "@/defs/types/request/ordered_enum_range.json"
+                },
+                "class_range": {
+                    "$ref": "@/defs/types/request/ordered_enum_range.json"
+                }
+            }
+        },
+        "order_by": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "filter_name": {
+                        "type": "string",
+                        "enum": [
+                            "name",
+                            "evaluation_timestamp",
+                            "score",
+                            "difficulty",
+                            "class_range"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "ASC",
+                            "DESC"
+                        ]
+                    }
+                },
+                "required": [
+                    "filter_name",
+                    "type"
+                ]
+            }
+        }
+    },
+    "required": [
+        "filters",
+        "order_by"
+    ]
+}
