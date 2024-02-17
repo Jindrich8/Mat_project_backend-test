@@ -144,9 +144,6 @@ class TaskController extends Controller
             ->setTask($responseTask);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(HttpRequest $request): Create\Response
     {
         DebugUtils::log("Task:store called", $request);
@@ -163,12 +160,16 @@ class TaskController extends Controller
             ->setTaskId($taskId);
     }
 
-    public function update(HttpRequest $request,int $id){
-        DB::transaction(function(){
-        });
+    public function update(HttpRequest $request,int $id):Response{
+        $requestData = RequestHelper::getDtoFromRequest(TaskDto\Update\Request::class,$request);
+        $parseEntry = new ParseEntry();
+        $taskRes = $parseEntry->parse([$requestData->task->source]);
+        $taskRes->tagsIds = $requestData->task->tags;
+        $taskRes->update();
+        return response(status: Response::HTTP_NO_CONTENT);
     }
 
-    public function evaluate(HttpRequest $request, int $id)
+    public function evaluate(HttpRequest $request, int $id):TaskDto\Review\Get\Response
     {
         $requestData = RequestHelper::getDtoFromRequest(Evaluate\Request::class, $request);
         $taskId = $id;
@@ -227,7 +228,7 @@ class TaskController extends Controller
             ->setTask($responseTask);
     }
 
-    public function list(HttpRequest $request): List\Response
+    public function list(HttpRequest $request): TaskDto\List\Response
     {
 
         $requestData = RequestHelper::getDtoFromRequest(List\Request::class, $request);
@@ -361,7 +362,7 @@ class TaskController extends Controller
             ->setTasks($tasks);
     }
 
-    public function detail(HttpRequest $request,int $taskId){
+    public function detail(HttpRequest $request,int $taskId):TaskDto\Detail\Response{
        $task = BareTaskWAuthorName::tryFetchById($taskId,publicOnly:true);
        if(!$task){
         throw new AppModelNotFoundException(Task::class,withProperties:['id'=>$taskId]));
@@ -396,7 +397,7 @@ class TaskController extends Controller
     );
     }
 
-    public function delete(HttpRequest $request, int $taskId)
+    public function delete(HttpRequest $request, int $taskId):Response
     {
         if (!DB::table(Task::getTableName())
             ->delete($taskId)) {
@@ -405,7 +406,7 @@ class TaskController extends Controller
         return response(status: Response::HTTP_NO_CONTENT);
     }
 
-    public function myDetail(HttpRequest $request,int $taskId)
+    public function myDetail(HttpRequest $request,int $taskId):TaskDto\MyDetail\Response
     {
         $task = BareTask::tryFetchById($taskId,publicOnly:true);
         if(!$task){
@@ -438,7 +439,7 @@ class TaskController extends Controller
      );
     }
     
-     public function myList(HttpRequest $request)
+     public function myList(HttpRequest $request):TaskDto\MyList\Response
     {
 
         $requestData = RequestHelper::getDtoFromRequest(MyList\Request::class, $request);
