@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "title": "Filter error details",
+    "description": "Represents details about the filter error",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Filter error details error data",
+            "properties": {
+                "name": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "tags": {
+                    "$ref": "@/defs/types/errors/enum_array_error.json"
+                },
+                "creation_timestamp_range":{
+                    "$ref":"@/defs/types/errors/range_error.json"
+                 },
+                 "modification_timestamp_range":{
+                     "$ref":"@/defs/types/errors/range_error.json"
+                 },
+                "difficulty_range": {
+                    "$ref": "@/defs/types/errors/range_error.json"
+                },
+                "class_range": {
+                    "$ref": "@/defs/types/errors/range_error.json"
+                }
+            }
+        }
+    },
+    "required": [
+        "code",
+        "errorData"
+    ]
+}
