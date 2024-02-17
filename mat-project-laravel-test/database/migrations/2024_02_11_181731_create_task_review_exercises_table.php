@@ -1,6 +1,6 @@
 <?php
 
-use App\TableSpecificData\TaskDisplay;
+use App\Utils\DBUtils;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,22 +12,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create('task_review_exercises', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->string('name',250);
-            $table->enum('orientation',array_map(fn(TaskDisplay $case)=>$case->value,TaskDisplay::cases()));
-            $table->string('description',2040);
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('task_review_id');
+            $table->fixedFloat4('score');
+            $table->fixedFloat4('max_points');
+            $table->json('data');
             $table->autoTimestamps();
         });
+        DBUtils::addPercentDecimalConstraint('task_review_exercises','score');
     }
-    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists('task_review_exercises');
     }
 };

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('groups', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('task_id')->constrained()->cascadeOnDelete();
+            $table->id()->generatedAs()->always();
+            $table->foreignId('task_info_id')->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('start');
             $table->unsignedTinyInteger('length');
             $table->autoTimestamps();

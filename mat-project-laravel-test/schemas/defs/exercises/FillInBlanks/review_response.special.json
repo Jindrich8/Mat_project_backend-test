@@ -8,16 +8,28 @@
         "txtI": {
             "type": "object",
             "properties": {
-                "value": {
-                    "type": [
-                        "string"
-                    ]
+                "type":{
+                    "type":"string",
+                    "const":"txtI"
+                },
+                "userValue": {
+                    "type": "string"
+                },
+                "correctValue":{
+                    "type": "string"
                 }
-            }
+            },
+            "required": [
+                "userValue"
+            ]
         },
         "cmb": {
             "type": "object",
             "properties": {
+                "type":{
+                    "type":"string",
+                    "const":"cmb"
+                },
                 "userValue": {
                     "type": "string"
                 },
@@ -35,12 +47,12 @@
     "properties": {
         "exerType": {
             "type": "string",
-            "const": "Fill in blanks"
+            "const": "FillInBlanks"
         },
         "content": {
             "type": "array",
             "items": {
-                "oneOf": [
+                "anyOf": [
                     {
                         "$ref": "#/$defs/cmb"
                     },
@@ -53,7 +65,7 @@
                 ],
                 "minItems": 1,
                 "contains": {
-                    "oneOf": [
+                    "anyOf": [
                         {
                             "$ref": "#/$defs/cmb"
                         },

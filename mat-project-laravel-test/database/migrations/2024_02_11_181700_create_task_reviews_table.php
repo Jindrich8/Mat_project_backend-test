@@ -1,0 +1,36 @@
+<?php
+
+use App\Helpers\Database\DBHelper;
+use App\Utils\DBUtils;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('task_reviews', function (Blueprint $table) {
+            $table->id()->generatedAs()->always();
+            $table->foreignId('user_id');
+            $table->foreignId('task_review_template_id');
+            $table->fixedFloat4('score');
+            $table->fixedFloat4('max_points');
+            $table->json('exercises');
+            $table->autoTimestamps();
+        });
+        
+        DBUtils::addPercentDecimalConstraint('task_reviews','score');
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('task_reviews');
+    }
+};

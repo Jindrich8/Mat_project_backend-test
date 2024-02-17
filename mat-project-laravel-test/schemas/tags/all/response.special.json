@@ -6,17 +6,7 @@
         "tags":{
             "type":"array",
             "items":{
-                "type":"object",
-                "title": "Tag",
-                "properties": {
-                    "name":{
-                        "type":"string"
-                    },
-                    "id":{
-                        "type":"integer"
-                    }
-                },
-                "required": ["name", "id"]
+                "$ref":"@/defs/types/response/enum_element.json"
             }
         }
     },

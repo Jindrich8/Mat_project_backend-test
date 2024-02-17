@@ -2,9 +2,10 @@
 
 namespace App\Helpers\Exercises\FillInBlanks;
 
-use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent;
+use App\Dtos\InternalTypes\FillInBlanksContent;
 use App\Exceptions\InternalException;
 use App\Helpers\CCreateExerciseHelper;
+use App\ModelConstants\FillInBlanksConstants;
 use App\Models\FillInBlanks;
 use App\Types\CCreateExerciseHelperState;
 use App\Types\XMLDynamicNodeBase;
@@ -69,15 +70,11 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
                 'contents'=>$this->contents,
             ]);
             }
-            //echo "Content: ";
-           // dump($content);
             $data[]=[
-                FillInBlanks::ID => $ids[$i],
-                FillInBlanks::CONTENT => DtoUtils::dtoToJson($content,FillInBlanksContent::CONTENT)
+                FillInBlanksConstants::COL_EXERCISEABLE_ID => $ids[$i],
+                FillInBlanksConstants::COL_CONTENT => DtoUtils::dtoToJson($content,FillInBlanksContent::CONTENT)
             ];
         }
-        echo "Data: ";
-        dump($data);
         $success = DB::table(FillInBlanks::getTableName())
                                 ->insert($data);
        if(!$success){

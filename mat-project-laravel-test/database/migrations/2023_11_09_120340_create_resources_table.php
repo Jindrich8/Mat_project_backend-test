@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('resources', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('group_id')->constrained();
+            $table->id()->generatedAs()->always();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             $table->autoTimestamps();
         });

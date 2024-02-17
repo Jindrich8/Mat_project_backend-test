@@ -2,12 +2,14 @@
 
 namespace App\Helpers\Exercises\FixErrors;
 
-use App\Dtos\Task\Take\Response\FixErrorsTakeResponse;
-use App\Dtos\Task\Take\Response\FixErrorsTakeResponseContent;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsReviewResponse;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsReviewResponseContent;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponse;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponseContent;
 use App\Helpers\CCreateExerciseHelper;
 use App\Helpers\CExerciseHelper;
-use App\Helpers\CTakeExercise;
-use App\Helpers\Exercises\FixErrors\CreateFixErrorsExercise;
+use App\Helpers\Database\DBHelper;
+use App\ModelConstants\FixErrorsConstants;
 use App\Models\FixErrors;
 use App\Utils\Utils;
 use Illuminate\Support\Facades\DB;
@@ -16,32 +18,61 @@ class FixErrorsExerciseHelper implements CExerciseHelper
 {
     private ?CreateFixErrorsExercise $createHelper;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->createHelper = null;
     }
 
-    public function fetchTake(array $ids,array $savedValues): array
+    public function fetchTake(array &$savedValues): array
     {
-        $table = FixErrors::getTableName();
+        $ids = array_keys($savedValues);
+        $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
-       $exercises = DB::table($table)
-        ->select([$idName,FixErrors::WRONG_TEXT])
-        ->whereIn($idName,$ids)
-        ->get();
+        $exercises = DB::table($table)
+            ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
+            ->whereIn($idName, $ids)
+            ->get();
         $takeExercises = [];
-        while(($exercise = $exercises->pop())){
-            $exerciseId = Utils::access($exercise,$idName);
+        reset($savedValues);
+        $savedValue = current($savedValues);
+        while (($exercise = $exercises->pop())) {
+            $exerciseId = DBHelper::access($exercise, $idName);
+            $content = FixErrorsTakeResponseContent::create()
+                ->setDefaultText(DBHelper::access($exercise, FixErrorsConstants::COL_WRONG_TEXT));
+            if (is_string($savedValue)) {
+                $content->setText($savedValue);
+            }
 
-          $takeExercises[$exerciseId]= new  TakeFixErrorsExercise(
-            FixErrorsTakeResponse::create()
-            ->setContent(FixErrorsTakeResponseContent::create()
-            ->setDefaultText(Utils::access($exercise,FixErrors::WRONG_TEXT)))
-           );
+            $takeExercises[$exerciseId] = new TakeFixErrorsExercise(
+                FixErrorsTakeResponse::create()
+                    ->setContent($content)
+            );
         }
         return $takeExercises;
     }
 
-    public function fetchSave(array $ids): array
+    public function fetchEvaluate(array &$ids): array
+    {
+        $table = FixErrorsConstants::TABLE_NAME;
+        $idName = FixErrors::getPrimaryKeyName();
+        $exercises = DB::table($table)
+            ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
+            ->whereIn($idName, $ids)
+            ->get();
+        $evaluateExercises = [];
+        while (($exercise = $exercises->pop())) {
+            $exerciseId = DBHelper::access($exercise, $idName);
+
+            $evaluateExercises[$exerciseId] = new  EvaluateFixErrorsExercise(
+                FixErrorsReviewResponse::create()
+                    ->setContent(FixErrorsReviewResponseContent::create()
+                        ->setUserText(DBHelper::access($exercise, FixErrorsConstants::COL_WRONG_TEXT)))
+            );
+        }
+        return $evaluateExercises;
+    }
+
+    public function fetchSave(array &$ids): array
     {
         return [];
     }
@@ -49,5 +80,12 @@ class FixErrorsExerciseHelper implements CExerciseHelper
     public function getCreateHelper(): CCreateExerciseHelper
     {
         return $this->createHelper ??= new CreateFixErrorsExercise();
+    }
+
+    public function delete(array &$ids): void
+    {
+        DB::table(FixErrorsConstants::TABLE_NAME)
+        ->whereIn(FixErrorsConstants::COL_EXERCISEABLE_ID,$ids)
+        ->delete();
     }
 }

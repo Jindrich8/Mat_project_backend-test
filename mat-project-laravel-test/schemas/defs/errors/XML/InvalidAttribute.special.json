@@ -5,7 +5,7 @@
     "properties": {
         "code": {
             "type": "integer",
-            "const": 101
+            "const": null
         },
         "errorData": {
             "type": "object",

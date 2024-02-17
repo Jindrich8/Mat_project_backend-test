@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "title": "Task changed task evaluate error",
+    "description": "Represents error thrown if current task version is different than filled version.",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Task changed task evaluate error data"
+        }
+    },
+    "required": [
+        "code"
+    ]
+}

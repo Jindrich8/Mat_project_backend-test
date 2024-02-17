@@ -22,6 +22,9 @@ namespace App\MyConfigs {
         
         public readonly string $taskName;
         public readonly ValidableString $taskNameAttr;
+        /**
+         * @var ValidableEnum<TaskDisplay> $taskOrientationAttr
+         */
         public readonly ValidableEnum $taskOrientationAttr;
 
         public readonly ValidableString $taskDescription;

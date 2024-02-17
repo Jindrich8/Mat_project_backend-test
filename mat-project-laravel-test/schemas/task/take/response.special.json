@@ -24,7 +24,7 @@
         "details": {
           "anyOf": [
             {
-              "$ref": "../../defs/exercises/*/take_response.json"
+              "$ref": "@/defs/exercises/*/take_response.json"
             }
           ]
         }
@@ -81,8 +81,8 @@
     "task": {
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string"
+        "task_detail":{
+          "$ref":"@/defs/types/task/detail_info.json"
         },
         "display": {
           "type":"string",
@@ -90,9 +90,6 @@
             "vertical",
             "horizontal"
           ]
-        },
-        "description": {
-          "type": "string"
         },
         "entries": {
           "type": "array",
@@ -106,12 +103,30 @@
               }
             ]
           }
+        },
+        "prev_saved_values":{
+          "title": "Saved task values",
+          "description": "Saved values for previous version of this task.",
+          "type":"object",
+          "properties": {
+            "exercises":{
+              "type":"array",
+              "minItems":1,
+              "items":{
+                "anyOf":[
+                  {
+                    "$ref":"@/defs/exercises/*/save_request.json"
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["exercises"]
         }
       },
       "required": [
-        "name",
+        "task_detail",
         "display",
-        "description",
         "entries"
       ]
     }

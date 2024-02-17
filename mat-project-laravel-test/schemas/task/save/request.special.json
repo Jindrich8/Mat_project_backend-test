@@ -1,27 +1,26 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "title": "Save task successful request",
-    "type": "object",
-    "properties":{
-      "data":{
-        "type":"object",
-        "additionalProperties": false,
-        "properties":{
-          "exercises":{
-            "type":"array",
-            "items":{
-              "anyOf":[
-                {
-                  "$ref":"../../defs/exercises/*/save_request.json"
-                }
-              ]
-            }
-          }
-        },
-          "required":["exercises"]
-      }
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Save task request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "$ref": "@/defs/types/id.json"
     },
-    "required": [
-      "data"
-    ]
-  }
+    "exercises": {
+      "type": "array",
+      "minItems":1,
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "@/defs/exercises/*/save_request.json"
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "exercises",
+    "version"
+  ]
+}

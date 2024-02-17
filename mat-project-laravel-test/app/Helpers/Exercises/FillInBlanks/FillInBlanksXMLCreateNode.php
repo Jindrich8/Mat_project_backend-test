@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Exercises\FillInBlanks {
 
-    use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent;
+    use App\Dtos\InternalTypes\FillInBlanksContent;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBase;
     use App\Types\CCreateExerciseHelperState as ParsingState;

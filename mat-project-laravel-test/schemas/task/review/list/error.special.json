@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Task review list error response details",
+    "description": "Represents every possible error details, except for general error details, that can be thrown by the task review list endpoint",
+    "type": "object",
+    "anyOf": [
+        {
+            "$ref":"./errors/form.json"
+        }
+    ],
+    "required": ["code","errorData"]
+}

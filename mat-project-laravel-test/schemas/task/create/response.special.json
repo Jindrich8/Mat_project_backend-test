@@ -4,7 +4,7 @@
     "type":"object",
     "properties": {
         "taskId":{
-            "type":"integer"
+            "$ref":"@/defs/types/id.json"
         }
     },
     "required": ["taskId"]

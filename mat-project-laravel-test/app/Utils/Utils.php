@@ -8,6 +8,44 @@ use stdClass;
 use UnitEnum;
 
 class Utils{
+
+    /**
+     * @template T
+     * @template TKey
+     * @template R
+     * @template RKey
+     * @param callable(TKey $key,T $value):array{0:RKey,1:R}
+     * @param array<TKey,T> $array
+     * @return array<RKey,R>
+     */
+    public static function arrayMapWKey(callable $map,array &$array){
+        /**
+         * @var array<RKey,R> $mapped
+         */
+        $mapped = [];
+        foreach($array as $key => $value){
+            /**
+             * @var RKey $rKey
+             * @var R $rValue
+             */
+            [$rKey,$rValue]=$map($value,$key);
+            $mapped[$rKey]=$rValue;
+        }
+        return $mapped;
+    }
+    /**
+     * @template T
+     * @param T[] $arr
+     * @return T|null
+     */
+    public static function tryGetFirstArrayValue(array $arr):mixed{
+        return $arr ? $arr[Utils::arrayFirstKey($arr)] : null;
+    }
+
+    public static function isEmptyArray(mixed $value):bool{
+        return self::isArray($value) && count($value) === 0;
+    }
+
     /**
      * @template T
      * @return mixed|T
@@ -155,5 +193,11 @@ class Utils{
         else{
             $prop = $value;
         }
+    }
+
+    public static function getAccessor(array|object &$value):callable{
+        return is_object($value) ? 
+        static fn(object $value,string $prop) => $value->{$prop} 
+        : static fn(array &$value,string $prop) => $value[$prop];
     }
 }
