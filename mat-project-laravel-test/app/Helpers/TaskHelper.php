@@ -10,9 +10,9 @@ namespace App\Helpers {
     use App\Dtos\Defs\Types\Response\ResponseClassRange;
     use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
     use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
-    use App\Dtos\Defs\Types\Task\AuthorInfo;
-    use App\Dtos\Defs\Types\Task\TaskDetailInfo;
-    use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
+    use App\Dtos\Defs\Types\TaskInfo\AuthorInfo;
+    use App\Dtos\Defs\Types\TaskInfo\TaskDetailInfo;
+    use App\Dtos\Defs\Types\TaskInfo\TaskDetailInfoAuthor;
     use App\Dtos\Errors\ErrorResponse;
     use App\Dtos\InternalTypes\TaskSaveContent;
     use App\Exceptions\ApplicationException;
@@ -26,7 +26,7 @@ namespace App\Helpers {
     use App\Models\SavedTask;
     use App\Models\Tag;
     use App\Models\TagTask;
-    use App\Models\Task;
+    use App\Models\TaskInfo;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
     use App\Types\SaveTask;
@@ -376,7 +376,7 @@ namespace App\Helpers {
                     ->select([TagTask::TASK_ID])
                     ->whereIn(TagTask::TAG_ID, $translatedTags)
                     ->get()->toArray();
-                $builder->whereIn(Task::getPrimaryKeyName(), $taskIds);
+                $builder->whereIn(TaskInfo::getPrimaryKeyName(), $taskIds);
                 return [];
             }
             return $translatedTags;
@@ -388,7 +388,7 @@ namespace App\Helpers {
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskDifficulty::class);
             if (!$RangeError) {
-                $builder->whereBetween(Task::DIFFICULTY, [$min, $max]);
+                $builder->whereBetween(TaskInfo::DIFFICULTY, [$min, $max]);
             }
             return $RangeError;
         }
@@ -397,8 +397,8 @@ namespace App\Helpers {
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskClass::class);
             if (!$RangeError) {
-                $builder->where(Task::MIN_CLASS, '>=', $min);
-                $builder->where(Task::MAX_CLASS, '<=', $max);
+                $builder->where(TaskInfo::MIN_CLASS, '>=', $min);
+                $builder->where(TaskInfo::MAX_CLASS, '<=', $max);
             }
             return $RangeError;
         }
@@ -409,7 +409,7 @@ namespace App\Helpers {
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
-                    DB::raw('COALESCE(' . Task::UPDATED_AT . ',' . Task::CREATED_AT . ')'),
+                    DB::raw('COALESCE(' . TaskInfo::UPDATED_AT . ',' . TaskInfo::CREATED_AT . ')'),
                     [$minTimestamp, $maxTimestamp]
                 );
                 $rangeOrError = null;
@@ -423,7 +423,7 @@ namespace App\Helpers {
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
-                    Task::CREATED_AT,
+                    TaskInfo::CREATED_AT,
                     [$minTimestamp, $maxTimestamp]
                 );
                 $rangeOrError = null;

@@ -11,7 +11,7 @@ namespace App\Helpers\CreateTask {
     use App\Helpers\BareModels\BareExercise;
     use App\Models\Group;
     use App\Helpers\BareModels\BareGroup;
-    use App\Models\Task;
+    use App\Models\TaskInfo;
     use App\Types\CCreateExerciseHelperState;
     use App\Utils\Utils;
     use App\Helpers\BareModels\BareResource;
@@ -27,7 +27,7 @@ namespace App\Helpers\CreateTask {
 
     class TaskRes
     {
-        public ?Task $task;
+        public ?TaskInfo $task;
 
         /**
          * @var int[] $tagsIds
@@ -239,7 +239,7 @@ namespace App\Helpers\CreateTask {
                         );
                     }
                 }
-                DebugUtils::log("Task successfully inserted",['taskId' => $this->task->id]);
+                DebugUtils::log("TaskInfo successfully inserted",['taskId' => $this->task->id]);
                 $taskId = $this->task->id;
                 // insert groups and resources
                 {
@@ -362,7 +362,7 @@ namespace App\Helpers\CreateTask {
                 if ($this->tagsIds) {
                     $this->task->tags()->sync($this->tagsIds);
                 }
-                DebugUtils::log("Task successfully updated",['taskId' => $this->task->id]);
+                DebugUtils::log("TaskInfo successfully updated",['taskId' => $this->task->id]);
                 if(!DB::table(Group::getTableName())
                 ->where(Group::TASK_ID,'=',$this->task->id)
                 ->delete()){

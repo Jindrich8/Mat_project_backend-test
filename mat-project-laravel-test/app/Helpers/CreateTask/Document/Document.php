@@ -11,7 +11,7 @@ namespace App\Helpers\CreateTask\Document {
     use App\Helpers\CreateTask\XMLNoValueNode;
     use App\Types\XMLNoValueNodeTrait;
     use App\Helpers\CreateTask\XMLOneUseNode;
-    use App\Models\Task;
+    use App\Models\TaskInfo;
     use App\MyConfigs\TaskSrcConfig;
     use App\TableSpecificData\TaskDisplay;
     use App\Types\XMLAttributes;
@@ -80,7 +80,7 @@ namespace App\Helpers\CreateTask\Document {
 
        function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
        {
-        $context->getTaskRes()->task = new Task();
+        $context->getTaskRes()->task = new TaskInfo();
         parent::validateStart($attributes,$context,$name);
        }
         

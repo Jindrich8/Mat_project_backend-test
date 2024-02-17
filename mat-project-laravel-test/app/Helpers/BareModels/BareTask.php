@@ -3,7 +3,7 @@
 namespace App\Helpers\BareModels {
 
     use App\Helpers\Database\DBHelper;
-    use App\Models\Task;
+    use App\Models\TaskInfo;
     use App\Models\User;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
@@ -40,24 +40,24 @@ namespace App\Helpers\BareModels {
             $access = Utils::getAccessor($task);
 
             return new self(
-                id:$access($task,Task::getPrimaryKeyName()),
-                name:$access($task,Task::NAME),
-                difficulty:TaskDifficulty::fromThrow($access($task,Task::DIFFICULTY)),
-                display:TaskDisplay::fromThrow($access($task,Task::ORIENTATION)),
-                description:$access($task,Task::DESCRIPTION),
-                isPublic:$access($task,Task::IS_PUBLIC),
-                version:$access($task,Task::VERSION),
-                userId:$access($task,Task::USER_ID),
-                createdAt:$access($task,Task::CREATED_AT),
-                updatedAt:$access($task,Task::UPDATED_AT),
-                minClass:TaskClass::fromThrow($access($task,Task::MIN_CLASS)),
-                maxClass:TaskClass::fromThrow($access($task,Task::MAX_CLASS))
+                id:$access($task,TaskInfo::getPrimaryKeyName()),
+                name:$access($task,TaskInfo::NAME),
+                difficulty:TaskDifficulty::fromThrow($access($task,TaskInfo::DIFFICULTY)),
+                display:TaskDisplay::fromThrow($access($task,TaskInfo::ORIENTATION)),
+                description:$access($task,TaskInfo::DESCRIPTION),
+                isPublic:$access($task,TaskInfo::IS_PUBLIC),
+                version:$access($task,TaskInfo::VERSION),
+                userId:$access($task,TaskInfo::USER_ID),
+                createdAt:$access($task,TaskInfo::CREATED_AT),
+                updatedAt:$access($task,TaskInfo::UPDATED_AT),
+                minClass:TaskClass::fromThrow($access($task,TaskInfo::MIN_CLASS)),
+                maxClass:TaskClass::fromThrow($access($task,TaskInfo::MAX_CLASS))
                );
         }
 
         public static function tryFetchById(int $id):self|null{
             return self::tryFetch(function(Builder $builder)use($id){
-                $builder->where(Task::getPrimaryKeyName(),'=',$id);
+                $builder->where(TaskInfo::getPrimaryKeyName(),'=',$id);
             })->first(default:null);
         }
 
@@ -65,20 +65,20 @@ namespace App\Helpers\BareModels {
          * @param callable(Builder $builder):void $modifyQuery
          */
         public static function tryFetch(callable $modifyQuery){
-            $taskId = Task::getPrimaryKeyName();
-            $taskTable = Task::getTableName();
+            $taskId = TaskInfo::getPrimaryKeyName();
+            $taskTable = TaskInfo::getTableName();
            $builder = DB::table($taskTable)->select(
                 [
                     $taskId,
-                    Task::NAME,
-                    Task::MIN_CLASS,
-                    Task::MAX_CLASS,
-                    Task::DIFFICULTY,
-                    Task::IS_PUBLIC,
-                    Task::VERSION,
-                    Task::USER_ID,
-                    Task::CREATED_AT,
-                    Task::UPDATED_AT
+                    TaskInfo::NAME,
+                    TaskInfo::MIN_CLASS,
+                    TaskInfo::MAX_CLASS,
+                    TaskInfo::DIFFICULTY,
+                    TaskInfo::IS_PUBLIC,
+                    TaskInfo::VERSION,
+                    TaskInfo::USER_ID,
+                    TaskInfo::CREATED_AT,
+                    TaskInfo::UPDATED_AT
                 ]
                 );
             $modifyQuery($builder);

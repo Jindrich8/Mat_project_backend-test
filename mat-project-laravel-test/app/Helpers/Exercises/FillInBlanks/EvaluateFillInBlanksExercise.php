@@ -6,8 +6,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksReviewResponse;
     use App\Dtos\Defs\Types\Review\ExercisePoints;
     use App\Dtos\InternalTypes\FillInBlanksContent;
-    use App\Dtos\Task\Review\DefsExercise;
-    use App\Dtos\Task\Review\Get\DefsExercise as GetDefsExercise;
+    use App\Dtos\TaskInfo\Review\DefsExercise;
+    use App\Dtos\TaskInfo\Review\Get\DefsExercise as GetDefsExercise;
     use App\Helpers\CEvaluateExercise;
     use App\Helpers\RequestHelper;
     use App\Dtos\InternalTypes\TextInput;

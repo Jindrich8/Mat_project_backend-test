@@ -18,37 +18,37 @@ use App\Dtos\Defs\Types\Response\ResponseEnumElement;
 use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
 use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
 use App\Dtos\Defs\Types\Review\ExercisePoints;
-use App\Dtos\Defs\Types\Task\AuthorInfo;
-use App\Dtos\Defs\Types\Task\TaskDetailInfo;
-use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
-use App\Dtos\Defs\Types\Task\TaskPreviewInfo;
-use App\Dtos\Defs\Types\Task\TaskPreviewInfoAuthor;
+use App\Dtos\Defs\Types\TaskInfo\AuthorInfo;
+use App\Dtos\Defs\Types\TaskInfo\TaskDetailInfo;
+use App\Dtos\Defs\Types\TaskInfo\TaskDetailInfoAuthor;
+use App\Dtos\Defs\Types\TaskInfo\TaskPreviewInfo;
+use App\Dtos\Defs\Types\TaskInfo\TaskPreviewInfoAuthor;
 use App\Dtos\Errors\ErrorResponse;
-use App\Models\Task;
+use App\Models\TaskInfo;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
-use App\Dtos\Task as TaskDto;
-use App\Dtos\Task\Create;
-use App\Dtos\Task\Evaluate;
-use App\Dtos\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
-use App\Dtos\Task\Review;
+use App\Dtos\TaskInfo as TaskDto;
+use App\Dtos\TaskInfo\Create;
+use App\Dtos\TaskInfo\Evaluate;
+use App\Dtos\TaskInfo\Evaluate\Errors\TaskChangedTaskEvaluateError;
+use App\Dtos\TaskInfo\Review;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
 use Illuminate\Http\Request as HttpRequest;
-use App\Dtos\Task\Take;
-use App\Dtos\Task\List;
-use App\Dtos\Task\MyList;
-use App\Dtos\Task\List\Error\EnumArrayError;
-use App\Dtos\Task\List\Error\GeneralErrorDetails;
-use App\Dtos\Task\List\Errors\FilterErrorDetails;
-use App\Dtos\Task\List\Errors\FilterErrorDetailsErrorData;
-use App\Dtos\Task\List\OrderByItems as ListOrderByItems;
-use App\Dtos\Task\List\Request\OrderByItems;
-use App\Dtos\Task\MyList\OrderByItems as MyListOrderByItems;
-use App\Dtos\Task\Review\Get\DefsExercise;
-use App\Dtos\Task\Review\Get\DefsExerciseInstructions as GetDefsExerciseInstructions;
-use App\Dtos\Task\Take\DefsExerciseInstructions;
-use App\Dtos\Task\Take\SavedTaskValues;
+use App\Dtos\TaskInfo\Take;
+use App\Dtos\TaskInfo\List;
+use App\Dtos\TaskInfo\MyList;
+use App\Dtos\TaskInfo\List\Error\EnumArrayError;
+use App\Dtos\TaskInfo\List\Error\GeneralErrorDetails;
+use App\Dtos\TaskInfo\List\Errors\FilterErrorDetails;
+use App\Dtos\TaskInfo\List\Errors\FilterErrorDetailsErrorData;
+use App\Dtos\TaskInfo\List\OrderByItems as ListOrderByItems;
+use App\Dtos\TaskInfo\List\Request\OrderByItems;
+use App\Dtos\TaskInfo\MyList\OrderByItems as MyListOrderByItems;
+use App\Dtos\TaskInfo\Review\Get\DefsExercise;
+use App\Dtos\TaskInfo\Review\Get\DefsExerciseInstructions as GetDefsExerciseInstructions;
+use App\Dtos\TaskInfo\Take\DefsExerciseInstructions;
+use App\Dtos\TaskInfo\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
 use App\Exceptions\ConversionException;
@@ -107,9 +107,9 @@ class TaskController extends Controller
     {
         $requestData = RequestHelper::getDtoFromRequest(Take\Request::class, $request);
         $taskId = $id;
-        $responseTask = Take\Task::create();
+        $responseTask = Take\TaskInfo::create();
         $task = BareTaskWAuthorName::tryFetchById($taskId, publicOnly: true)
-            ?? throw new AppModelNotFoundException('Task', ['id' => $taskId]);
+            ?? throw new AppModelNotFoundException('TaskInfo', ['id' => $taskId]);
 
         $responseTask->setTaskDetail(TaskHelper::getInfo($task))
             ->setDisplay($task->display);
@@ -196,16 +196,16 @@ class TaskController extends Controller
 
     public function store(HttpRequest $request): Create\Response
     {
-        DebugUtils::log("Task:store called", $request);
+        DebugUtils::log("TaskInfo:store called", $request);
         $requestData = RequestHelper::getDtoFromRequest(Create\Request::class, $request);
-        DebugUtils::log("Task:store requestData imported", $requestData);
+        DebugUtils::log("TaskInfo:store requestData imported", $requestData);
         $parseEnty = new ParseEntry();
-        DebugUtils::log('Task:store parse');
+        DebugUtils::log('TaskInfo:store parse');
         $taskRes = $parseEnty->parse([$requestData->task->source]);
-        DebugUtils::log('Task:store parsed');
+        DebugUtils::log('TaskInfo:store parsed');
         $taskRes->tagsIds = $requestData->task->tags;
         $taskId = $taskRes->insert();
-        DebugUtils::log('Task:store completed');
+        DebugUtils::log('TaskInfo:store completed');
         return Create\Response::create()
             ->setTaskId($taskId);
     }
@@ -225,15 +225,15 @@ class TaskController extends Controller
         $taskId = $id;
 
         $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true)
-            ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
+            ?? throw new AppModelNotFoundException('TaskInfo', ['id' => $id]);
             if($task->version !== $requestData->version){
             throw new ApplicationException(
                 userStatus: Response::HTTP_CONFLICT,
                 userResponse: ErrorResponse::create()
                     ->setUserInfo(
                         UserSpecificPartOfAnError::create()
-                            ->setMessage("Task changed.")
-                            ->setDescription("Task was updated, so filled data do not longer represents valid data for this task.")
+                            ->setMessage("TaskInfo changed.")
+                            ->setDescription("TaskInfo was updated, so filled data do not longer represents valid data for this task.")
                     )
                     ->setDetails(
                         TaskChangedTaskEvaluateError::create()
@@ -241,7 +241,7 @@ class TaskController extends Controller
             );
             }
 
-        $responseTask = Review\Get\Task::create()
+        $responseTask = Review\Get\TaskInfo::create()
             ->setDisplay($task->display);
 
         $exercises = ExerciseHelper::evaluate(
@@ -302,7 +302,7 @@ class TaskController extends Controller
              * @var List\Errors\FilterErrorDetailsErrorData|null $error
              */
             $filterErrorData = null;
-            $builder->where(Task::USER_ID, Auth::getUser()->id);
+            $builder->where(TaskInfo::USER_ID, Auth::getUser()->id);
 
             $filters = $requestData->filters;
             if ($filters->tags) {
@@ -374,13 +374,13 @@ class TaskController extends Controller
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
                     if ($filterName === ListOrderByItems::CLASS_RANGE) {
-                        $builder->orderBy(Task::MIN_CLASS, $direction);
-                        $builder->orderBy(Task::MAX_CLASS, $direction);
+                        $builder->orderBy(TaskInfo::MIN_CLASS, $direction);
+                        $builder->orderBy(TaskInfo::MAX_CLASS, $direction);
                     } else {
                         if ($filterName === ListOrderByItems::DIFFICULTY) {
-                            $column = Task::DIFFICULTY;
+                            $column = TaskInfo::DIFFICULTY;
                         } else if ($filterName === ListOrderByItems::NAME) {
-                            $column = Task::NAME;
+                            $column = TaskInfo::NAME;
                         } else {
                             return false;
                         }
@@ -429,7 +429,7 @@ class TaskController extends Controller
     public function detail(HttpRequest $request,int $taskId):TaskDto\Detail\Response{
        $task = BareTaskWAuthorName::tryFetchById($taskId,publicOnly:true);
        if(!$task){
-        throw new AppModelNotFoundException(Task::class,withProperties:['id'=>$taskId]));
+        throw new AppModelNotFoundException(TaskInfo::class,withProperties:['id'=>$taskId]));
        }
        $tags = TaskHelper::getTaskTags($taskId);
 
@@ -463,9 +463,9 @@ class TaskController extends Controller
 
     public function delete(HttpRequest $request, int $taskId):Response
     {
-        if (!DB::table(Task::getTableName())
+        if (!DB::table(TaskInfo::getTableName())
             ->delete($taskId)) {
-            throw new AppModelNotFoundException("Task", ['id' => $taskId]);
+            throw new AppModelNotFoundException("TaskInfo", ['id' => $taskId]);
         }
         return response(status: Response::HTTP_NO_CONTENT);
     }
@@ -474,7 +474,7 @@ class TaskController extends Controller
     {
         $task = BareTask::tryFetchById($taskId,publicOnly:true);
         if(!$task){
-         throw new AppModelNotFoundException(Task::class,withProperties:['id'=>$taskId]));
+         throw new AppModelNotFoundException(TaskInfo::class,withProperties:['id'=>$taskId]));
         }
         $tags = TaskHelper::getTaskTags($taskId);
  
@@ -513,7 +513,7 @@ class TaskController extends Controller
              * @var MyList\Errors\FilterErrorDetailsErrorData|null $error
              */
             $filterErrorData = null;
-            $builder->where(Task::USER_ID, Auth::getUser()->id);
+            $builder->where(TaskInfo::USER_ID, Auth::getUser()->id);
 
             $filters = $requestData->filters;
             if ($filters->tags) {
@@ -601,13 +601,13 @@ class TaskController extends Controller
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
                     if ($filterName === MyListOrderByItems::CLASS_RANGE) {
-                        $builder->orderBy(Task::MIN_CLASS, $direction);
-                        $builder->orderBy(Task::MAX_CLASS, $direction);
+                        $builder->orderBy(TaskInfo::MIN_CLASS, $direction);
+                        $builder->orderBy(TaskInfo::MAX_CLASS, $direction);
                     } else {
                         if ($filterName === MyListOrderByItems::DIFFICULTY) {
-                            $column = Task::DIFFICULTY;
+                            $column = TaskInfo::DIFFICULTY;
                         } else if ($filterName === MyListOrderByItems::NAME) {
-                            $column = Task::NAME;
+                            $column = TaskInfo::NAME;
                         } else {
                             return false;
                         }
