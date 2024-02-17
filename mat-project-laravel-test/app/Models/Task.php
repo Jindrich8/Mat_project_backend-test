@@ -12,18 +12,6 @@ class Task extends BaseModel
 {
     use HasFactory;
 
-    const NAME = 'name';
-    const DIFFICULTY = 'difficulty';
-    const DESCRIPTION = 'description';
-    const MIN_CLASS = 'min_class';
-    const MAX_CLASS = 'max_class';
-    const USER_ID = 'user_id';
-    const IS_PUBLIC = 'is_public';
-    const VERSION = 'version';
-    const ORIENTATION = 'orientation';
-    
-
-
     public static function getMaxClass(Task $task){
         return TaskClass::from($task->max_class);
     }

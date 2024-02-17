@@ -3,6 +3,7 @@
 namespace App\Helpers\BareModels {
 
     use App\Helpers\Database\DBHelper;
+    use App\ModelConstants\TaskConstants;
     use App\Models\Task;
     use App\Models\User;
     use App\TableSpecificData\TaskClass;
@@ -41,17 +42,17 @@ namespace App\Helpers\BareModels {
 
             return new self(
                 id:$access($task,Task::getPrimaryKeyName()),
-                name:$access($task,Task::NAME),
-                difficulty:TaskDifficulty::fromThrow($access($task,Task::DIFFICULTY)),
-                display:TaskDisplay::fromThrow($access($task,Task::ORIENTATION)),
-                description:$access($task,Task::DESCRIPTION),
-                isPublic:$access($task,Task::IS_PUBLIC),
-                version:$access($task,Task::VERSION),
-                userId:$access($task,Task::USER_ID),
-                createdAt:$access($task,Task::CREATED_AT),
-                updatedAt:$access($task,Task::UPDATED_AT),
-                minClass:TaskClass::fromThrow($access($task,Task::MIN_CLASS)),
-                maxClass:TaskClass::fromThrow($access($task,Task::MAX_CLASS))
+                name:$access($task,TaskConstants::COL_NAME),
+                difficulty:TaskDifficulty::fromThrow($access($task,TaskConstants::COL_DIFFICULTY)),
+                display:TaskDisplay::fromThrow($access($task,TaskConstants::COL_ORIENTATION)),
+                description:$access($task,TaskConstants::COL_DESCRIPTION),
+                isPublic:$access($task,TaskConstants::COL_IS_PUBLIC),
+                version:$access($task,TaskConstants::COL_VERSION),
+                userId:$access($task,TaskConstants::COL_USER_ID),
+                createdAt:$access($task,TaskConstants::COL_CREATED_AT),
+                updatedAt:$access($task,TaskConstants::COL_UPDATED_AT),
+                minClass:TaskClass::fromThrow($access($task,TaskConstants::COL_MIN_CLASS)),
+                maxClass:TaskClass::fromThrow($access($task,TaskConstants::COL_MAX_CLASS))
                );
         }
 
@@ -66,19 +67,19 @@ namespace App\Helpers\BareModels {
          */
         public static function tryFetch(callable $modifyQuery){
             $taskId = Task::getPrimaryKeyName();
-            $taskTable = Task::getTableName();
+            $taskTable = TaskConstants::TABLE_NAME;
            $builder = DB::table($taskTable)->select(
                 [
                     $taskId,
-                    Task::NAME,
-                    Task::MIN_CLASS,
-                    Task::MAX_CLASS,
-                    Task::DIFFICULTY,
-                    Task::IS_PUBLIC,
-                    Task::VERSION,
-                    Task::USER_ID,
-                    Task::CREATED_AT,
-                    Task::UPDATED_AT
+                    TaskConstants::COL_NAME,
+                    TaskConstants::COL_MIN_CLASS,
+                    TaskConstants::COL_MAX_CLASS,
+                    TaskConstants::COL_DIFFICULTY,
+                    TaskConstants::COL_IS_PUBLIC,
+                    TaskConstants::COL_VERSION,
+                    TaskConstants::COL_USER_ID,
+                    TaskConstants::COL_CREATED_AT,
+                    TaskConstants::COL_UPDATED_AT
                 ]
                 );
             $modifyQuery($builder);

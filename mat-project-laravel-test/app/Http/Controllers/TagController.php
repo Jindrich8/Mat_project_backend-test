@@ -25,14 +25,14 @@ class TagController extends Controller
     public function getAll(HttpRequest $request)
     {
         $tagIdName = Tag::getPrimaryKeyName();
-       $tags = DB::table(Tag::getTableName())
-        ->select([$tagIdName,Tag::NAME])
+       $tags = DB::table(TagConstants::TABLE_NAME)
+        ->select([$tagIdName,TagConstants::COL_NAME])
         ->get();
 
        $response = Response::create()
         ->setTags(
             $tags->map(fn($tag)=>ResponseEnumElement::create()
-        ->setName(DBHelper::access($tag,Tag::NAME))
+        ->setName(DBHelper::access($tag,TagConstants::COL_NAME))
         ->setId(ResponseHelper::translateIdForUser(DBHelper::access($tag,$tagIdName)))
         )->all()
         );

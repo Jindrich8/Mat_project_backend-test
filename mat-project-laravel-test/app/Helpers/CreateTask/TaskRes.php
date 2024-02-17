@@ -252,9 +252,9 @@ namespace App\Helpers\CreateTask {
 
                     if ($insertGroupsBindings) {
                         $groupIds = PgDB::insertAndGetIds(
-                            Group::getTableName(),
+                            GroupConstants::TABLE_NAME,
                             Group::getPrimaryKeyName(),
-                            columns: [Group::TASK_ID, Group::START, Group::LENGTH],
+                            columns: [GroupConstants::COL_TASK_ID, GroupConstants::COL_START, GroupConstants::COL_LENGTH],
                             values: $insertGroupsBindings,
                             unsetValuesArray: false
                         );
@@ -273,8 +273,8 @@ namespace App\Helpers\CreateTask {
                                     $insertResourcesAssocData,
                                     ...array_map(
                                         fn (BareResource $resource) => [
-                                            Resource::GROUP_ID => $groupId,
-                                            Resource::CONTENT => $resource->content
+                                            ResourceConstants::COL_GROUP_ID => $groupId,
+                                            ResourceConstants::COL_CONTENT => $resource->content
                                         ],
                                         $resources
                                     )
@@ -282,7 +282,7 @@ namespace App\Helpers\CreateTask {
                             }
                             if ($insertResourcesAssocData) {
                                 DebugUtils::log("Resources",$insertResourcesAssocData);
-                                $success = DB::table(Resource::getTableName())
+                                $success = DB::table(ResourceConstants::TABLE_NAME)
                                 ->insert($insertResourcesAssocData);
                                 // /**
                                 //  * @var bool $success
@@ -324,9 +324,9 @@ namespace App\Helpers\CreateTask {
                         if ($exerciseBindings) {
                             DebugUtils::log("Exercise bindings",$exerciseBindings);
                             $ids =  PgDB::insertAndGetIds(
-                                Exercise::getTableName(),
+                                ExerciseConstants::TABLE_NAME,
                                 Exercise::getPrimaryKeyName(),
-                                columns: [Exercise::TASK_ID, Exercise::ORDER, Exercise::INSTRUCTIONS, Exercise::WEIGHT, Exercise::EXERCISEABLE_TYPE],
+                                columns: [ExerciseConstants::COL_TASK_ID, ExerciseConstants::COL_ORDER, ExerciseConstants::COL_INSTRUCTIONS, ExerciseConstants::COL_WEIGHT, ExerciseConstants::COL_EXERCISEABLE_TYPE],
                                 values: $exerciseBindings,
                                 unsetValuesArray: false
                             );
@@ -363,8 +363,8 @@ namespace App\Helpers\CreateTask {
                     $this->task->tags()->sync($this->tagsIds);
                 }
                 DebugUtils::log("Task successfully updated",['taskId' => $this->task->id]);
-                if(!DB::table(Group::getTableName())
-                ->where(Group::TASK_ID,'=',$this->task->id)
+                if(!DB::table(GroupConstants::TABLE_NAME)
+                ->where(GroupConstants::COL_TASK_ID,'=',$this->task->id)
                 ->delete()){
                     throw new InternalException("Could not delete task groups!",['taskId' => $this->task->id]);
                 }
@@ -382,9 +382,9 @@ namespace App\Helpers\CreateTask {
 
                     if ($insertGroupsBindings) {
                         $groupIds = PgDB::insertAndGetIds(
-                            Group::getTableName(),
+                            GroupConstants::TABLE_NAME,
                             Group::getPrimaryKeyName(),
-                            columns: [Group::TASK_ID, Group::START, Group::LENGTH],
+                            columns: [GroupConstants::COL_TASK_ID, GroupConstants::COL_START, GroupConstants::COL_LENGTH],
                             values: $insertGroupsBindings,
                             unsetValuesArray: false
                         );
@@ -403,8 +403,8 @@ namespace App\Helpers\CreateTask {
                                     $insertResourcesAssocData,
                                     ...array_map(
                                         fn (BareResource $resource) => [
-                                            Resource::GROUP_ID => $groupId,
-                                            Resource::CONTENT => $resource->content
+                                            ResourceConstants::COL_GROUP_ID => $groupId,
+                                            ResourceConstants::COL_CONTENT => $resource->content
                                         ],
                                         $resources
                                     )
@@ -412,7 +412,7 @@ namespace App\Helpers\CreateTask {
                             }
                             if ($insertResourcesAssocData) {
                                 DebugUtils::log("Resources",$insertResourcesAssocData);
-                                $success = DB::table(Resource::getTableName())
+                                $success = DB::table(ResourceConstants::TABLE_NAME)
                                 ->insert($insertResourcesAssocData);
                                 // /**
                                 //  * @var bool $success
@@ -432,8 +432,8 @@ namespace App\Helpers\CreateTask {
                     }
                 }
 
-                if(!DB::table(Exercise::getTableName())
-                ->where(Exercise::TASK_ID,'=',$taskId)
+                if(!DB::table(ExerciseConstants::TABLE_NAME)
+                ->where(ExerciseConstants::COL_TASK_ID,'=',$taskId)
                 ->delete()){
                     throw new InternalException("Could not delete task exercises!",['taskId' => $taskId]);
                 }
@@ -461,9 +461,9 @@ namespace App\Helpers\CreateTask {
                         if ($exerciseBindings) {
                             DebugUtils::log("Exercise bindings",$exerciseBindings);
                             $ids =  PgDB::insertAndGetIds(
-                                Exercise::getTableName(),
+                                ExerciseConstants::TABLE_NAME,
                                 Exercise::getPrimaryKeyName(),
-                                columns: [Exercise::TASK_ID, Exercise::ORDER, Exercise::INSTRUCTIONS, Exercise::WEIGHT, Exercise::EXERCISEABLE_TYPE],
+                                columns: [ExerciseConstants::COL_TASK_ID, ExerciseConstants::COL_ORDER, ExerciseConstants::COL_INSTRUCTIONS, ExerciseConstants::COL_WEIGHT, ExerciseConstants::COL_EXERCISEABLE_TYPE],
                                 values: $exerciseBindings,
                                 unsetValuesArray: false
                             );

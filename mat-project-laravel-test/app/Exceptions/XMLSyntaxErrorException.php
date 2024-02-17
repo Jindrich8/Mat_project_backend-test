@@ -1,6 +1,10 @@
 <?php
 namespace App\Exceptions{
 
+    use App\Dtos\Defs\Errors\XML\XMLSyntaxError as XMLXMLSyntaxError;
+    use App\Dtos\Defs\Errors\XML\XMLSyntaxErrorErrorData as XMLXMLSyntaxErrorErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
     use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
     use App\Dtos\Errors\ErrorResponse\XMLSyntaxError;
     use App\Dtos\Errors\ErrorResponse\XMLSyntaxErrorErrorData;
@@ -8,7 +12,7 @@ namespace App\Exceptions{
 class XMLSyntaxErrorException extends XMLParsingException{
    
     public function __construct(
-        XMLSyntaxErrorErrorData $errorData,
+        XMLXMLSyntaxErrorErrorData $errorData,
         string $message = "",
         string $description = "",
         )
@@ -26,11 +30,14 @@ class XMLSyntaxErrorException extends XMLParsingException{
             $description = "XML does not have valid XML syntax.";
         }
         parent::__construct(
-           ApplicationErrorObject::create()
-           ->setMessage($message)
-           ->setDescription($description)
+           ErrorResponse::create()
+           ->setUserInfo(
+            UserSpecificPartOfAnError::create()
+            ->setMessage($message)
+            ->setDescription($description)
+           )
            ->setDetails(
-            XMLSyntaxError::create()
+            XMLXMLSyntaxError::create()
            ->setErrorData($errorData)
            )
         );

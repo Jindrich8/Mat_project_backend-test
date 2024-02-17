@@ -9,9 +9,5 @@ class FixErrors extends BaseModel
 {
     use HasFactory;
 
-    public $primaryKey = self::ID;
-
-    const ID = 'exerciseable_id';
-    const CORRECT_TEXT = 'correct_text';
-    const WRONG_TEXT = 'wrong_text';
+    public $primaryKey = 'exerciseable_id';
 }

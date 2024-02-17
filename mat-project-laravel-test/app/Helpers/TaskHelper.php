@@ -21,6 +21,12 @@ namespace App\Helpers {
     use App\Helpers\BareModels\BareTaskWAuthorName;
     use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
+    use App\ModelConstants\GroupConstants;
+    use App\ModelConstants\ResourceConstants;
+    use App\ModelConstants\SavedTaskConstants;
+    use App\ModelConstants\TagConstants;
+    use App\ModelConstants\TagTaskConstants;
+    use App\ModelConstants\TaskConstants;
     use App\Models\Group;
     use App\Models\Resource;
     use App\Models\SavedTask;
@@ -62,16 +68,19 @@ namespace App\Helpers {
             array &$entries
         ) {
             $groupIdName = Group::getPrimaryKeyName();
-            $groups = DB::table(Group::getTableName())
-                ->select([$groupIdName, Group::START, Group::LENGTH])
-                ->where(Group::TASK_ID, '=', $taskId)
-                ->orderBy(Group::START, direction: 'asc')
-                ->orderBy(Group::LENGTH, direction: 'desc')
+            $groups = DB::table(GroupConstants::TABLE_NAME)
+                ->select([$groupIdName, GroupConstants::COL_START, GroupConstants::COL_LENGTH])
+                ->where(GroupConstants::COL_TASK_ID, '=', $taskId)
+                ->orderBy(GroupConstants::COL_START, direction: 'asc')
+                ->orderBy(GroupConstants::COL_LENGTH, direction: 'desc')
                 ->get();
 
-            $resources = DB::table(Resource::getTableName())
-                ->select([Resource::GROUP_ID, Resource::CONTENT])
-                ->whereIn(Resource::GROUP_ID, $groups->keys())
+            $resources = DB::table(ResourceConstants::TABLE_NAME)
+                ->select([
+                    ResourceConstants::COL_GROUP_ID, 
+                    ResourceConstants::COL_CONTENT
+                    ])
+                ->whereIn(ResourceConstants::COL_GROUP_ID, $groups->keys())
                 ->get();
             /**
              * @var array<mixed,string[]> $resourcesByGroupId
@@ -81,11 +90,11 @@ namespace App\Helpers {
                 /**
                  * @var mixed $groupId
                  */
-                $groupId = DBHelper::access($resource, Resource::GROUP_ID);
+                $groupId = DBHelper::access($resource, ResourceConstants::COL_GROUP_ID);
                 /**
                  * @var string $content
                  */
-                $content = DBHelper::access($resource, Resource::CONTENT);
+                $content = DBHelper::access($resource, ResourceConstants::COL_CONTENT);
                 $resourcesByGroupId[$groupId][] = $content;
             }
 
@@ -123,7 +132,7 @@ namespace App\Helpers {
                     [$exerciseEnd, &$dest] =  $stack[$stackEntryKey];
                     unset($stack[$stackEntryKey]);
                 }
-                if ($exI === DBHelper::access($nextGroup, Group::START)) {
+                if ($exI === DBHelper::access($nextGroup, GroupConstants::COL_START)) {
                     $groupId = DBHelper::access($nextGroup, $groupIdName);
                     $groupDto = $groupToDto($resourcesByGroupId[$groupId] ?? []);
                     unset($resourcesByGroupId[$groupId]);
@@ -131,7 +140,7 @@ namespace App\Helpers {
                     $dest[] = $groupDto;
                     $stack[] = [$exerciseEnd, &$dest];
                     $dest = &$groupDto->entries;
-                    $exerciseEnd = $exI + DBHelper::access($nextGroup, Group::LENGTH);
+                    $exerciseEnd = $exI + DBHelper::access($nextGroup, GroupConstants::COL_LENGTH);
                 }
                 $exerciseDto = $exerciseToDto($exercise);
                 $dest[] = $exerciseDto;
@@ -145,26 +154,29 @@ namespace App\Helpers {
                 TimeStampUtils::timestampToUtc($localySavedTaskUtcTimestamp);
                 $savedTaskTable = SavedTask::getTableName();
                 $builder = DB::table($savedTaskTable)
-                    ->select([SavedTask::DATA, SavedTask::TASK_VERSION])
-                    ->where(SavedTask::USER_ID, '=', $user->id)
-                    ->where(SavedTask::TASK_ID, '=', $taskId);
+                    ->select([
+                        SavedTaskConstants::COL_DATA, 
+                        SavedTaskConstants::COL_TASK_VERSION
+                        ])
+                    ->where(SavedTaskConstants::COL_USER_ID, '=', $user->id)
+                    ->where(SavedTaskConstants::COL_TASK_ID, '=', $taskId);
                 if ($localySavedTaskUtcTimestamp) {
                     $builder = $builder
-                        ->where(SavedTask::UPDATED_AT, '>', $localySavedTaskUtcTimestamp, boolean: 'or')
-                        ->where(SavedTask::CREATED_AT, '>', $localySavedTaskUtcTimestamp);
+                        ->where(SavedTaskConstants::COL_UPDATED_AT, '>', $localySavedTaskUtcTimestamp, boolean: 'or')
+                        ->where(SavedTaskConstants::COL_CREATED_AT, '>', $localySavedTaskUtcTimestamp);
                 }
                 $savedTask = $builder->first();
                 if ($savedTask) {
-                    $savedTaskData = $savedTask[SavedTask::DATA];
-                    $taskVersion = $savedTaskData[SavedTask::TASK_VERSION];
+                    $savedTaskData = $savedTask[SavedTaskConstants::COL_DATA];
+                    $taskVersion = $savedTaskData[SavedTaskConstants::COL_TASK_VERSION];
                     $decodedSavedData = TaskSaveContent::import(
                         (object)[
                             TaskSaveContent::EXERCISES =>
                             DBJsonHelper::decode(
                                 $savedTaskData,
                                 table: $savedTaskTable,
-                                column: SavedTask::DATA,
-                                id: [SavedTask::USER_ID => $user->id, SavedTask::TASK_ID => $taskId]
+                                column: SavedTaskConstants::COL_DATA,
+                                id: [SavedTaskConstants::COL_USER_ID => $user->id, SavedTaskConstants::COL_TASK_ID => $taskId]
                             )
                         ]
                     );
@@ -267,11 +279,11 @@ namespace App\Helpers {
             $tagTable = Tag::getPrimaryKeyName();
             foreach (DB::table($tagTaskTable)
                 ->select([
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TAG_ID),
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TASK_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TAG_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TASK_ID),
                     DBHelper::colExpression(
                         table: $tagTable,
-                        column: Tag::NAME,
+                        column: TagConstants::COL_NAME,
                         as: 'name'
                     )
                 ])
@@ -279,7 +291,7 @@ namespace App\Helpers {
                     $tagTable,
                     DBHelper::colExpression(
                         table: $tagTaskTable,
-                        column: TagTask::TAG_ID
+                        column: TagTaskConstants::COL_TAG_ID
                     ),
                     '=',
                     DBHelper::colExpression(
@@ -291,13 +303,13 @@ namespace App\Helpers {
                 /**
                  * @var int $taskId
                  */
-                $taskId = $tag[TagTask::TASK_ID];
+                $taskId = $tag[TagTaskConstants::COL_TASK_ID];
                 $tagsByTaskId[$taskId] ??= [];
 
                 /**
                  * @var array{int,string}
                  */
-                $tagData = [$tag[TagTask::TAG_ID] + 0, $tag['name'] . ''];
+                $tagData = [$tag[TagTaskConstants::COL_TAG_ID] + 0, $tag['name'] . ''];
                 $tagsByTaskId[$taskId][] = $tagData;
             }
             return $tagsByTaskId;
@@ -312,11 +324,11 @@ namespace App\Helpers {
             $tagTable = Tag::getPrimaryKeyName();
             $tags = DB::table($tagTaskTable)
                 ->select([
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TAG_ID),
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TASK_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TAG_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TASK_ID),
                     DBHelper::colExpression(
                         table: $tagTable,
-                        column: Tag::NAME,
+                        column: TagConstants::COL_NAME,
                         as: 'name'
                     )
                 ])
@@ -324,7 +336,7 @@ namespace App\Helpers {
                     $tagTable,
                     DBHelper::colExpression(
                         table: $tagTaskTable,
-                        column: TagTask::TAG_ID
+                        column: TagTaskConstants::COL_TAG_ID
                     ),
                     '=',
                     DBHelper::colExpression(
@@ -335,7 +347,7 @@ namespace App\Helpers {
                 ->where(
                     DBHelper::colExpression(
                         table: $tagTaskTable,
-                        column: TagTask::TASK_ID
+                        column: TagTaskConstants::COL_TASK_ID
                     ),
                     '=',
                     $taskId
@@ -345,7 +357,7 @@ namespace App\Helpers {
             $access = null;
             return $tags->mapWithKeys(function ($tag, $key) use ($access) {
                 $access ??= Utils::getAccessor($tag);
-                return [$access($tag, TagTask::TAG_ID) + 0 => $access($tag, 'name') . ''];
+                return [$access($tag, TagTaskConstants::COL_TAG_ID) + 0 => $access($tag, 'name') . ''];
             });
         }
 
@@ -373,8 +385,8 @@ namespace App\Helpers {
             }
             if (!$areInvalid) {
                 $taskIds = DB::table(TagTask::getTableName())
-                    ->select([TagTask::TASK_ID])
-                    ->whereIn(TagTask::TAG_ID, $translatedTags)
+                    ->select([TagTaskConstants::COL_TASK_ID])
+                    ->whereIn(TagTaskConstants::COL_TAG_ID, $translatedTags)
                     ->get()->toArray();
                 $builder->whereIn(Task::getPrimaryKeyName(), $taskIds);
                 return [];
@@ -388,7 +400,7 @@ namespace App\Helpers {
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskDifficulty::class);
             if (!$RangeError) {
-                $builder->whereBetween(Task::DIFFICULTY, [$min, $max]);
+                $builder->whereBetween(TaskConstants::COL_DIFFICULTY, [$min, $max]);
             }
             return $RangeError;
         }
@@ -397,8 +409,8 @@ namespace App\Helpers {
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskClass::class);
             if (!$RangeError) {
-                $builder->where(Task::MIN_CLASS, '>=', $min);
-                $builder->where(Task::MAX_CLASS, '<=', $max);
+                $builder->where(TaskConstants::COL_MIN_CLASS, '>=', $min);
+                $builder->where(TaskConstants::COL_MAX_CLASS, '<=', $max);
             }
             return $RangeError;
         }
@@ -409,7 +421,7 @@ namespace App\Helpers {
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
-                    DB::raw('COALESCE(' . Task::UPDATED_AT . ',' . Task::CREATED_AT . ')'),
+                    DB::raw('COALESCE(' . TaskConstants::COL_UPDATED_AT . ',' . TaskConstants::COL_CREATED_AT . ')'),
                     [$minTimestamp, $maxTimestamp]
                 );
                 $rangeOrError = null;
@@ -423,7 +435,7 @@ namespace App\Helpers {
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
-                    Task::CREATED_AT,
+                    TaskConstants::COL_CREATED_AT,
                     [$minTimestamp, $maxTimestamp]
                 );
                 $rangeOrError = null;

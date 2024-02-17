@@ -130,6 +130,8 @@ namespace Dev\Utils {
          }
 
          public function showPassedOptions(){
+            "This: ";
+            var_dump($this);
             echo "\nValid passed options: ";
             var_dump($this->passedValidOptions);
             echo "\n";

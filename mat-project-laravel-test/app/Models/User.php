@@ -12,6 +12,30 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    
+    private static ?string $staticTableName = null;
+    private static ?string $staticPrimaryKeyName = null;
+
+    public static function getTableName():string{
+        if(!self::$staticTableName){
+            self::storeModelInfo();
+        }
+        return self::$staticTableName;
+    }
+
+    public static function getPrimaryKeyName():string{
+        if(!self::$staticPrimaryKeyName){
+            self::storeModelInfo();
+        }
+        return self::$staticPrimaryKeyName;
+    }
+
+    private static function storeModelInfo(){
+        $user = new static();
+        self::$staticTableName = $user->table;
+        self::$staticPrimaryKeyName = $user->primaryKey;
+    }
+    
 
     const ID = 'id';
     const TABLE_NAME = 'users';

@@ -17,6 +17,7 @@ use App\Dtos\Task\Take;
 use App\Exceptions\InternalException;
 use App\Helpers\Database\DBHelper;
 use App\Helpers\ResponseHelper;
+use App\ModelConstants\FillInBlanksConstants;
 use App\Utils\DtoUtils;
 use App\Utils\GeneratorUtils;
 use App\Utils\Utils;
@@ -39,7 +40,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         $table = FillInBlanks::getTableName();
         $idName = FillInBlanks::getPrimaryKeyName();
         $exercises = DB::table($table)
-            ->select([$idName, FillInBlanks::CONTENT])
+            ->select([$idName, FillInBlanksConstants::COL_CONTENT])
             ->whereIn($idName, $ids)
             ->get();
         while (($exercise = $exercises->pop()) !== null) {
@@ -48,9 +49,9 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
              */
             $exerciseId = DBHelper::access($exercise, $idName);
             $decodedContent = DBJsonHelper::decode(
-                json: DBHelper::access($exercise, FillInBlanks::CONTENT),
+                json: DBHelper::access($exercise, FillInBlanksConstants::COL_CONTENT),
                 table: $table,
-                column: FillInBlanks::CONTENT,
+                column: FillInBlanksConstants::COL_CONTENT,
                 id: $exerciseId
             );
 

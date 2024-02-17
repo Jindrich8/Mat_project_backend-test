@@ -43,8 +43,8 @@ class TaskCreateInfoController extends Controller
     {
         $response = Response\Response::create()
             ->setTags(
-                DB::table(Tag::getTableName())
-                    ->pluck(Tag::NAME, Tag::getPrimaryKeyName())
+                DB::table(TagConstants::TABLE_NAME)
+                    ->pluck(TagConstants::COL_NAME, Tag::getPrimaryKeyName())
                     ->map(
                         fn ($name, $id) =>
                         Response\ResponseEnumElement::create()

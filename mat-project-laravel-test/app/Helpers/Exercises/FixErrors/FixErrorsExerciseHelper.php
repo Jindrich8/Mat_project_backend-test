@@ -28,7 +28,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         $table = FixErrors::getTableName();
         $idName = FixErrors::getPrimaryKeyName();
         $exercises = DB::table($table)
-            ->select([$idName, FixErrors::WRONG_TEXT])
+            ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
             ->whereIn($idName, $ids)
             ->get();
         $takeExercises = [];
@@ -37,7 +37,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         while (($exercise = $exercises->pop())) {
             $exerciseId = DBHelper::access($exercise, $idName);
             $content = FixErrorsTakeResponseContent::create()
-                ->setDefaultText(DBHelper::access($exercise, FixErrors::WRONG_TEXT));
+                ->setDefaultText(DBHelper::access($exercise, FixErrorsConstants::COL_WRONG_TEXT));
             if (is_string($savedValue)) {
                 $content->setText($savedValue);
             }
@@ -55,7 +55,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         $table = FixErrors::getTableName();
         $idName = FixErrors::getPrimaryKeyName();
         $exercises = DB::table($table)
-            ->select([$idName, FixErrors::WRONG_TEXT])
+            ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
             ->whereIn($idName, $ids)
             ->get();
         $evaluateExercises = [];
@@ -65,7 +65,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
             $evaluateExercises[$exerciseId] = new  EvaluateFixErrorsExercise(
                 FixErrorsReviewResponse::create()
                     ->setContent(FixErrorsReviewResponseContent::create()
-                        ->setUserText(DBHelper::access($exercise, FixErrors::WRONG_TEXT)))
+                        ->setUserText(DBHelper::access($exercise, FixErrorsConstants::COL_WRONG_TEXT)))
             );
         }
         return $evaluateExercises;

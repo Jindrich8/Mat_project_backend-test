@@ -63,6 +63,8 @@ use App\TableSpecificData\TaskDisplay;
 use App\Helpers\ExerciseHelper;
 use App\Helpers\ResponseHelper;
 use App\Helpers\TaskHelper;
+use App\ModelConstants\SavedTaskConstants;
+use App\ModelConstants\TaskConstants;
 use Illuminate\Support\Facades\DB;
 use App\Models\Exercise;
 use App\Models\Group;
@@ -181,8 +183,13 @@ class TaskController extends Controller
         $requestData = RequestHelper::getDtoFromRequest(TaskDto\Save\Request::class, $request);
         $success = DB::table(SavedTask::getTableName())
             ->updateOrInsert(
-                attributes: [SavedTask::TASK_ID => $id, SavedTask::USER_ID => $user->id],
-                values: [SavedTask::Data => TaskDto\Save\Request::export($requestData->exercises)]
+                attributes: [
+                    SavedTaskConstants::COL_TASK_ID => $id, 
+                    SavedTaskConstants::COL_USER_ID => $user->id
+                ],
+                values: [
+                    SavedTaskConstants::COL_DATA => TaskDto\Save\Request::export($requestData->exercises)
+                    ]
             );
         if (!$success) {
             throw new InternalException(
@@ -301,7 +308,7 @@ class TaskController extends Controller
              * @var List\Errors\FilterErrorDetailsErrorData|null $error
              */
             $filterErrorData = null;
-            $builder->where(Task::USER_ID, Auth::getUser()->id);
+            $builder->where(TaskConstants::COL_USER_ID, Auth::getUser()->id);
 
             $filters = $requestData->filters;
             if ($filters->tags) {
@@ -316,7 +323,7 @@ class TaskController extends Controller
             }
 
             if ($filters->name) {
-                $builder->whereRaw(TASK::NAME . " LIKE %?%", [$filters->name]);
+                $builder->whereRaw(TASKConstants::COL_NAME . " LIKE %?%", [$filters->name]);
             }
 
             if ($filters->difficultyRange) {
@@ -373,13 +380,13 @@ class TaskController extends Controller
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
                     if ($filterName === ListOrderByItems::CLASS_RANGE) {
-                        $builder->orderBy(Task::MIN_CLASS, $direction);
-                        $builder->orderBy(Task::MAX_CLASS, $direction);
+                        $builder->orderBy(TaskConstants::COL_MIN_CLASS, $direction);
+                        $builder->orderBy(TaskConstants::COL_MAX_CLASS, $direction);
                     } else {
                         if ($filterName === ListOrderByItems::DIFFICULTY) {
-                            $column = Task::DIFFICULTY;
+                            $column = TaskConstants::COL_DIFFICULTY;
                         } else if ($filterName === ListOrderByItems::NAME) {
-                            $column = Task::NAME;
+                            $column = TaskConstants::COL_NAME;
                         } else {
                             return false;
                         }
@@ -396,7 +403,7 @@ class TaskController extends Controller
                 ->setId(ResponseHelper::translateIdForUser($task->id))
                 ->setName($task->name)
                 ->setAuthor(
-                    TaskPreviewInfoAuthor::create()
+                    AuthorInfo::create()
                         ->setId($task->userId)
                         ->setName($task->authorName)
                 )
@@ -462,7 +469,7 @@ class TaskController extends Controller
 
     public function delete(HttpRequest $request, int $taskId):Response
     {
-        if (!DB::table(Task::getTableName())
+        if (!DB::table(TaskConstants::TABLE_NAME)
             ->delete($taskId)) {
             throw new AppModelNotFoundException("Task", ['id' => $taskId]);
         }
@@ -512,7 +519,7 @@ class TaskController extends Controller
              * @var MyList\Errors\FilterErrorDetailsErrorData|null $error
              */
             $filterErrorData = null;
-            $builder->where(Task::USER_ID, Auth::getUser()->id);
+            $builder->where(TaskConstants::COL_USER_ID, Auth::getUser()->id);
 
             $filters = $requestData->filters;
             if ($filters->tags) {
@@ -527,7 +534,7 @@ class TaskController extends Controller
             }
 
             if ($filters->name) {
-                $builder->whereRaw(TASK::NAME . " LIKE %?%", [$filters->name]);
+                $builder->whereRaw(TaskConstants::COL_NAME . " LIKE %?%", [$filters->name]);
             }
 
             if ($filters->difficultyRange) {
@@ -600,13 +607,13 @@ class TaskController extends Controller
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
                     if ($filterName === MyListOrderByItems::CLASS_RANGE) {
-                        $builder->orderBy(Task::MIN_CLASS, $direction);
-                        $builder->orderBy(Task::MAX_CLASS, $direction);
+                        $builder->orderBy(TaskConstants::COL_MIN_CLASS, $direction);
+                        $builder->orderBy(TaskConstants::COL_MAX_CLASS, $direction);
                     } else {
                         if ($filterName === MyListOrderByItems::DIFFICULTY) {
-                            $column = Task::DIFFICULTY;
+                            $column = TaskConstants::COL_DIFFICULTY;
                         } else if ($filterName === MyListOrderByItems::NAME) {
-                            $column = Task::NAME;
+                            $column = TaskConstants::COL_NAME;
                         } else {
                             return false;
                         }

@@ -9,6 +9,4 @@ class TagTask extends BaseModel
 {
     use HasFactory;
 
-    const TASK_ID = 'task_id';
-    const TAG_ID = 'tag_id';
 }

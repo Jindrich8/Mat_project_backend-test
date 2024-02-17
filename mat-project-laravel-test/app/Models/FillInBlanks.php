@@ -8,8 +8,5 @@ class FillInBlanks extends BaseModel
 {
     use HasFactory;
 
-    const CONTENT = 'content';
-    const ID = 'exerciseable_id';
-
-    public $primaryKey = self::ID;
+    public $primaryKey = 'exerciseable_id';
 }

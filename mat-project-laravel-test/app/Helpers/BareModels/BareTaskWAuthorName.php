@@ -3,6 +3,7 @@
 namespace App\Helpers\BareModels {
 
     use App\Helpers\Database\DBHelper;
+    use App\ModelConstants\TaskConstants;
     use App\Models\Task;
     use App\Models\User;
     use App\TableSpecificData\TaskClass;
@@ -38,16 +39,16 @@ namespace App\Helpers\BareModels {
             $access = Utils::getAccessor($task);
             return new self(
                 id:$access($task,Task::getPrimaryKeyName()),
-                name:$access($task,Task::NAME),
-                difficulty:TaskDifficulty::fromThrow($access($task,Task::DIFFICULTY)),
-                display:TaskDisplay::fromThrow($access($task,Task::ORIENTATION)),
-                description:$access($task,Task::DESCRIPTION),
+                name:$access($task,TaskConstants::COL_NAME),
+                difficulty:TaskDifficulty::fromThrow($access($task,TaskConstants::COL_DIFFICULTY)),
+                display:TaskDisplay::fromThrow($access($task,TaskConstants::COL_ORIENTATION)),
+                description:$access($task,TaskConstants::COL_DESCRIPTION),
                 authorName:$access($task,$authorNameColName),
-                isPublic:$access($task,Task::IS_PUBLIC),
-                version:$access($task,Task::VERSION),
-                userId:$access($task,Task::USER_ID),
-                minClass:TaskClass::fromThrow($access($task,Task::MIN_CLASS)),
-                maxClass:TaskClass::fromThrow($access($task,Task::MAX_CLASS))
+                isPublic:$access($task,TaskConstants::COL_IS_PUBLIC),
+                version:$access($task,TaskConstants::COL_VERSION),
+                userId:$access($task,TaskConstants::COL_USER_ID),
+                minClass:TaskClass::fromThrow($access($task,TaskConstants::COL_MIN_CLASS)),
+                maxClass:TaskClass::fromThrow($access($task,TaskConstants::COL_MAX_CLASS))
                );
         }
 
@@ -55,7 +56,7 @@ namespace App\Helpers\BareModels {
             return self::tryFetch(function(Builder $builder)use($id,$publicOnly){
                 $builder->where(Task::getPrimaryKeyName(),'=',$id);
                 if($publicOnly){
-                    $builder->where(Task::IS_PUBLIC,'=',true);
+                    $builder->where(TaskConstants::COL_IS_PUBLIC,'=',true);
                 }
             })->first(default:null);
         }
@@ -65,26 +66,26 @@ namespace App\Helpers\BareModels {
          */
         public static function tryFetch(callable $modifyQuery){
             $taskId = Task::getPrimaryKeyName();
-            $taskTable = Task::getTableName();
-            $userTable = User::getTableName();
+            $taskTable = TaskConstants::TABLE_NAME;
+            $userTable = UserConstants::TABLE_NAME;
            $builder = DB::table($taskTable)->select(
                 [
                     DBHelper::colFromTableAsCol($taskTable,$taskId),
-                    DBHelper::colFromTableAsCol($taskTable,Task::NAME),
-                    DBHelper::colFromTableAsCol($taskTable,Task::MIN_CLASS),
-                    DBHelper::colFromTableAsCol($taskTable,Task::MAX_CLASS),
-                    DBHelper::colFromTableAsCol($taskTable,Task::DIFFICULTY),
-                    DBHelper::colFromTableAsCol($taskTable,Task::IS_PUBLIC),
-                    DBHelper::colFromTableAsCol($taskTable,Task::VERSION),
-                    DBHelper::colFromTableAsCol($taskTable,Task::USER_ID),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_NAME),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_MIN_CLASS),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_MAX_CLASS),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_DIFFICULTY),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_IS_PUBLIC),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_VERSION),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_USER_ID),
                     DBHelper::colExpression(
                         table:$userTable,
-                        column:User::NAME,
+                        column:UserConstants::COL_NAME,
                         as:'authorName'
                     )
                 ]
             )
-            ->join(User::getTableName(),User::getPrimaryKeyName(),'=',$taskTable.'.'.Task::USER_ID);
+            ->join(UserConstants::TABLE_NAME,User::getPrimaryKeyName(),'=',$taskTable.'.'.TaskConstants::COL_USER_ID);
             $modifyQuery($builder);
            $tasks = $builder->get();
 

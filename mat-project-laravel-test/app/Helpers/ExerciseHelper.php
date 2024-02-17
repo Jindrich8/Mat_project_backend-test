@@ -12,6 +12,7 @@ use App\Models\SavedTask;
 use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
 use App\Dtos\InternalTypes\TaskSaveContent;
+use App\ModelConstants\ExerciseConstants;
 use App\Types\SavedTaskContentProvider;
 use App\Types\SaveTask;
 use App\Utils\DebugUtils;
@@ -59,14 +60,14 @@ class ExerciseHelper
   {
 
     $exerciseIDName = Exercise::getPrimaryKeyName();
-    $columns = [$exerciseIDName, Exercise::EXERCISEABLE_TYPE];
+    $columns = [$exerciseIDName, ExerciseConstants::COL_EXERCISEABLE_TYPE];
     if ($shouldFetchInstructions) {
-      $columns[] = Exercise::INSTRUCTIONS;
+      $columns[] = ExerciseConstants::COL_INSTRUCTIONS;
     }
-    $exercises = DB::table(Exercise::getTableName())
+    $exercises = DB::table(ExerciseConstants::TABLE_NAME)
       ->select($columns)
-      ->where(Exercise::TASK_ID, $taskId)
-      ->orderBy(Exercise::ORDER)
+      ->where(ExerciseConstants::COL_TASK_ID, $taskId)
+      ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
     DebugUtils::log("Exercises: ", $exercises);
@@ -81,7 +82,7 @@ class ExerciseHelper
       /**
        * @var string $exerciseType
        */
-      $exerciseType = DBHelper::access($exercise, Exercise::EXERCISEABLE_TYPE);
+      $exerciseType = DBHelper::access($exercise, ExerciseConstants::COL_EXERCISEABLE_TYPE);
       /**
        * @var int $exerciseId
        */
@@ -110,7 +111,7 @@ class ExerciseHelper
       $exerciseId = DBHelper::access($exercise, $exerciseIDName);
       $result[] = $toClass(
         $exerciseId,
-        DBHelper::tryToAccess($exercise, Exercise::INSTRUCTIONS, default: null),
+        DBHelper::tryToAccess($exercise, ExerciseConstants::COL_INSTRUCTIONS, default: null),
         $cExercises[$exerciseId]
       );
     }
@@ -153,10 +154,15 @@ class ExerciseHelper
     /**
      * @var array<array|\stdClass> $exercises
      */
-    $exercises = DB::table(Exercise::getTableName())
-      ->select([$exerciseIDName,Exercise::WEIGHT, Exercise::EXERCISEABLE_TYPE, Exercise::INSTRUCTIONS])
-      ->where(Exercise::TASK_ID, $taskId)
-      ->orderBy(Exercise::ORDER)
+    $exercises = DB::table(ExerciseConstants::TABLE_NAME)
+      ->select([
+        $exerciseIDName,
+      ExerciseConstants::COL_WEIGHT, 
+      ExerciseConstants::COL_EXERCISEABLE_TYPE, 
+      ExerciseConstants::COL_INSTRUCTIONS
+      ])
+      ->where(ExerciseConstants::COL_TASK_ID, $taskId)
+      ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
     DebugUtils::log("Exercises: ", $exercises);
@@ -167,7 +173,7 @@ class ExerciseHelper
     $exercisesCount = count($exercises);
     for ($i = 0; $i < $exercisesCount; ++$i) {
       $exercise = $exercises[$i];
-      $exerciseType = DBHelper::access($exercise, Exercise::EXERCISEABLE_TYPE);
+      $exerciseType = DBHelper::access($exercise, ExerciseConstants::COL_EXERCISEABLE_TYPE);
       /**
        * @var int $exerciseId
        */
@@ -194,8 +200,8 @@ class ExerciseHelper
       $exerciseId = DBHelper::access($exercise, $exerciseIDName);
       $result[] = new EvaluateExercise(
         id: $exerciseId,
-        weight:DBHelper::access($exercise,Exercise::WEIGHT),
-        instructions: DBHelper::access($exercise, Exercise::INSTRUCTIONS),
+        weight:DBHelper::access($exercise,ExerciseConstants::COL_WEIGHT),
+        instructions: DBHelper::access($exercise, ExerciseConstants::COL_INSTRUCTIONS),
         impl: $cExercises[$exerciseId]
       );
     }
