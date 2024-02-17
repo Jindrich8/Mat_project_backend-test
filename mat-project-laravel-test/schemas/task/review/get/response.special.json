@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "title": "Review task response",
+  "description": "Represents task review response.",
+  "type": "object",
+  "$defs": {
+    "group": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "group"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "content"
+            ]
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "@/defs/types/review/exercise.json"
+              },
+              {
+                "$ref": "#/$defs/group"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "resources",
+        "entries"
+      ]
+    }
+  },
+  "properties": {
+    "task": {
+      "type": "object",
+      "properties": {
+        "id":{
+          "$ref":"@/defs/types/id.json"
+        },
+        "name":{
+          "type":"string",
+          "minLength":1
+        },
+        "points": {
+          "$ref":"@/defs/types/review/points.json"
+        },
+        "evaluation_timestamp":{
+          "type":"string",
+          "format":"timestamp"
+        },
+        "display": {
+          "type":"string",
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/group"
+              },
+              {
+                "$ref": "@/defs/types/review/exercise.json"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "points",
+        "evaluation_timestamp",
+        "display",
+        "entries"
+      ]
+    }
+  },
+  "required": [
+    "task"
+  ]
+}

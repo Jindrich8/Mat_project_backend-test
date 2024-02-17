@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Unauthorized error",
+    "description": "Represents an unauthorized user error.",
+    "type":"object",
+    "properties":{
+        "code":{
+            "type":"integer",
+            "const":null
+        },
+        "errorData":{
+            "type":["object","array","null"]
+        }
+    },
+    "required": ["code"]
+}
