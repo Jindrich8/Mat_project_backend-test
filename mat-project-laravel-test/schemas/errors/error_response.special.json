@@ -3,60 +3,24 @@
     "title": "Application error response",
     "type": "object",
     "properties": {
-        "error": {
-            "title": "Application error object",
-            "description": "Serves as object specifying details about the error for both application and user.",
-            "type": "object",
-            "properties": {
-                "message": {
-                    "title": "Human readable error message",
-                    "type": "string",
-                    "description": "Human readable error message"
+        "user_info": {
+            "$ref": "@/defs/types/errors/user_part_of_error.json"
+        },
+        "details": {
+            "anyOf": [
+                {
+                    "$ref": "@/defs/errors/**/*.json"
                 },
-                "details": {
-                    "title": "Error details",
-                    "type": "object",
-                    "anyOf": [
-                        {
-                            "type": "object",
-                            "description": "Endpoint specific error details",
-                            "properties": {
-                                "code": {
-                                    "title": "Endpoint specific error code",
-                                    "type": "integer",
-                                    "description": "Serves as identifier for action which should be triggered by app."
-                                },
-                                "errorData": {
-                                    "title": "Error data",
-                                    "description": "Serves as error action specific data.",
-                                    "type": [
-                                        "object",
-                                        "array"
-                                    ]
-                                }
-                            },
-                            "required": [
-                                "code"
-                            ]
-                        },
-                        {
-                            "$ref": "../defs/errors/**/*.json"
-                        }
-                    ],
-                    "required":["code","errorData"]
+                {
+                    "$ref": "@/defs/errors/*.json"
                 },
-                "description": {
-                    "title": "Human readable error description",
-                    "type": "string",
-                    "description": "Human readable details about error or help message, specifying which action should user take"
+                {
+                    "$ref": "../task/*/error.json"
                 }
-            },
-            "required": [
-                "message",
-                "details",
-                "description"
             ]
         }
     },
-    "required": ["error"]
+    "required": [
+        "user_info"
+    ]
 }

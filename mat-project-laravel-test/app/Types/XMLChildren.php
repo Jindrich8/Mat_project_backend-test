@@ -2,6 +2,7 @@
 
 namespace App\Types {
 
+    use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
     use App\Types\XMLNodeBase;
     use App\Utils\Utils;
@@ -50,21 +51,21 @@ namespace App\Types {
     
         private function checkChildNameAndGetItsParent(XMLNodeBase $child,string $name){
             $name = $child->getName();
-            if(array_key_exists($name,$this->requiredChildren)){
-                dump("DUPLICATE CHILD: $name");
-                dump($this->requiredChildren[$name]);
-            }
-            if(array_key_exists($name,$this->nonRequiredChildren)){
-                dump("DUPLICATE CHILD: $name");
-                dump($this->nonRequiredChildren[$name]);
-            }
-            dump(
-                "requiredChildrenCount : " . count($this->requiredChildren)."\n"
-            ."nonRequiredChildrenCount : " . count($this->nonRequiredChildren)."\n"
-        );
+        //     if(array_key_exists($name,$this->requiredChildren)){
+        //         dump("DUPLICATE CHILD: $name");
+        //         dump($this->requiredChildren[$name]);
+        //     }
+        //     if(array_key_exists($name,$this->nonRequiredChildren)){
+        //         dump("DUPLICATE CHILD: $name");
+        //         dump($this->nonRequiredChildren[$name]);
+        //     }
+        //     dump(
+        //         "requiredChildrenCount : " . count($this->requiredChildren)."\n"
+        //     ."nonRequiredChildrenCount : " . count($this->nonRequiredChildren)."\n"
+        // );
             if(array_key_exists($name,$this->requiredChildren) 
             || array_key_exists($name,$this->nonRequiredChildren)){
-                throw new InvalidArgumentException(
+                $e = new InvalidArgumentException(
                 argumentName:"child",
                 argumentValue:$child,
                 isNotValidBecause:"child with same name already exists",
@@ -73,10 +74,16 @@ namespace App\Types {
                     'nonRequiredChildren' => $this->requiredChildren,
                     'newChild' => [$name => $child]
                 ]);
+                report($e);
+                throw $e;
             }
+            
+            //report(new InternalException($child->getName()." getting parent obj id"));
             $parent = $child->getParentObjectId();
+            
+            //report(new InternalException($child->getName()." got parent obj id"));
             if($parent === null){
-                throw new InvalidArgumentException(
+                $e = new InvalidArgumentException(
                     argumentName:"child",
                     argumentValue:$child,
                     isNotValidBecause:"all children should have parent",
@@ -85,21 +92,27 @@ namespace App\Types {
                         'nonRequiredChildren' => $this->requiredChildren,
                         'newChild' => [$name => $child]
                     ]);
+                    report($e);
+                    throw $e;
             }
+            //report("child checking was successfull");
             return $parent;
         }
         /**
          * @param XMLNodeBase $child
          */
         public function addChild(XMLNodeBase $child,bool $required = false):self{
+          //  report(new InternalException($child->getName()." addChild"));
             $name = $child->getName();
+           // report(new InternalException($child->getName()." checking name and getting its parent"));
            $parent = $this->checkChildNameAndGetItsParent($child,$name);
+          // report(new InternalException($child->getName()." getting expected parent"));
             $expectedParent = $this->getParent();
             if($expectedParent === null){
                 $this->parent = $parent;
             }
             else if($parent !== $expectedParent){
-                throw new InvalidArgumentException(
+                $e = new InvalidArgumentException(
                 argumentName:"child",
                 argumentValue:$child,
                 isNotValidBecause:"children should have same parent",
@@ -108,14 +121,17 @@ namespace App\Types {
                     'nonRequiredChildren' => $this->requiredChildren,
                     'newChild' => [$name => $child]
                 ]);
+                report($e);
+                throw $e;
             }
-
+            //report(new InternalException($child->getName()." child adding"));
             if($required){
                 $this->requiredChildren[$name] = $child;
             }
             else{
                 $this->nonRequiredChildren[$name] = $child;
             }
+           // report(new InternalException($child->getName()." child added successfully"));
             return $this;
         }
 

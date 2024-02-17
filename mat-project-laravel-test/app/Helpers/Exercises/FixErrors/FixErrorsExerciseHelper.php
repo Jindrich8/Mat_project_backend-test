@@ -2,12 +2,10 @@
 
 namespace App\Helpers\Exercises\FixErrors;
 
-use App\Dtos\Task\Take\Response\FixErrorsTakeResponse;
-use App\Dtos\Task\Take\Response\FixErrorsTakeResponseContent;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponse;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponseContent;
 use App\Helpers\CCreateExerciseHelper;
 use App\Helpers\CExerciseHelper;
-use App\Helpers\CTakeExercise;
-use App\Helpers\Exercises\FixErrors\CreateFixErrorsExercise;
 use App\Models\FixErrors;
 use App\Utils\Utils;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +37,27 @@ class FixErrorsExerciseHelper implements CExerciseHelper
            );
         }
         return $takeExercises;
+    }
+
+    public function fetchEvaluate(array $ids): array
+    {
+        $table = FixErrors::getTableName();
+        $idName = FixErrors::getPrimaryKeyName();
+       $exercises = DB::table($table)
+        ->select([$idName,FixErrors::WRONG_TEXT])
+        ->whereIn($idName,$ids)
+        ->get();
+        $evaluateExercises = [];
+        while(($exercise = $exercises->pop())){
+            $exerciseId = Utils::access($exercise,$idName);
+
+          $evaluateExercises[$exerciseId]= new  EvaluateFixErrorsExercise(
+            FixErrorsEvaluateResponse::create()
+            ->setContent(FixErrorsEvaluateResponseContent::create()
+            ->setDefaultText(Utils::access($exercise,FixErrors::WRONG_TEXT)))
+           );
+        }
+        return $evaluateExercises;
     }
 
     public function fetchSave(array $ids): array

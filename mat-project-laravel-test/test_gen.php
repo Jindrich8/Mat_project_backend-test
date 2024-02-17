@@ -12,7 +12,7 @@ use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use App\Dtos\Task\Create\Request;
 use App\Dtos\Errors\XML\InvalidAttribute;
 
-$request = Request\Request::create()
+$request = Request::create()
     ->setData(
         Request\Data::create()
             ->setTask(
@@ -26,7 +26,7 @@ $request = Request\Request::create()
 
 echo "\n------JSON_REQUEST-----\n",
 json_encode(
-    Request\Request::export($request),
+    Request::export($request),
     JSON_PRETTY_PRINT
 );
 
