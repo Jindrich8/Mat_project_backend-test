@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('exercises', function (Blueprint $table) {
-            $table->id();
+            $table->id()->generatedAs()->always();
             $table->unsignedTinyInteger('order');
             $table->unsignedInteger('weight');
             $table->string('exerciseable_type');

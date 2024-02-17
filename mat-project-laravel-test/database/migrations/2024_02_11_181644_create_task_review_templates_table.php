@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tags', function (Blueprint $table) {
+        Schema::create('task_review_templates', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->string('name',25);
+            $table->foreignId('user_task_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('task_id');
             $table->autoTimestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tags');
+        Schema::dropIfExists('task_review_templates');
     }
 };

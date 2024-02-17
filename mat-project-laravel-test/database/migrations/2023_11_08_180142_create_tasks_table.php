@@ -15,17 +15,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('task_infos', function (Blueprint $table) {
+        Schema::create('tasks', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->unsignedInteger('version')->default(0);
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name',250);
             $table->unsignedTinyInteger('orientation');
             $table->string('description',2040);
             $table->unsignedTinyInteger('difficulty');
             $table->unsignedTinyInteger('min_class');
             $table->unsignedTinyInteger('max_class');
-            $table->boolean('is_public')->default(false);
             $table->autoTimestamps();
         });
         DBUtils::addIntEnumConstraint('tasks','orientation',TaskDisplay::class);

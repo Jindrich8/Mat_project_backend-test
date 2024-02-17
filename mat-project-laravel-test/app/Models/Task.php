@@ -8,7 +8,7 @@ use App\TableSpecificData\TaskDisplay;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TaskInfo extends BaseModel
+class Task extends BaseModel
 {
     use HasFactory;
 
@@ -24,19 +24,19 @@ class TaskInfo extends BaseModel
     
 
 
-    public static function getMaxClass(TaskInfo $task){
+    public static function getMaxClass(Task $task){
         return TaskClass::from($task->max_class);
     }
 
-    public static function getMinClass(TaskInfo $task){
+    public static function getMinClass(Task $task){
         return TaskClass::from($task->min_class);
     }
 
-    public static function getDifficulty(TaskInfo $task){
+    public static function getDifficulty(Task $task){
         return TaskDifficulty::from($task->difficulty);
     }
 
-    public static function getOrientation(TaskInfo $task){
+    public static function getOrientation(Task $task){
         return TaskDisplay::from($task->orientation);
     }
 

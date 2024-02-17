@@ -2,10 +2,10 @@
 
 namespace App\Helpers;
 
-use App\Dtos\TaskInfo\Review\Get\DefsExercise;
+use App\Dtos\Task\Review\Get\DefsExercise;
 use App\Exceptions\BadSaveExerciseException;
 use App\Types\Transformable;
-use App\Dtos\TaskInfo\Review\Response;
+use App\Dtos\Task\Review\Response;
 
 interface CEvaluateExercise
 {

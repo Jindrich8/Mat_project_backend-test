@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TaskInfo;
+use App\Models\Task;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
-use App\Dtos\TaskInfo as TaskDto;
-use App\Dtos\TaskInfo\Create;
-use App\Dtos\TaskInfo\Evaluate;
-use App\Dtos\TaskInfo\Review;
+use App\Dtos\Task as TaskDto;
+use App\Dtos\Task\Create;
+use App\Dtos\Task\Evaluate;
+use App\Dtos\Task\Review;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
 use Illuminate\Http\Request as HttpRequest;
-use App\Dtos\TaskInfo\Take;
+use App\Dtos\Task\Take;
 use App\Exceptions\InternalException;
 use App\Exceptions\UnsupportedVariantException;
 use App\Helpers\RequestHelper;

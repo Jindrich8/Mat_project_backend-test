@@ -7,14 +7,15 @@ use App\Dtos\InternalTypes\Combobox;
 use App\Dtos\InternalTypes\FillInBlanksContent;
 use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent as FillInBlanksContentFillInBlanksContent;
 use App\Dtos\InternalTypes\TextInput;
-use App\Dtos\TaskInfo\Take\Response\FillInBlanksTakeResponse;
+use App\Dtos\Task\Take\Response\FillInBlanksTakeResponse;
 use App\Helpers\CCreateExerciseHelper;
 use App\Helpers\CExerciseHelper;
 use App\Helpers\Database\DBJsonHelper;
 use App\Models\FillInBlanks;
 use App\Utils\StrUtils;
-use App\Dtos\TaskInfo\Take;
+use App\Dtos\Task\Take;
 use App\Exceptions\InternalException;
+use App\Helpers\Database\DBHelper;
 use App\Helpers\ResponseHelper;
 use App\Utils\DtoUtils;
 use App\Utils\GeneratorUtils;
@@ -63,18 +64,21 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         }
     }
 
-    public function fetchTake(array &$ids, array $savedValues): array
+    public function fetchTake(array &$savedValues): array
     {
+        $ids = array_keys($savedValues);
         $exercises = self::fetchContents($ids);
         $takeExercises = [];
+        reset($savedValues);
         foreach ($exercises as $exerciseId => $content) {
             $takeParts = [];
-            $savedValue = null;
-            $getNextSavedValue = true;
+            $savedValue = current($savedValues);
+            if($savedValue === false){
+                $savedValue = null;
+            }
+            $getNextSavedValue = false;
+
             while (($part = Utils::arrayShift($content->content)) !== null) {
-                if ($getNextSavedValue && $savedValues) {
-                    $savedValue = Utils::arrayShift($savedValues);
-                }
                 $getNextSavedValue = true;
                 if ($part instanceof TextInput) {
                     $txtI = Take\TextInput::create();
@@ -103,6 +107,13 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
                         ]
                     );
                 }
+              
+                if ($getNextSavedValue && $savedValue !== null) {
+                    $savedValue = next($savedValues);
+                    if($savedValue === false){
+                        $savedValue = null;
+                    }
+                }
             }
             unset($content);
 
@@ -126,7 +137,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         return $reviewExercises;
     }
 
-    public function fetchSave(array $ids): array
+    public function fetchSave(array &$ids): array
     {
         return [];
     }
