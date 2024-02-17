@@ -70,7 +70,7 @@ RouteUtils::get('/review/list',fn(Request $request) =>
 );
 
 RouteUtils::get('/review/{id}/detail',fn(Request $request,string $id) =>
-    data:ReviewController::construct()
+    ReviewController::construct()
     ->detail($request,RequestHelper::translateId($id))
 );
 

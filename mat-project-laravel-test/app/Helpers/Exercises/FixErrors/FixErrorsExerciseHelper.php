@@ -28,12 +28,12 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         ->get();
         $takeExercises = [];
         while(($exercise = $exercises->pop())){
-            $exerciseId = Utils::access($exercise,$idName);
+            $exerciseId = DBHelper::access($exercise,$idName);
 
           $takeExercises[$exerciseId]= new  TakeFixErrorsExercise(
             FixErrorsTakeResponse::create()
             ->setContent(FixErrorsTakeResponseContent::create()
-            ->setDefaultText(Utils::access($exercise,FixErrors::WRONG_TEXT)))
+            ->setDefaultText(DBHelper::access($exercise,FixErrors::WRONG_TEXT)))
            );
         }
         return $takeExercises;
@@ -49,12 +49,12 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         ->get();
         $evaluateExercises = [];
         while(($exercise = $exercises->pop())){
-            $exerciseId = Utils::access($exercise,$idName);
+            $exerciseId = DBHelper::access($exercise,$idName);
 
           $evaluateExercises[$exerciseId]= new  EvaluateFixErrorsExercise(
             FixErrorsEvaluateResponse::create()
             ->setContent(FixErrorsEvaluateResponseContent::create()
-            ->setDefaultText(Utils::access($exercise,FixErrors::WRONG_TEXT)))
+            ->setDefaultText(DBHelper::access($exercise,FixErrors::WRONG_TEXT)))
            );
         }
         return $evaluateExercises;

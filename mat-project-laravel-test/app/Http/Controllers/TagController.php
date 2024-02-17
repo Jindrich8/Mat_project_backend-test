@@ -32,8 +32,8 @@ class TagController extends Controller
        $response = Response::create()
         ->setTags(
             $tags->map(fn($tag)=>ResponseEnumElement::create()
-        ->setName(Utils::access($tag,Tag::NAME))
-        ->setId(ResponseHelper::translateIdForUser(Utils::access($tag,$tagIdName)))
+        ->setName(DBHelper::access($tag,Tag::NAME))
+        ->setId(ResponseHelper::translateIdForUser(DBHelper::access($tag,$tagIdName)))
         )->all()
         );
 

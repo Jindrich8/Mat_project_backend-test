@@ -18,6 +18,9 @@
         "task": {
             "list/errors": {
                 "1": "form.json"
+            },
+            "evaluate/errors": {
+                "1":"task_changed.json"
             }
         }
     }

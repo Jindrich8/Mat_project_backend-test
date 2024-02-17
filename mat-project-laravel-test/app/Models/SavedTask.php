@@ -12,4 +12,5 @@ class SavedTask extends BaseModel
     public const DATA = 'data';
     public const USER_ID = 'user_id';
     public const TASK_ID = 'task_id';
+    public const TASK_VERSION = 'task_version';
 }

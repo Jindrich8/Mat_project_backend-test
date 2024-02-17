@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Dtos\Defs\Errors\GeneralErrorDetails as ErrorsGeneralErrorDetails;
+use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksSaveRequest;
+use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksSaveValue;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsSaveRequest;
+use App\Dtos\Defs\Exercises\FixErrors\FixErrorsSaveValue;
 use App\Dtos\Defs\Types\Errors\EnumArrayError as ErrorsEnumArrayError;
 use App\Dtos\Defs\Types\Errors\InvalidBoundsError;
 use App\Dtos\Defs\Types\Errors\RangeError;
@@ -26,6 +30,7 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Dtos\Task as TaskDto;
 use App\Dtos\Task\Create;
 use App\Dtos\Task\Evaluate;
+use App\Dtos\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
 use App\Dtos\Task\Review;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
@@ -43,6 +48,7 @@ use App\Dtos\Task\MyList\OrderByItems as MyListOrderByItems;
 use App\Dtos\Task\Review\Get\DefsExercise;
 use App\Dtos\Task\Review\Get\DefsExerciseInstructions as GetDefsExerciseInstructions;
 use App\Dtos\Task\Take\DefsExerciseInstructions;
+use App\Dtos\Task\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
 use App\Exceptions\ConversionException;
@@ -62,6 +68,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Exercise;
 use App\Models\Group;
 use App\Models\Resource;
+use App\Models\SavedTask;
 use App\Models\Tag;
 use App\Models\TagTask;
 use App\Models\User;
@@ -79,6 +86,7 @@ use Carbon\Carbon;
 use Swaggest\JsonSchema;
 use DateTime;
 use DateTimeZone;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Response;
@@ -109,16 +117,40 @@ class TaskController extends Controller
         DebugUtils::log("timestamp", $requestData->localySavedTask?->timestamp);
         // dump($requestData->localySavedTask?->timestamp);
         $localySavedTaskTimeStamp = $requestData->localySavedTask ?
-            Carbon::createFromFormat(
-                format: DateTime::ATOM,
-                time: $requestData->localySavedTask->timestamp,
-                timezone: new DateTimeZone('UTC')
-            ) : null;
+            TimeStampUtils::tryParseIsoTimestampToUtc($requestData->localySavedTask->timestamp)
+            : null;
+
         DebugUtils::log("localySavedTaskTimeStamp", $localySavedTaskTimeStamp);
-        $exercises = ExerciseHelper::take(
+        $saveTask = TaskHelper::getSavedTask(
             taskId: $taskId,
             localySavedTaskUtcTimestamp: $localySavedTaskTimeStamp
         );
+        if ($saveTask) {
+            if ($task->version === $saveTask->taskVersion) {
+                $exercises = ExerciseHelper::take(
+                    taskId: $taskId,
+                    savedTask: $saveTask
+                );
+            } else {
+                $responseTask->setPrevSavedValues(
+                    SavedTaskValues::create()
+                        ->setExercises(
+                            array_map(
+                                function ($exercise) {
+                                    if ($exercise instanceof FillInBlanksSaveValue) {
+                                        return FillInBlanksSaveRequest::create()
+                                            ->setContent($exercise->content);
+                                    } else if ($exercise instanceof FixErrorsSaveValue) {
+                                        return FixErrorsSaveRequest::create()
+                                            ->setContent($exercise->content);
+                                    }
+                                },
+                                $saveTask->content->exercises
+                            )
+                        )
+                );
+            }
+        }
         $responseTask->entries = [];
         $taskEntries = &$responseTask->entries;
         TaskHelper::getTaskEntries(
@@ -142,6 +174,24 @@ class TaskController extends Controller
         );
         return Take\Response::create()
             ->setTask($responseTask);
+    }
+
+    public function save(HttpRequest $request, int $id): Response
+    {
+        $user = Auth::getUser() ?? throw new AuthenticationException();
+        $requestData = RequestHelper::getDtoFromRequest(TaskDto\Save\Request::class, $request);
+        $success = DB::table(SavedTask::getTableName())
+            ->updateOrInsert(
+                attributes: [SavedTask::TASK_ID => $id, SavedTask::USER_ID => $user->id],
+                values: [SavedTask::Data => TaskDto\Save\Request::export($requestData->exercises)]
+            );
+        if (!$success) {
+            throw new InternalException(
+                "Could not save task values!",
+                context: ['taskid' => $id]
+            );
+        }
+        return response(status: Response::HTTP_NO_CONTENT);
     }
 
     public function store(HttpRequest $request): Create\Response
@@ -176,6 +226,20 @@ class TaskController extends Controller
 
         $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true)
             ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
+            if($task->version !== $requestData->version){
+            throw new ApplicationException(
+                userStatus: Response::HTTP_CONFLICT,
+                userResponse: ErrorResponse::create()
+                    ->setUserInfo(
+                        UserSpecificPartOfAnError::create()
+                            ->setMessage("Task changed.")
+                            ->setDescription("Task was updated, so filled data do not longer represents valid data for this task.")
+                    )
+                    ->setDetails(
+                        TaskChangedTaskEvaluateError::create()
+                    )
+            );
+            }
 
         $responseTask = Review\Get\Task::create()
             ->setDisplay($task->display);

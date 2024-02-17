@@ -31,12 +31,16 @@ if (PathHelper::isRelative($filePath)) {
 $replacerFile = json_decode(file_get_contents($filePath), associative: true);
 dump($replacerFile);
 $filePath = PathHelper::getPotentialyNonExistentAbsolutePath($filePath);
-$stack = [[$replacerFile, MyFileInfo::dirname($filePath)]];
-$nextPosfix = "";
+/**
+ * @var array{mixed,string,string} $stack
+ * [$json, $path, $posfix]
+ */
+$stack = [[$replacerFile, MyFileInfo::dirname($filePath),""]];
 while ($stack) {
-    [$json, $path] = Utils::arrayShift($stack);
+    $nextPosfix = "";
+    [$json, $path,$posfix] = Utils::arrayShift($stack);
     echo "PATH: '$path'\n";
-    $posfix = $nextPosfix;
+    echo "POSFIX: '$posfix'\n";
     foreach ($json as $prop => $value) {
         if (Str::startsWith($prop, '$')) {
             if ($prop === '$posfix') {
@@ -47,10 +51,10 @@ while ($stack) {
             $newPath = PathHelper::getPotentialyNonExistentAbsolutePath(
                 PathHelper::concatPaths($path, $newPathSegment)
             );
-            $stack[] = [$value, $newPath];
+            $stack[] = [$value, $newPath,$posfix.$nextPosfix];
         } else {
-            $value = parsePath($value.$posfix);
-            [$file, $filePropPath] = explode("#", $value, limit: 2);
+            $valueWPosfix = parsePath($value.$posfix);
+            [$file, $filePropPath] = explode("#", $valueWPosfix, limit: 2);
             $file = PathHelper::concatPaths($path, $file);
             $currentFile = json_decode(file_get_contents($file), associative: true);
             $newValue = json_decode($prop) ?? $prop;

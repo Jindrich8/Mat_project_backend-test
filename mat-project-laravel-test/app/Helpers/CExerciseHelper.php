@@ -6,11 +6,10 @@ interface CExerciseHelper
 {
     /**
      *
-     * @param int[] $ids
-     * @param array $savedValues
+     * @param array<int,mixed> $savedValues indexed by exercise id
      * @return array<int,CTakeExercise> array indexed by id
      */
-    public function fetchTake(array $ids,array $savedValues): array;
+    public function fetchTake(array $savedValues): array;
 
     /**
      * @param int[] $ids

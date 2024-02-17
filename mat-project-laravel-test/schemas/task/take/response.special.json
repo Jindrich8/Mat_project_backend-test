@@ -103,6 +103,25 @@
               }
             ]
           }
+        },
+        "prev_saved_values":{
+          "title": "Saved task values",
+          "description": "Saved values for previous version of this task.",
+          "type":"object",
+          "properties": {
+            "exercises":{
+              "type":"array",
+              "minItems":1,
+              "items":{
+                "anyOf":[
+                  {
+                    "$ref":"@/defs/exercises/*/save_request.json"
+                  }
+                ]
+              }
+            }
+          },
+          "required": ["exercises"]
         }
       },
       "required": [

@@ -45,9 +45,9 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
             /**
              * @var int $exerciseId
              */
-            $exerciseId = Utils::access($exercise, $idName);
+            $exerciseId = DBHelper::access($exercise, $idName);
             $decodedContent = DBJsonHelper::decode(
-                json: Utils::access($exercise, FillInBlanks::CONTENT),
+                json: DBHelper::access($exercise, FillInBlanks::CONTENT),
                 table: $table,
                 column: FillInBlanks::CONTENT,
                 id: $exerciseId

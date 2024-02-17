@@ -14,18 +14,22 @@ namespace App\Helpers {
     use App\Dtos\Defs\Types\Task\TaskDetailInfo;
     use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
     use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\InternalTypes\TaskSaveContent;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
     use App\Exceptions\InternalException;
     use App\Helpers\BareModels\BareTaskWAuthorName;
     use App\Helpers\Database\DBHelper;
+    use App\Helpers\Database\DBJsonHelper;
     use App\Models\Group;
     use App\Models\Resource;
+    use App\Models\SavedTask;
     use App\Models\Tag;
     use App\Models\TagTask;
     use App\Models\Task;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
+    use App\Types\SaveTask;
     use App\Utils\DtoUtils;
     use App\Utils\TimeStampUtils;
     use App\Utils\Utils;
@@ -33,6 +37,8 @@ namespace App\Helpers {
     use DateTime;
     use Illuminate\Database\Query\Builder;
     use Illuminate\Http\Response;
+    use Illuminate\Support\Carbon as SupportCarbon;
+    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use IntBackedEnum;
 
@@ -75,11 +81,11 @@ namespace App\Helpers {
                 /**
                  * @var mixed $groupId
                  */
-                $groupId = Utils::access($resource, Resource::GROUP_ID);
+                $groupId = DBHelper::access($resource, Resource::GROUP_ID);
                 /**
                  * @var string $content
                  */
-                $content = Utils::access($resource, Resource::CONTENT);
+                $content = DBHelper::access($resource, Resource::CONTENT);
                 $resourcesByGroupId[$groupId][] = $content;
             }
 
@@ -117,19 +123,58 @@ namespace App\Helpers {
                     [$exerciseEnd, &$dest] =  $stack[$stackEntryKey];
                     unset($stack[$stackEntryKey]);
                 }
-                if ($exI === Utils::access($nextGroup, Group::START)) {
-                    $groupId = Utils::access($nextGroup, $groupIdName);
+                if ($exI === DBHelper::access($nextGroup, Group::START)) {
+                    $groupId = DBHelper::access($nextGroup, $groupIdName);
                     $groupDto = $groupToDto($resourcesByGroupId[$groupId] ?? []);
                     unset($resourcesByGroupId[$groupId]);
 
                     $dest[] = $groupDto;
                     $stack[] = [$exerciseEnd, &$dest];
                     $dest = &$groupDto->entries;
-                    $exerciseEnd = $exI + Utils::access($nextGroup, Group::LENGTH);
+                    $exerciseEnd = $exI + DBHelper::access($nextGroup, Group::LENGTH);
                 }
                 $exerciseDto = $exerciseToDto($exercise);
                 $dest[] = $exerciseDto;
             }
+        }
+
+        public static function getSavedTask(int $taskId, ?Carbon $localySavedTaskUtcTimestamp):SaveTask|null
+        {
+            $user = Auth::user();
+            if ($user !== null) {
+                TimeStampUtils::timestampToUtc($localySavedTaskUtcTimestamp);
+                $savedTaskTable = SavedTask::getTableName();
+                $builder = DB::table($savedTaskTable)
+                    ->select([SavedTask::DATA, SavedTask::TASK_VERSION])
+                    ->where(SavedTask::USER_ID, '=', $user->id)
+                    ->where(SavedTask::TASK_ID, '=', $taskId);
+                if ($localySavedTaskUtcTimestamp) {
+                    $builder = $builder
+                        ->where(SavedTask::UPDATED_AT, '>', $localySavedTaskUtcTimestamp, boolean: 'or')
+                        ->where(SavedTask::CREATED_AT, '>', $localySavedTaskUtcTimestamp);
+                }
+                $savedTask = $builder->first();
+                if ($savedTask) {
+                    $savedTaskData = $savedTask[SavedTask::DATA];
+                    $taskVersion = $savedTaskData[SavedTask::TASK_VERSION];
+                    $decodedSavedData = TaskSaveContent::import(
+                        (object)[
+                            TaskSaveContent::EXERCISES =>
+                            DBJsonHelper::decode(
+                                $savedTaskData,
+                                table: $savedTaskTable,
+                                column: SavedTask::DATA,
+                                id: [SavedTask::USER_ID => $user->id, SavedTask::TASK_ID => $taskId]
+                            )
+                        ]
+                    );
+                    return new SaveTask(
+                        taskVersion:$taskVersion,
+                        content:$decodedSavedData
+                    );
+                }
+            }
+            return null;
         }
 
         public static function getInfo(BareTaskWAuthorName $task, ?TaskDetailInfo $info = null): TaskDetailInfo
@@ -222,23 +267,24 @@ namespace App\Helpers {
             $tagTable = Tag::getPrimaryKeyName();
             foreach (DB::table($tagTaskTable)
                 ->select([
-            DBHelper::colFromTableAsCol($tagTaskTable,TagTask::TAG_ID),
-            DBHelper::colFromTableAsCol($tagTaskTable,TagTask::TASK_ID),
-            DBHelper::colExpression(
-                table:$tagTable,
-                column:Tag::NAME,
-                as:'name'
-            )
-            ])
-                ->join($tagTable,
-                DBHelper::colExpression(
-                    table:$tagTaskTable,
-                    column:TagTask::TAG_ID
-                ),
-                '=',
-                DBHelper::colExpression(
-                    table:$tagTable,
-                    column:Tag::getPrimaryKeyName()
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TAG_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTask::TASK_ID),
+                    DBHelper::colExpression(
+                        table: $tagTable,
+                        column: Tag::NAME,
+                        as: 'name'
+                    )
+                ])
+                ->join(
+                    $tagTable,
+                    DBHelper::colExpression(
+                        table: $tagTaskTable,
+                        column: TagTask::TAG_ID
+                    ),
+                    '=',
+                    DBHelper::colExpression(
+                        table: $tagTable,
+                        column: Tag::getPrimaryKeyName()
                     )
                 )
                 ->get() as $tag) {
@@ -297,9 +343,9 @@ namespace App\Helpers {
                 ->get();
 
             $access = null;
-            return $tags->mapWithKeys(function ($tag,$key) use ($access) {
+            return $tags->mapWithKeys(function ($tag, $key) use ($access) {
                 $access ??= Utils::getAccessor($tag);
-                return [$access($tag,TagTask::TAG_ID) + 0 => $access($tag,'name') . ''];
+                return [$access($tag, TagTask::TAG_ID) + 0 => $access($tag, 'name') . ''];
             });
         }
 
@@ -316,7 +362,7 @@ namespace App\Helpers {
             foreach ($tags as $tag) {
                 $translatedId = RequestHelper::tryToTranslateId($tag);
                 if ($translatedId === null) {
-                    if(!$areInvalid){
+                    if (!$areInvalid) {
                         $areInvalid = true;
                         $translatedTags = [];
                     }
@@ -336,18 +382,20 @@ namespace App\Helpers {
             return $translatedTags;
         }
 
-      
 
-        public static function filterByDifficultyRange(int $min, int $max,Builder $builder):RangeError|null{
-            $RangeError = DtoHelper::validateEnumRange($min,$max,TaskDifficulty::class);
+
+        public static function filterByDifficultyRange(int $min, int $max, Builder $builder): RangeError|null
+        {
+            $RangeError = DtoHelper::validateEnumRange($min, $max, TaskDifficulty::class);
             if (!$RangeError) {
                 $builder->whereBetween(Task::DIFFICULTY, [$min, $max]);
             }
             return $RangeError;
         }
 
-        public static function filterByClassRange(int $min, int $max,Builder $builder):RangeError|null{
-            $RangeError = DtoHelper::validateEnumRange($min,$max,TaskClass::class);
+        public static function filterByClassRange(int $min, int $max, Builder $builder): RangeError|null
+        {
+            $RangeError = DtoHelper::validateEnumRange($min, $max, TaskClass::class);
             if (!$RangeError) {
                 $builder->where(Task::MIN_CLASS, '>=', $min);
                 $builder->where(Task::MAX_CLASS, '<=', $max);
@@ -355,30 +403,32 @@ namespace App\Helpers {
             return $RangeError;
         }
 
-        public static function filterByModificationTimestamp(TimestampRange $range,Builder $builder):RangeError|null{
-           $rangeOrError = DtoHelper::validateTimestampRange($range->min,$range->max);
-           if(is_array($rangeOrError)){
-            [$minTimestamp,$maxTimestamp] = $rangeOrError;
-            $builder->whereBetween(
-                DB::raw('COALESCE('.Task::UPDATED_AT.','.Task::CREATED_AT.')'),
-            [$minTimestamp,$maxTimestamp]
-            );
-            $rangeOrError = null;
-           }
-           return $rangeOrError;
-        }
-
-        public static function filterByCreationTimestamp(TimestampRange $range,Builder $builder):RangeError|null{
-            $rangeOrError = DtoHelper::validateTimestampRange($range->min,$range->max);
-            if(is_array($rangeOrError)){
-             [$minTimestamp,$maxTimestamp] = $rangeOrError;
-             $builder->whereBetween(
-                 Task::CREATED_AT,
-             [$minTimestamp,$maxTimestamp]
-             );
-             $rangeOrError = null;
+        public static function filterByModificationTimestamp(TimestampRange $range, Builder $builder): RangeError|null
+        {
+            $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
+            if (is_array($rangeOrError)) {
+                [$minTimestamp, $maxTimestamp] = $rangeOrError;
+                $builder->whereBetween(
+                    DB::raw('COALESCE(' . Task::UPDATED_AT . ',' . Task::CREATED_AT . ')'),
+                    [$minTimestamp, $maxTimestamp]
+                );
+                $rangeOrError = null;
             }
             return $rangeOrError;
-         }
+        }
+
+        public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder): RangeError|null
+        {
+            $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
+            if (is_array($rangeOrError)) {
+                [$minTimestamp, $maxTimestamp] = $rangeOrError;
+                $builder->whereBetween(
+                    Task::CREATED_AT,
+                    [$minTimestamp, $maxTimestamp]
+                );
+                $rangeOrError = null;
+            }
+            return $rangeOrError;
+        }
     }
 }

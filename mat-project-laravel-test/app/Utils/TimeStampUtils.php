@@ -9,15 +9,16 @@ namespace App\Utils {
 
     class TimeStampUtils
     {
-        public static function tryParseIsoTimestamp(string $timestamp):Carbon|false|null{
-           return Carbon::createFromFormat(
+        public static function tryParseIsoTimestamp(string $timestamp):Carbon|null{
+           $carbon = Carbon::createFromFormat(
                 format: DateTime::ATOM,
                 time: $timestamp,
                 timezone: new DateTimeZone('UTC')
            );
+           return $carbon ?: null;
         }
 
-        public static function tryParseIsoTimestampToUtc(string $timestamp):Carbon|false|null{
+        public static function tryParseIsoTimestampToUtc(string $timestamp):Carbon|null{
            $carbon = self::tryParseIsoTimestamp($timestamp);
            if($carbon){
             self::timestampToUtc($carbon);

@@ -49,6 +49,20 @@ namespace App\Helpers\Database {
 
 
         /**
+         * @template T
+         * @param T $default
+         * @return mixed|T
+         */
+        public static function tryToAccess(mixed $record,string $prop,mixed $default = null){
+            return $record->{$prop} ?? $default;
+        }
+
+        public static function access(mixed $record,string $prop){
+            return $record->{$prop};
+        }
+
+
+        /**
          * @param array<string,mixed> $pk
          * @param bool $try
          * @param string $table
