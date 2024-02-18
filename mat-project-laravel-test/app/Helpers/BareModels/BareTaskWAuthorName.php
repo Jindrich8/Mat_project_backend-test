@@ -62,12 +62,15 @@ namespace App\Helpers\BareModels {
 
         }
 
-        public static function tryFetchById(int $id, bool $publicOnly = true): self|null
+        public static function tryFetchById(int $id, bool $publicOnly = true,bool $sharedLock = false): self|null
         {
-            return self::tryFetch(function (Builder $builder) use ($id, $publicOnly) {
+            return self::tryFetch(function (Builder $builder) use ($id, $publicOnly,$sharedLock) {
                 $builder->where(TaskConstants::COL_ID, '=', $id);
                 if ($publicOnly) {
                     $builder->where(TaskConstants::COL_IS_PUBLIC, '=', true);
+                }
+                if($sharedLock){
+                $builder->sharedLock();
                 }
             })->first(default: null);
         }
