@@ -14,6 +14,14 @@ class MyFileInfo{
     public function getInfo():SplFileInfo{
         return $this->file;
     }
+    public static function getExtensionsPart(string $path): bool|string
+    {
+        $extensions = mb_strstr($path,'.',encoding:'UTF-8');
+        if(!$extensions){
+            $extensions = '';
+        }
+        return $extensions;
+    }
 
     public function getFilenameWithoutExtensions(){
         return Str::before($this->file->getBasename(),'.');

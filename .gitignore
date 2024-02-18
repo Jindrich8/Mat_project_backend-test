@@ -5,3 +5,4 @@
 /test.php
 /mat-project-laravel-test/app/parser-test.php
 /mat-project-laravel-test/app/test.php
+/mat-project-laravel-test/app/ModelConstants/*.php
