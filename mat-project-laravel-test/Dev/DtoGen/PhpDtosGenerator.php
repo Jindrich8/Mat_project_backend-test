@@ -20,7 +20,7 @@ namespace Dev\DtoGen {
     {
         const DEFS = "defs";
 
-        public static function generate(mixed $schemaData, string $rootName, string $basePath, string $baseNameSpace,string $relResolverDir = null, string $schemaFilePath = null, string $separator = DIRECTORY_SEPARATOR)
+        public static function generate(mixed $schemaData, string $rootName, string $basePath, string $baseNameSpace, string $relResolverDir = null, string $schemaFilePath = null, string $separator = DIRECTORY_SEPARATOR)
         {
             if ($schemaFilePath) {
                 $schemaFilePath = realpath($schemaFilePath);
@@ -35,38 +35,51 @@ namespace Dev\DtoGen {
             $relResolverDir ??= MyFileInfo::dirname($schemaFilePath);
 
             $remoteRefProvider = $relResolverDir ?
-             new RelativeSchemaRefResolver($relResolverDir)
-            : null;
+                new RelativeSchemaRefResolver($relResolverDir)
+                : null;
 
             $schemaContext = new Context($remoteRefProvider);
-            $swaggerSchema = Schema::import($schemaData,$schemaContext);
+            $swaggerSchema = Schema::import($schemaData, $schemaContext);
 
             $appPath = $basePath;
             $appPath = <<<'EOF'
             C:\Users\Jindra\source\repos\JS\Mat_project_backend-test\mat-project-laravel-test\app\Dtos
             EOF;
-            echo "AppPath: " . $appPath."\n";
+            echo "AppPath: " . $appPath . "\n";
             $appNs = MyFileInfo::omitAllExtensions($baseNameSpace);
             echo "AppNS: " . $appNs . "\n";
             $app = new MyApp();
             $app->setNamespaceRoot($appNs, '.');
 
             $builder = new PhpBuilder();
-            $builder->namesFromDescriptions =true;
+            $builder->namesFromDescriptions = true;
             $builder->buildSetters = true;
             $builder->makeEnumConstants = true;
 
             $rootName = Str::studly($rootName);
             echo "RelResolverDir: '$relResolverDir'\n";
             $quotedSeparator = null;
+          
+
+            {
             $builder->classCreatedHook = new ClassHookCallback(
                 function (PhpClass $class, string $path, JsonSchema $schema)
-                use ($app,$appPath, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator,$relResolverDir,$schemaBase) {
-                    $classSchemaFilePath = Str::before($path,'#');
-                    if(!$classSchemaFilePath){
+                use (
+                    $app,
+                    $appPath,
+                    $appNs,
+                    $rootName,
+                    $schemaFilePath,
+                    $separator,
+                    $quotedSeparator,
+                    $relResolverDir,
+                    $schemaBase,
+                ) {
+                    $classSchemaFilePath = Str::before($path, '#');
+                    if (!$classSchemaFilePath) {
                         $classSchemaFilePath = $schemaFilePath;
                     }
-                    echo "classSchemaFilePath: ".$classSchemaFilePath."\n";
+                    echo "classSchemaFilePath: " . $classSchemaFilePath . "\n";
                     $desc = '';
                     if ($schema->title) {
                         $desc = $schema->title;
@@ -79,45 +92,21 @@ namespace Dev\DtoGen {
                     }
 
                     $class->setDescription(trim($desc));
-                    $createFuncBody = <<<'EOF'
-                $instance = parent::create();
-                EOF;
-                $hasConstants = false;
-                   $props = $schema->properties;
-                   foreach($props as $name => $value){
-                    $class->addConstant(new PhpConstant(Str::upper(Str::snake($name)),$name));
-                   $const = $value->const;
-                   if($const){
-                    $hasConstants = true;
-                    if(!is_numeric($const)){
-                        $const = "\"$const\"";
-                    }
-                    $createFuncBody.="\n\$instance->$name = $const;";
-                   }
-                   }
-
-
-                   if($hasConstants){
-                    $createFuncBody.="\nreturn \$instance;";
-                $createFunc = new PhpFunction(name:'create',visibility:'public',isStatic:true);
-                $createFunc->setResult(PhpStdType::tStatic())
-                ->setBody($createFuncBody);
-                $class->addMethod($createFunc);
-                   }
+                   
                     $namespace = $class->getNamespace();
                     echo "classSchemaFilePath '$classSchemaFilePath' starts with '$schemaBase'\n";
-                    if(Str::startsWith($classSchemaFilePath,$schemaBase)){
+                    if (Str::startsWith($classSchemaFilePath, $schemaBase)) {
                         echo "TRUE\n";
 
-                   $namespace = implode('\\',array_map(fn($part)=>Str::studly($part),explode('\\',Str::replace(
-                    search:['/','\\'],
-                   replace:'\\',
-                   subject:MyFileInfo::dirname(Str::replaceStart($schemaBase,'',$classSchemaFilePath))
-                ))));
+                        $namespace = implode('\\', array_map(fn ($part) => Str::studly($part), explode('\\', Str::replace(
+                            search: ['/', '\\'],
+                            replace: '\\',
+                            subject: MyFileInfo::dirname(Str::replaceStart($schemaBase, '', $classSchemaFilePath))
+                        ))));
                     }
 
-                    $class->setNamespace(PathHelper::concatPaths($appNs,$namespace));
-                    echo "Namespace: ".PathHelper::concatPaths($appNs,$namespace)."\n";
+                    $class->setNamespace(PathHelper::concatPaths($appNs, $namespace));
+                    echo "Namespace: " . PathHelper::concatPaths($appNs, $namespace) . "\n";
                     if ('#' === $path) {
                         $class->setName($rootName); // Class name for root schema
                     } elseif (strpos($path, "#/" . PhpDtosGenerator::DEFS . "/") === 0) {
@@ -126,23 +115,22 @@ namespace Dev\DtoGen {
                         ));
                     } else {
                         $className = $class->getName();
-                    //     echo "Class " . $className."\n";
-                    //     echo "Titles: " . $schema->title. "\n";
-                    //     echo "Description: " .$schema->description."\n";
-                    //    // var_dump($schema);
-                    //     var_dump($class);
-                    //     var_dump($path);
-                        if($schema->title){
+                        //     echo "Class " . $className."\n";
+                        //     echo "Titles: " . $schema->title. "\n";
+                        //     echo "Description: " .$schema->description."\n";
+                        //    // var_dump($schema);
+                        //     var_dump($class);
+                        //     var_dump($path);
+                        if ($schema->title) {
                             $className = $schema->title;
-                        }
-                        else if ($path && mb_strlen($className) > 15) {
-                      //    echo "PATH " . $path."\n";
+                        } else if ($path && mb_strlen($className) > 15) {
+                            //    echo "PATH " . $path."\n";
                             $path = Str::remove(['$', '[', ']', '(', ')'], $path);
                             $pathParts = preg_split("/->|#/u", $path);
                             if (!$pathParts) {
                                 $pathParts = [$path];
                             }
-                            if ($schemaFilePath && !Str::startsWith($path,'#')) {
+                            if ($schemaFilePath && !Str::startsWith($path, '#')) {
                                 $i = 0;
                                 $len = min(strlen($path), strlen($schemaFilePath));
                                 /** @noinspection PhpStatementHasEmptyBodyInspection */
@@ -184,13 +172,90 @@ END;
                             $className
                         ));
                         echo "Class: " . $class->getFullyQualifiedName() . "\n";
-
                     }
                     $app->addClass($class);
                 }
             );
+        }
+
+        $functionNameReflect = new \ReflectionProperty(PhpFunction::class, 'name');
+        $functionNameReflect->setAccessible(true);
+        $classMethodsReflect = new \ReflectionProperty(PhpClass::class, 'methods');
+        $classMethodsReflect->setAccessible(true);
+
+            $builder->classPreparedHook = new ClassHookCallback(
+                function (PhpClass $class, string $path, JsonSchema $schema)
+                use (
+                    $app,
+                    $appPath,
+                    $appNs,
+                    $rootName,
+                    $schemaFilePath,
+                    $separator,
+                    $quotedSeparator,
+                    $relResolverDir,
+                    $schemaBase,
+                    $classMethodsReflect,
+                    $functionNameReflect
+                ) {
+                    $createFuncBody = <<<'EOF'
+                    $instance = parent::create();
+                    EOF;
+
+                        $constants = [];
+                        $props = $schema->properties;
+                        $propNames = [];
+                        foreach ($props as $name => $value) {
+                            $baseName = PhpCode::makePhpName($name);
+                            $name = $baseName;
+                            if(Utils::arrayHasKey($propNames,$baseName)){
+                               $name .= ++$propNames[$baseName];
+                            }
+                            else{
+                                $propNames[$baseName] = 1;
+                            }
+                            $class->addConstant(new PhpConstant(Str::upper(Str::snake($name)), $name));
+                            $isConstant = isset($value->const);
+                            $const = $value->const;
+                            if ($isConstant) {
+                                $constants[$name] = $const;
+                                if (!is_numeric($const)) {
+                                    $const = "\"$const\"";
+                                }
+                                $createFuncBody .= "\n\$instance->$name = $const;";
+                            }
+                        }
+                        /**
+                         * @var array<string|int,mixed> $constants
+                         */
+    
+    
+                        if ($constants) {
+                            echo "constants: ";
+                            dump($constants);
+                            $createFuncBody .= "\nreturn \$instance;";
+                            $createFunc = new PhpFunction(name: 'create', visibility: 'public', isStatic: true);
+                            $createFunc->setResult(PhpStdType::tStatic())
+                                ->setBody($createFuncBody);
+    
+                            $class->addMethod($createFunc);
+                            /** @var PhpFunction[] */
+                            $methods =  $classMethodsReflect->getValue($class);
+                            $methods = array_filter($methods, function ($method) use ($functionNameReflect, &$constants) {
+                                $name = $functionNameReflect->getValue($method);
+                                if (Str::startsWith($name, 'set')) {
+                                    $nameAfterSet = Str::lcfirst(substr($name, strlen('set')));
+                                    echo "nameAfterSet: " . $nameAfterSet."\n";
+                                    return !Utils::arrayHasKey($constants, $nameAfterSet);
+                                }
+                                return true;
+                            });
+                            $classMethodsReflect->setValue($class, $methods);
+                        }
+                });
+
             $builder->getType($swaggerSchema);
-           // $app->clearOldFiles($appPath);
+            // $app->clearOldFiles($appPath);
             $app->storeNoClear($appPath);
         }
     }
