@@ -33,6 +33,9 @@ use App\Dtos\Task\MyList\OrderByItems as MyListOrderByItems;
 use App\Dtos\Task\Review;
 use App\Dtos\Task\Take;
 use App\Dtos\Task\Take\DefsExerciseInstructions;
+use App\Dtos\Task\Take\NewerServerSavedTaskInfo;
+use App\Dtos\Task\Take\OlderServerSavedTaskInfo;
+use App\Dtos\Task\Take\SavedTaskInfo;
 use App\Dtos\Task\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
@@ -53,6 +56,8 @@ use App\ModelConstants\TaskReviewConstants;
 use App\ModelConstants\TaskReviewTemplateConstants;
 use App\Models\SavedTask;
 use App\Models\Task;
+use App\TableSpecificData\TaskClass;
+use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
 use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
@@ -103,12 +108,20 @@ class TaskController extends Controller
             localySavedTaskUtcTimestamp: $localySavedTaskTimeStamp
         );
         $useSavedTask = $saveTask && $task->version === $saveTask->taskVersion;
-        if (!$useSavedTask) {
-                $responseTask->setPrevSavedValues(
+        $savedValuesInfo = null;
+        if($saveTask){
+            $savedValuesInfo = NewerServerSavedTaskInfo::create();
+            if(!$useSavedTask){
+                $savedValuesInfo->setPrevSavedValues(
                     SavedTaskValues::create()
-                        ->setExercises($saveTask->content->exercises)
+                    ->setExercises($saveTask->content->exercises)
                 );
             }
+        }
+        else{
+            $savedValuesInfo = OlderServerSavedTaskInfo::create();
+        }
+        $responseTask->setSavedValuesInfo($savedValuesInfo);
         $exercises = ExerciseHelper::takeTaskInfo(
             taskInfoId: $task->taskInfoId,
             savedTask: $useSavedTask ? $saveTask : null
@@ -145,13 +158,13 @@ class TaskController extends Controller
      */
     public function save(HttpRequest $request, int $id): Response
     {
-        $user = Auth::getUser() ?? throw new AuthenticationException();
+        $userId = UserHelper::getUserId();
         $requestData = RequestHelper::getDtoFromRequest(TaskDto\Save\Request::class, $request);
         $success = DB::table(SavedTask::getTableName())
             ->updateOrInsert(
                 attributes: [
                     SavedTaskConstants::COL_TASK_ID => $id,
-                    SavedTaskConstants::COL_USER_ID => $user->id
+                    SavedTaskConstants::COL_USER_ID => $userId
                 ],
                 values: [
                     SavedTaskConstants::COL_DATA => TaskDto\Save\Request::export($requestData->exercises)
@@ -160,7 +173,7 @@ class TaskController extends Controller
         if (!$success) {
             throw new InternalException(
                 "Could not save task values!",
-                context: ['taskid' => $id]
+                context: ['taskId' => $id]
             );
         }
         return response(status: Response::HTTP_NO_CONTENT);
@@ -186,10 +199,10 @@ class TaskController extends Controller
             fn ($tagId) => RequestHelper::translateId($tagId),
             $requestTask->tags
         );
-        $task->difficulty = $requestTask->difficulty;
+        $task->difficulty = TaskDifficulty::fromThrow($requestTask->difficulty);
         $task->isPublic = $requestTask->isPublic;
-        $task->minClass = $requestTask->classRange->min;
-        $task->maxClass = $requestTask->classRange->max;
+        $task->minClass = TaskClass::fromThrow($requestTask->classRange->min);
+        $task->maxClass = TaskClass::fromThrow($requestTask->classRange->max);
 
         $taskId = $taskRes->insert();
         return Create\Response::create()
@@ -213,10 +226,10 @@ class TaskController extends Controller
             fn ($tagId) => RequestHelper::translateId($tagId),
             $requestTask->tags
         );
-        $task->difficulty = $requestTask->difficulty;
+        $task->difficulty = TaskDifficulty::fromThrow($requestTask->difficulty);
         $task->isPublic = $requestTask->isPublic;
-        $task->minClass = $requestTask->classRange->min;
-        $task->maxClass = $requestTask->classRange->max;
+        $task->minClass = TaskClass::fromThrow($requestTask->classRange->min);
+        $task->maxClass = TaskClass::fromThrow($requestTask->classRange->max);
 
         $taskRes->update($id);
         return response(status: Response::HTTP_NO_CONTENT);
@@ -226,8 +239,18 @@ class TaskController extends Controller
     {
         $userId = UserHelper::tryGetUserId();
         $requestData = RequestHelper::getDtoFromRequest(Evaluate\Request::class, $request);
-
-        $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true)
+        $responseTask = Review\Get\Task::create();
+        
+       /**
+         * @param ExerciseReview[]|null $evaluatedExercises
+         * @param App\Dtos\Task\Review\Get\Task &$responseTask
+         * @return BareTaskWAuthorName
+         * Fetches the task and locks it if userId is not null
+         * Evaluates task and sets response to responseTask
+         * Adds evaluated exercises to evalutedExercises if evalutedExercises are not null
+         */
+    $do = function(array|null &$evaluatedExercises,&$responseTask) use($id, $userId,$requestData){
+        $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true,sharedLock:$userId !== null)
             ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
         if ($task->version !== $requestData->version) {
             throw new ApplicationException(
@@ -244,18 +267,13 @@ class TaskController extends Controller
             );
         }
 
-        $responseTask = Review\Get\Task::create()
-            ->setDisplay($task->display);
+        $responseTask->setDisplay($task->display);
 
         $exercises = ExerciseHelper::evaluateTaskInfo(
             taskInfoId: $task->taskInfoId
         );
         $taskPoints = 0;
         $taskmax = 0;
-        /**
-         * @var ExerciseReview[] $evaluatedExercises
-         */
-        $evaluatedExercises = [];
         $taskEntries = &$responseTask->setEntries([])->entries;
         TaskHelper::getTaskEntries(
             taskInfoId: $task->taskInfoId,
@@ -273,7 +291,9 @@ class TaskController extends Controller
 
                 $taskPoints += $exerciseDto->points->has;
                 $taskmax += $exerciseDto->points->max;
+                if($evaluatedExercises){
                 $evaluatedExercises[] = $exerciseDto;
+                }
                 return $exerciseDto;
             },
             groupToDto: function (array $resources) {
@@ -296,8 +316,20 @@ class TaskController extends Controller
                 ->setHas($taskPoints)
                 ->setMax($taskmax)
         );
-        if($userId !== null){
-        DB::transaction(function () use ($task, $responseTask, &$evaluatedExercises,$userId) {
+        return $task;
+    };
+
+    if($userId === null){
+        $evaluatedExercises = null;
+       $do($evaluatedExercises,$responseTask);
+    }
+    else{
+        DB::transaction(function()use($do,$userId,$responseTask){
+            /**
+             * @var ExerciseReview[] $evaluatedExercises
+             */
+            $evaluatedExercises = [];
+            $task = $do($evaluatedExercises,$responseTask);
             $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                 ->select([TaskReviewTemplateConstants::COL_ID])
                 ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $task->taskInfoId)
@@ -614,15 +646,15 @@ class TaskController extends Controller
 
     public function myList(HttpRequest $request): TaskDto\MyList\Response
     {
-
+        $userId = UserHelper::getUserId();
         $requestData = RequestHelper::getDtoFromRequest(MyList\Request::class, $request);
 
-        $bareTasks = BareTask::tryFetch(function (Builder $builder) use ($requestData) {
+        $bareTasks = BareTask::tryFetch(function (Builder $builder) use ($requestData,$userId) {
             /**
              * @var MyList\Errors\FilterErrorDetailsErrorData|null $error
              */
             $filterErrorData = null;
-            $builder->where(TaskConstants::COL_USER_ID, Auth::getUser()->id);
+            $builder->where(TaskConstants::COL_USER_ID, $userId);
 
             $filters = $requestData->filters;
             if ($filters->tags) {

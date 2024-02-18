@@ -22,6 +22,7 @@ namespace App\Helpers {
     use App\Helpers\CreateTask\ParseEntry;
     use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
+    use App\Helpers\Database\UserHelper;
     use App\ModelConstants\ExerciseConstants;
     use App\ModelConstants\GroupConstants;
     use App\ModelConstants\ResourceConstants;
@@ -153,18 +154,18 @@ namespace App\Helpers {
 
         public static function getSavedTask(int $taskId, ?Carbon $localySavedTaskUtcTimestamp):SaveTask|null
         {
-            $user = Auth::user();
-            if ($user !== null) {
-                TimeStampUtils::timestampToUtc($localySavedTaskUtcTimestamp);
+           $userId = UserHelper::tryGetUserId();
+            if ($userId !== null) {
                 $savedTaskTable = SavedTaskConstants::TABLE_NAME;
                 $builder = DB::table($savedTaskTable)
                     ->select([
                         SavedTaskConstants::COL_DATA,
                         SavedTaskConstants::COL_TASK_VERSION
                         ])
-                    ->where(SavedTaskConstants::COL_USER_ID, '=', $user->id)
+                    ->where(SavedTaskConstants::COL_USER_ID, '=', $userId)
                     ->where(SavedTaskConstants::COL_TASK_ID, '=', $taskId);
                 if ($localySavedTaskUtcTimestamp) {
+                    TimeStampUtils::timestampToUtc($localySavedTaskUtcTimestamp);
                     $builder = $builder
                         ->where(SavedTaskConstants::COL_UPDATED_AT, '>', $localySavedTaskUtcTimestamp, boolean: 'or')
                         ->where(SavedTaskConstants::COL_CREATED_AT, '>', $localySavedTaskUtcTimestamp);
@@ -176,7 +177,7 @@ namespace App\Helpers {
                         json:$savedTask[SavedTaskConstants::COL_DATA],
                         table: $savedTaskTable,
                         column: SavedTaskConstants::COL_DATA,
-                        id: [SavedTaskConstants::COL_USER_ID => $user->id, SavedTaskConstants::COL_TASK_ID => $taskId],
+                        id: [SavedTaskConstants::COL_USER_ID => $userId, SavedTaskConstants::COL_TASK_ID => $taskId],
                         wrapper:TaskSaveContent::EXERCISES,
 
                     );

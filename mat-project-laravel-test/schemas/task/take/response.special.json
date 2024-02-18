@@ -104,30 +104,62 @@
             ]
           }
         },
-        "prev_saved_values":{
-          "title": "Saved task values",
-          "description": "Saved values for previous version of this task.",
+        "saved_values_info":{
+          "title": "Saved task info",
+          "description": "Provides information about the saved task values.",
           "type":"object",
-          "properties": {
-            "exercises":{
-              "type":"array",
-              "minItems":1,
-              "items":{
-                "anyOf":[
-                  {
-                    "$ref":"@/defs/exercises/*/save_request.json"
-                  }
-                ]
-              }
-            }
-          },
-          "required": ["exercises"]
-        }
+          "anyOf": [
+            {
+              "title": "Newer server saved task info",
+              "description": "Represents information about saved task, that is more recent than locally saved version of it.",
+              "type":"object",
+              "properties": {
+                "has_saved_values":{
+                  "type":"boolean",
+                  "const":"true"
+                },
+                "prev_saved_values":{
+                  "title": "Saved task values",
+                  "description": "Saved values for previous version of this task.\nThis means that task version has changed or some other reason why these values could not be filled into exercises.",
+                  "type":"object",
+                  "properties": {
+                    "exercises":{
+                      "type":"array",
+                      "minItems":1,
+                      "items":{
+                        "anyOf":[
+                          {
+                            "$ref":"@/defs/exercises/*/save_request.json"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["exercises"]
+                }
+              },
+              "required": ["has_saved_values"]
+            },
+            {
+              "title": "Older server saved task info",
+              "description": "Represents information that locally saved task is more recent than the saved task on the server.",
+              "type":"object",
+              "properties": {
+                "has_saved_values":{
+                  "type":"boolean",
+                  "const":"false"
+                }
+            },
+            "required": ["has_saved_values"]
+          }
+          ]
+      }
       },
       "required": [
         "task_detail",
         "display",
-        "entries"
+        "entries",
+        "saved_values_info"
       ]
     }
   },
