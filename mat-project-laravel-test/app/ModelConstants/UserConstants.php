@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class UserConstants 
+class UserConstants
 {
     const TABLE_NAME = 'users';
 

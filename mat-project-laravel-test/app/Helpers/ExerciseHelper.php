@@ -22,6 +22,7 @@ use DateTimeZone;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class ExerciseHelper
 {
@@ -169,13 +170,13 @@ class ExerciseHelper
   {
     $exerciseIDName = ExerciseConstants::COL_ID;
     /**
-     * @var array<array|\stdClass> $exercises
+     * @var array<array|stdClass> $exercises
      */
     $exercises = DB::table(ExerciseConstants::TABLE_NAME)
       ->select([
         $exerciseIDName,
-      ExerciseConstants::COL_WEIGHT, 
-      ExerciseConstants::COL_EXERCISEABLE_TYPE, 
+      ExerciseConstants::COL_WEIGHT,
+      ExerciseConstants::COL_EXERCISEABLE_TYPE,
       ExerciseConstants::COL_INSTRUCTIONS
       ])
       ->where(ExerciseConstants::COL_TASK_INFO_ID, $taskInfoId)

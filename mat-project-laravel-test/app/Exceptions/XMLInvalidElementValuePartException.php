@@ -1,9 +1,10 @@
 <?php
 namespace App\Exceptions{
 
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValuePart;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValuePartErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValuePart;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValuePartErrorData;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ErrorResponse;
 
 class XMLInvalidElementValuePartException extends XMLParsingException{
 
@@ -26,9 +27,12 @@ class XMLInvalidElementValuePartException extends XMLParsingException{
         );
 
         parent::__construct(
-            ApplicationErrorObject::create()
-            ->setMessage($message)
+            ErrorResponse::create()
+            ->setUserInfo(
+                UserSpecificPartOfAnError::create()
+                ->setMessage($message)
             ->setDescription($description)
+            )
             ->setDetails(
                 XMLInvalidElementValuePart::create()
             ->setErrorData($errorData)

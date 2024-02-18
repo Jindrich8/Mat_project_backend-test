@@ -19,6 +19,7 @@ namespace App\Helpers {
     use App\Exceptions\ConversionException;
     use App\Exceptions\InternalException;
     use App\Helpers\BareModels\BareTaskWAuthorName;
+    use App\Helpers\CreateTask\ParseEntry;
     use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
     use App\ModelConstants\ExerciseConstants;
@@ -54,7 +55,7 @@ namespace App\Helpers {
     class TaskHelper
     {
         /**
-         * @template T 
+         * @template T
          * @template TExerciseDto of ClassStructure
          * @template TGroupDto of ClassStructure
          * @param int $taskInfoId
@@ -80,7 +81,7 @@ namespace App\Helpers {
 
             $resources = DB::table(ResourceConstants::TABLE_NAME)
                 ->select([
-                    ResourceConstants::COL_GROUP_ID, 
+                    ResourceConstants::COL_GROUP_ID,
                     ResourceConstants::COL_CONTENT
                     ])
                 ->whereIn(ResourceConstants::COL_GROUP_ID, $groups->keys())
@@ -158,7 +159,7 @@ namespace App\Helpers {
                 $savedTaskTable = SavedTaskConstants::TABLE_NAME;
                 $builder = DB::table($savedTaskTable)
                     ->select([
-                        SavedTaskConstants::COL_DATA, 
+                        SavedTaskConstants::COL_DATA,
                         SavedTaskConstants::COL_TASK_VERSION
                         ])
                     ->where(SavedTaskConstants::COL_USER_ID, '=', $user->id)
@@ -364,7 +365,7 @@ namespace App\Helpers {
 
             return $tags->mapWithKeys(function ($tag, $key) {
                 return [
-                    DBHelper::access($tag, TagTaskInfoConstants::COL_TAG_ID) + 0 
+                    DBHelper::access($tag, TagTaskInfoConstants::COL_TAG_ID) + 0
                 => DBHelper::access($tag, 'name') . ''
             ];
             });
@@ -387,7 +388,7 @@ namespace App\Helpers {
                         $areInvalid = true;
                         $translatedTags = [];
                     }
-                    $invalidTags[] = $tag;
+                    $translatedTags[] = $tag;
                 } else if (!$areInvalid) {
                     $translatedTags[] = $translatedId;
                 }
@@ -403,7 +404,8 @@ namespace App\Helpers {
             return $translatedTags;
         }
 
-        public static function deleteActualExercisesByTaskInfo(int $taskInfoId){
+        public static function deleteActualExercisesByTaskInfo(int $taskInfoId): void
+        {
             $typesByIds = DB::table(ExerciseConstants::TABLE_NAME)
             ->select([
                 ExerciseConstants::COL_ID,
@@ -431,7 +433,7 @@ namespace App\Helpers {
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskDifficulty::class);
             if (!$RangeError) {
-                $column = $withPrefix ? 
+                $column = $withPrefix ?
                 DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,TaskInfoConstants::COL_DIFFICULTY)
                 : TaskInfoConstants::COL_DIFFICULTY;
                 $builder->whereBetween($column, [$min, $max]);

@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class FillInBlanksConstants 
+class FillInBlanksConstants
 {
     const TABLE_NAME = 'fill_in_blanks';
 

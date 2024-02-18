@@ -13,23 +13,27 @@ namespace App\Helpers\CreateTask {
     class ExerciseContentNode extends XMLValueParsingNode
     {
 
-        public static function create(ExerciseNode $parent){
-            $node = new self($parent);
-            return $node;
+        public static function create(ExerciseNode $parent): self
+        {
+            return new self($parent);
         }
-        
+
 
         private function __construct(ExerciseNode $exercise){
             parent::__construct(
-                parent:$exercise,
-                maxCount:1,
-            name:TaskSrcConfig::get()->exerciseContentName
+                name: TaskSrcConfig::get()->exerciseContentName,
+                parent: $exercise,
+                maxCount: 1
             );
         }
 
         public function getContentNode(XMLContextBase $context): XMLNodeBase
         {
-            return $context->getTaskRes()->getExerciseContentNode(name:$this->getName(),parent:$this->parent);
+            return $context->getTaskRes()
+                ->getExerciseContentNode(
+                    parent: $this->parent,
+                    name: $this->getName()
+                );
         }
 }
 }

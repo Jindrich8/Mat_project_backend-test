@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Exercises\FixErrors {
 
+    use App\Dtos\Defs\Types\Review\ExerciseReview;
     use App\Dtos\Task\Review\Get\DefsExercise;
     use App\Helpers\CEvaluateExercise;
 
@@ -12,7 +13,7 @@ namespace App\Helpers\Exercises\FixErrors {
             
         }
 
-        public function evaluateAndSetAsContentTo(mixed $value, DefsExercise $exercise): void
+        public function evaluateAndSetAsContentTo(mixed $value, ExerciseReview $exercise): void
         {
             
         }

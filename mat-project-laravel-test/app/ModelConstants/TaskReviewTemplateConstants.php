@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class TaskReviewTemplateConstants 
+class TaskReviewTemplateConstants
 {
     const TABLE_NAME = 'task_review_templates';
 

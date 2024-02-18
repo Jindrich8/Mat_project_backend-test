@@ -22,7 +22,7 @@ namespace App\Helpers\BareModels {
         public function __construct(
             public readonly int $id,
             public readonly int $taskInfoId,
-            public readonly string $name, 
+            public readonly string $name,
             public readonly TaskDisplay $display,
             public readonly TaskDifficulty $difficulty,
             public readonly TaskClass $minClass,
@@ -38,7 +38,7 @@ namespace App\Helpers\BareModels {
         }
 
         /**
-         * 
+         *
          */
         public static function fromRecord(array|object $task){
             return new self(
@@ -55,7 +55,7 @@ namespace App\Helpers\BareModels {
                 userId:DBHelper::access($task,TaskConstants::COL_USER_ID),
                 createdAt:TimeStampUtils::parseIsoTimestampToUtc(DBHelper::access($task,TaskConstants::COL_CREATED_AT)),
                 updatedAt:TimeStampUtils::parseIsoTimestampToUtc(DBHelper::access($task,TaskConstants::COL_UPDATED_AT)),
-               
+
                );
         }
 
@@ -97,8 +97,7 @@ namespace App\Helpers\BareModels {
             $modifyQuery($builder);
            $tasks = $builder->get();
 
-           $bareTasks = $tasks->map(fn($task)=>self::fromRecord($task));
-           return $bareTasks;
+            return $tasks->map(fn($task)=>self::fromRecord($task));
         }
     }
 }

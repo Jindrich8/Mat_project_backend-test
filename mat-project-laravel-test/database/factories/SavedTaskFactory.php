@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\SavedTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\SavedTask>
+ * @extends Factory<SavedTask>
  */
 class SavedTaskFactory extends Factory
 {

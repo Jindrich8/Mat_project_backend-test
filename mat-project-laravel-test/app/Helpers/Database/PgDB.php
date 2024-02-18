@@ -22,7 +22,7 @@ namespace App\Helpers\Database {
             $valuesCount = count($values);
             $columnsCount = count($columns);
             $rowBindingTemplate = '(?'.str_repeat(',?',$columnsCount-1).')';
-            
+
             $query ="INSERT INTO $tableName (" . Utils::wrapAndImplode('"',",",$columns) . ") VALUES $rowBindingTemplate"
             . str_repeat(",$rowBindingTemplate", count($values) - 1)
                         . "RETURNING $primaryKeyName";
@@ -35,7 +35,6 @@ namespace App\Helpers\Database {
                     context:[
                         'tableName' => $tableName,
                     'primaryKeyName' => $primaryKeyName,
-                    'columns' => $columns, 
                     'values' => $values
                 ]);
                 }
@@ -60,7 +59,6 @@ namespace App\Helpers\Database {
                     'query' => $query,
                     'tableName' => $tableName,
                 'primaryKeyName' => $primaryKeyName,
-                'columns' => $columns, 
                 'values' => $values,
                 'unsetValuesArray'=>$unsetValuesArray
             ]);
@@ -68,8 +66,8 @@ namespace App\Helpers\Database {
             for($i = 0; $i < $valuesCount; ++$i){
                 $id = $ids[$i];
                 if(!is_int($id)){
-                    $ids[$i] = is_object($id) ? 
-                    $id->{$primaryKeyName} 
+                    $ids[$i] = is_object($id) ?
+                    $id->{$primaryKeyName}
                     : $id[$primaryKeyName];
                 }
             }

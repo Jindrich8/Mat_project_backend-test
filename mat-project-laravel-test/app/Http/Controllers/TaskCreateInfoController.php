@@ -11,6 +11,7 @@ use App\Dtos\Task\Evaluate;
 use App\Dtos\Task\Review;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
+use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use App\Dtos\Task\Take;
 use App\Exceptions\InternalException;
@@ -42,8 +43,11 @@ class TaskCreateInfoController extends Controller
 {
     use ConstructableTrait;
 
-    public function getCreateInfo(): Response
+    public function getCreateInfo(Request $request): Response
     {
+        $difficulties = TaskDifficulty::getValues();
+        $classes = TaskClass::getValues();
+
         $response = Response::create()
             ->setTags(
                 DB::table(TagConstants::TABLE_NAME)
@@ -61,7 +65,7 @@ class TaskCreateInfoController extends Controller
                     ResponseOrderedEnumElement::create()
                         ->setName($name)
                         ->setOrderedId($index)
-                ], TaskDifficulty::getValues())
+                ], $difficulties)
             )
             ->setClasses(
                 Utils::arrayMapWKey(fn ($index, $name) => [
@@ -69,7 +73,7 @@ class TaskCreateInfoController extends Controller
                     ResponseOrderedEnumElement::create()
                         ->setName($name)
                         ->setOrderedId($index)
-                ], TaskClass::getValues())
+                ], $classes)
             );
 
         return $response;

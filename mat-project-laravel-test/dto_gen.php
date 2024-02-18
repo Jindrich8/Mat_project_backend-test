@@ -9,6 +9,7 @@ use Dev\DtoGen\PathHelper;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
+use Symfony\Component\Finder\Finder;
 
 
 $SchemasDir = __DIR__ . DIRECTORY_SEPARATOR . 'schemas';
@@ -30,21 +31,20 @@ EOF;
 echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
 if (ScriptArgsBuilder::create()
     ->optionSet(name: "dir", set: function ($value) use (&$SchemasDir) {
-        $SchemasDir = parsePath($value, real: true);
+        $SchemasDir = PathHelper::parsePath($value, real: true);
     })
     ->optionSet(name: "targetDir", set: function ($value) use (&$TargetDir) {
-        $TargetDir = parsePath($value, real: true);
+        $TargetDir = PathHelper::parsePath($value, real: true);
     })
     ->optionSet(name: "targetNamespace", set: function ($value) use (&$TargetNamespace) {
-        $TargetNamespace = parsePath($value);
+        $TargetNamespace = PathHelper::parsePath($value);
     })
     ->option(name: "sep", var: $PathSeparator)
     ->optionSet(name: 'excludeRelDir', set: function ($value) use (&$ExludeSchemas) {
-        $ExludeSchemas = parsePath($value, sep: '/');
+        $ExludeSchemas = PathHelper::parsePath($value, sep: '/');
     })
     ->option(name: "schemaNamePattern", var: $SchemaNamePattern)
     ->flag(name: "force", var: $ForceRegenerate)
-
     ->fetchScriptArguments()
     ->showPassedOptions()
     ->showInvalidOptions()
@@ -63,65 +63,46 @@ foreach ($finder as $file) {
         $path = realpath($file->getPath());
         if ($path) {
             $relPath = Str::replaceStart($SchemasDir, '', $path);
-            $parts =  explode(DIRECTORY_SEPARATOR, $relPath);
-            if ($parts !== false) {
-                $parts =  array_map(fn ($part) => Str::studly($part), $parts);
-                $parsedRelPath =  implode(DIRECTORY_SEPARATOR, $parts);
-                $fileName = $file->getFilenameWithoutExtensions();
-                $schema = json_decode($file->getContents());
-                if (is_array($schema) || is_object($schema)) {
-                    $parsedRelPathNoExtensions = MyFileInfo::omitAllExtensions($parsedRelPath);
-                    $targetPath = PathHelper::concatPaths($TargetDir, $parsedRelPathNoExtensions);
-                    // construct relative path to target
-                    $targetRelPath = Str::replaceFirst(__DIR__ . DIRECTORY_SEPARATOR, '', $targetPath);
-                    // generate ?
-                    $generate = $ForceRegenerate;
-                    if (!$generate) {
-                        $mTime = $file->getInfo()->getMTime();
-                        $generate = $mTime === false || phpFilesChange($mTime, $targetPath);
-                    }
-                    if ($generate) {
-                        $targetNamespace = PathHelper::concatPaths($TargetNamespace, $parsedRelPathNoExtensions);
+            $parts = explode(DIRECTORY_SEPARATOR, $relPath);
+            $parts = array_map(fn($part) => Str::studly($part), $parts);
+            $parsedRelPath = implode(DIRECTORY_SEPARATOR, $parts);
+            $fileName = $file->getFilenameWithoutExtensions();
+            $schema = json_decode($file->getContents());
+            if (is_array($schema) || is_object($schema)) {
+                $parsedRelPathNoExtensions = MyFileInfo::omitAllExtensions($parsedRelPath);
+                $targetPath = PathHelper::concatPaths($TargetDir, $parsedRelPathNoExtensions);
+                // construct relative path to target
+                $targetRelPath = Str::replaceFirst(__DIR__ . DIRECTORY_SEPARATOR, '', $targetPath);
+                // generate ?
+                $generate = $ForceRegenerate;
+                if (!$generate) {
+                    $mTime = $file->getInfo()->getMTime();
+                    $generate = $mTime === false || phpFilesChange($mTime, $targetPath);
+                }
+                if ($generate) {
+                    $targetNamespace = PathHelper::concatPaths($TargetNamespace, $parsedRelPathNoExtensions);
 
-                        echo "\n\ngenerating... $fileName",
-                        "\ntarget path: $targetRelPath",
-                        "\ntarget namespace: $targetNamespace\n";
-                        $fileDir = MyFileInfo::dirname($path);
-                        echo "FilePath: $path\n FileDir: $fileDir\n";
-                        PhpDtosGenerator::generate(
-                            schemaData: $schema,
-                            rootName: $fileName,
-                            basePath: $targetPath,
-                            baseNameSpace: "App\\Dtos", //$targetNamespace,
-                            schemaFilePath: $path,
-                            relResolverDir: $fileDir,
-                            separator: $PathSeparator
-                        );
-                    } else {
-                        echo "\n\nskipping... $fileName",
-                        "\ntarget path: $targetRelPath\n";
-                    }
+                    echo "\n\ngenerating... $fileName",
+                    "\ntarget path: $targetRelPath",
+                    "\ntarget namespace: $targetNamespace\n";
+                    $fileDir = MyFileInfo::dirname($path);
+                    echo "FilePath: $path\n FileDir: $fileDir\n";
+                    PhpDtosGenerator::generate(
+                        schemaData: $schema,
+                        rootName: $fileName,
+                        basePath: $targetPath,
+                        baseNameSpace: "App\\Dtos", //$targetNamespace,
+                        relResolverDir: $fileDir,
+                        schemaFilePath: $path,
+                        separator: $PathSeparator
+                    );
+                } else {
+                    echo "\n\nskipping... $fileName",
+                    "\ntarget path: $targetRelPath\n";
                 }
             }
         }
     }
-}
-
-function parsePath(string $path, string $sep = DIRECTORY_SEPARATOR, bool $real = false)
-{
-    $replaced = Str::replace(['/', '\\'], $sep, $path);
-    if ($real) {
-        $replaced = realpath($replaced);
-        if ($replaced === false) {
-            throw new Exception("Path should exist '$path'");
-        }
-    }
-    return $replaced;
-}
-
-function SetSeparatorsTo(string $path, string $sep = DIRECTORY_SEPARATOR)
-{
-    return Str::replace(['/', '\\'], $sep, $path);
 }
 
 function phpFilesChange(int $lastTime, string|array $targetPath): bool
@@ -138,7 +119,7 @@ function phpFilesChange(int $lastTime, string|array $targetPath): bool
     }
 }
 
-function filesChange(\Symfony\Component\Finder\Finder $finder, int $lastTime): bool
+function filesChange(Finder $finder, int $lastTime): bool
 {
     foreach ($finder as $file) {
         $time = $file->getMTime();

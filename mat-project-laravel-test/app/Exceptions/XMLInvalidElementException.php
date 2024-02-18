@@ -5,7 +5,7 @@ namespace App\Exceptions {
     use App\Dtos\Defs\Errors\XML\XMLInvalidElement;
     use App\Dtos\Defs\Errors\XML\XMLInvalidElementErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
+    
     use App\Dtos\Errors\ErrorResponse;
     use App\Utils\Utils;
 

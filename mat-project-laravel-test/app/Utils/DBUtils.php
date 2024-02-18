@@ -76,8 +76,8 @@ namespace App\Utils {
             self::addMinMaxConstraint(
                 table: $table,
                 column: $column,
-                min: 0,
-                max: count($enum::cases())
+                max: count($enum::cases()),
+                min: 0
             );
         }
 
@@ -94,14 +94,15 @@ namespace App\Utils {
             }
         }
 
-        public static function addPercentDecimalConstraint(string $table, string $column){
+        public static function addPercentDecimalConstraint(string $table, string $column)
+        {
             self::addMinMaxConstraint(
-                table:$table,
-                column:$column,
-                min:0,
-                minIsInclusive:true,
-                max:1,
-                maxIsInclusive:true
+                table: $table,
+                column: $column,
+                max: 1,
+                min: 0,
+                maxIsInclusive: true,
+                minIsInclusive: true
             );
         }
 
@@ -152,6 +153,7 @@ namespace App\Utils {
                 );
             }
         }
+
         /**
          * @param class-string<BackedEnum> $enumName
          */
@@ -160,36 +162,5 @@ namespace App\Utils {
             return Str::snake($enumName) . "_pq_enum";
         }
 
-        /**
-         * @param string $name
-         * @param string[] $values
-         */
-        public static function tryCreatePgEnum(string $name, array &$values): bool
-        {
-            if (!$values) return true;
-            $valuesCount = count($values);
-
-            $success = DB::statement(
-                query: "CREATE TYPE $name AS ENUM (" . Utils::wrapAndImplode("'", ',', $values) . ');'
-            );
-            return $success;
-        }
-
-        /**
-         * @param string $name
-         * @param string[] $values
-         */
-        public static function createPgEnum(string $name, array $values): void
-        {
-            if (!self::tryCreatePgEnum($name, $values)) {
-                throw new InternalException(
-                    message: "Could not create PostgreSQL enum '$name' with values '$values'.",
-                    context: [
-                        'enumName' => $name,
-                        'enumValues' => $values
-                    ]
-                );
-            }
-        }
     }
 }

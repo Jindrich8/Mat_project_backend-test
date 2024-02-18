@@ -5,9 +5,6 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLSyntaxErrorErrorData as XMLXMLSyntaxErrorErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ErrorResponse;
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\XMLSyntaxError;
-    use App\Dtos\Errors\ErrorResponse\XMLSyntaxErrorErrorData;
 
 class XMLSyntaxErrorException extends XMLParsingException{
    

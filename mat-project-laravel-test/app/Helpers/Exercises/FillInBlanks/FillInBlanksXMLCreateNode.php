@@ -36,7 +36,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->reset();
         }
 
-        public function reset()
+        public function reset(): void
         {
             parent::reset();
             $this->state = ParsingState::EXERCISE_ENDED;

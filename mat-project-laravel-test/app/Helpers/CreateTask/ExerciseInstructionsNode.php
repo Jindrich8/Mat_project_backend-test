@@ -2,6 +2,7 @@
 
 namespace App\Helpers\CreateTask {
 
+    use App\Exceptions\XMLInvalidElementValueException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBaseWParentNode;
@@ -23,7 +24,7 @@ namespace App\Helpers\CreateTask {
             );
         }
 
-        
+
 
     public function appendValue(string $value, XMLContextBase $context): void
     {
@@ -32,7 +33,10 @@ namespace App\Helpers\CreateTask {
         $lastExercise->instructions =($lastExercise->instructions ?? "").$value;
     }
 
-    protected function validate(XMLContextBase $context): void
+        /**
+         * @throws XMLInvalidElementValueException
+         */
+        protected function validate(XMLContextBase $context): void
     {
         parent::validate($context);
         $taskRes = $context->getTaskRes();

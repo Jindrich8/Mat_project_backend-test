@@ -24,7 +24,7 @@ if (ScriptArgsBuilder::create()
     ->helpRequested()
 ) return;
 
-$filePath = parsePath($arguments[0]);
+$filePath = PathHelper::parsePath($arguments[0]);
 if (PathHelper::isRelative($filePath)) {
     $filePath = PathHelper::concatPaths(__DIR__, $filePath);
 }
@@ -47,13 +47,13 @@ while ($stack) {
                 $nextPosfix = $value;
             }
         } else if (!is_string($value)) {
-            $newPathSegment = parsePath($prop);
+            $newPathSegment = PathHelper::parsePath($prop);
             $newPath = PathHelper::getPotentialyNonExistentAbsolutePath(
                 PathHelper::concatPaths($path, $newPathSegment)
             );
             $stack[] = [$value, $newPath,$posfix.$nextPosfix];
         } else {
-            $valueWPosfix = parsePath($value.$posfix);
+            $valueWPosfix = PathHelper::parsePath($value.$posfix);
             [$file, $filePropPath] = explode("#", $valueWPosfix, limit: 2);
             $file = PathHelper::concatPaths($path, $file);
             $currentFile = json_decode(file_get_contents($file), associative: true);

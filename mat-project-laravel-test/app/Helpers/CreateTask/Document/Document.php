@@ -31,9 +31,9 @@ namespace App\Helpers\CreateTask\Document {
             //report(new InternalException('Document instanted'));
             $docDesc = DocumentDescription::create($doc);
            // report(new InternalException('Document description created'));
-            if($docDesc->getParentObjectId() === null){
+           /* if($docDesc->getParentObjectId() === null){
                 // dump("DOCUMENT DESCRIPTION DOES NOT HAVE PARENT!!!");
-            }
+            }*/
            // report(new InternalException('Document setChildren'));
             $doc->setChildren(
                 XMLChildren::construct()
@@ -84,6 +84,6 @@ namespace App\Helpers\CreateTask\Document {
         $context->getTaskRes()->task = new TaskResTask();
         parent::validateStart($attributes,$context,$name);
        }
-        
+
     }
 }

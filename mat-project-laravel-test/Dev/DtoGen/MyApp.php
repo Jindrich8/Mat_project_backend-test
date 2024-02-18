@@ -3,8 +3,9 @@
 namespace Dev\DtoGen {
 
     use Illuminate\Support\Str;
+    use Swaggest\PhpCodeBuilder\App\PhpApp;
 
-    class MyApp extends \Swaggest\PhpCodeBuilder\App\PhpApp
+    class MyApp extends PhpApp
     {
         public function storeNoClear(string $path):void{
         if (DIRECTORY_SEPARATOR === '\\') {

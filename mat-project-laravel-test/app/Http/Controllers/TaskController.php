@@ -2,14 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Dtos\Defs\Errors\GeneralErrorDetails as ErrorsGeneralErrorDetails;
-use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksSaveRequest;
-use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksSaveValue;
-use App\Dtos\Defs\Exercises\FixErrors\FixErrorsSaveRequest;
-use App\Dtos\Defs\Exercises\FixErrors\FixErrorsSaveValue;
 use App\Dtos\Defs\Types\Errors\EnumArrayError as ErrorsEnumArrayError;
-use App\Dtos\Defs\Types\Errors\InvalidBoundsError;
-use App\Dtos\Defs\Types\Errors\RangeError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Defs\Types\MyTask\MyTaskDetailInfo;
 use App\Dtos\Defs\Types\MyTask\MyTaskPreviewInfo;
@@ -25,88 +18,54 @@ use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
 use App\Dtos\Defs\Types\Task\TaskPreviewInfo;
 use App\Dtos\Defs\Types\Task\TaskPreviewInfoAuthor;
 use App\Dtos\Errors\ErrorResponse;
-use App\Dtos\InternalTypes\TaskReviewContent;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
-use App\Models\Task;
-use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\UpdateTaskRequest;
 use App\Dtos\Task as TaskDto;
 use App\Dtos\Task\Create;
 use App\Dtos\Task\Evaluate;
 use App\Dtos\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
-use App\Dtos\Task\Review;
-use App\Helpers\CreateTask\ParseEntry;
-use App\Helpers\CreateTask\TaskRes;
-use Illuminate\Http\Request as HttpRequest;
-use App\Dtos\Task\Take;
 use App\Dtos\Task\List;
-use App\Dtos\Task\MyList;
 use App\Dtos\Task\List\Error\EnumArrayError;
 use App\Dtos\Task\List\Error\GeneralErrorDetails;
-use App\Dtos\Task\List\Errors\FilterErrorDetails;
-use App\Dtos\Task\List\Errors\FilterErrorDetailsErrorData;
 use App\Dtos\Task\List\OrderByItems as ListOrderByItems;
 use App\Dtos\Task\List\Request\OrderByItems;
+use App\Dtos\Task\MyList;
 use App\Dtos\Task\MyList\OrderByItems as MyListOrderByItems;
-use App\Dtos\Task\Review\Get\DefsExercise;
-use App\Dtos\Task\Review\Get\DefsExerciseInstructions as GetDefsExerciseInstructions;
+use App\Dtos\Task\Review;
+use App\Dtos\Task\Take;
 use App\Dtos\Task\Take\DefsExerciseInstructions;
 use App\Dtos\Task\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
-use App\Exceptions\ConversionException;
-use App\Exceptions\EnumConversionException;
 use App\Exceptions\InternalException;
-use App\Exceptions\NotFoundException;
-use App\Exceptions\UnsupportedVariantException;
 use App\Helpers\BareModels\BareTask;
 use App\Helpers\BareModels\BareTaskWAuthorName;
+use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\Database\DBHelper;
 use App\Helpers\Database\UserHelper;
-use App\Helpers\DtoHelper;
-use App\Helpers\RequestHelper;
-use App\TableSpecificData\TaskDisplay;
 use App\Helpers\ExerciseHelper;
+use App\Helpers\RequestHelper;
 use App\Helpers\ResponseHelper;
 use App\Helpers\TaskHelper;
-use App\ModelConstants\ExerciseConstants;
 use App\ModelConstants\SavedTaskConstants;
 use App\ModelConstants\TaskConstants;
 use App\ModelConstants\TaskInfoConstants;
 use App\ModelConstants\TaskReviewConstants;
-use App\ModelConstants\TaskReviewExerciseConstants;
 use App\ModelConstants\TaskReviewTemplateConstants;
-use Illuminate\Support\Facades\DB;
-use App\Models\Exercise;
-use App\Models\Group;
-use App\Models\Resource;
 use App\Models\SavedTask;
-use App\Models\Tag;
-use App\Models\TagTask;
-use App\Models\TaskReviewExercise;
-use App\Models\TaskReviewTemplate;
-use App\Models\User;
-use App\TableSpecificData\TaskClass;
-use App\TableSpecificData\TaskDifficulty;
+use App\Models\Task;
+use App\TableSpecificData\TaskDisplay;
 use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
-use App\Utils\DBUtils;
 use App\Utils\DebugUtils;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
-use App\Utils\Utils;
-use App\Utils\ValidateUtils;
-use Carbon\Carbon;
-use Swaggest\JsonSchema;
-use DateTime;
-use DateTimeZone;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Swaggest\JsonSchema\JsonSchema as JsonSchemaJsonSchema;
-use Swaggest\JsonSchema\Structure\ClassStructure;
+use Illuminate\Support\Facades\DB;
+use Swaggest\JsonSchema\InvalidValue;
 
 class TaskController extends Controller
 {
@@ -117,6 +76,10 @@ class TaskController extends Controller
     }
 
 
+    /**
+     * @throws ApplicationException
+     * @throws AppModelNotFoundException
+     */
     public function take(HttpRequest $request, int $id): Take\Response
     {
         $requestData = RequestHelper::getDtoFromRequest(Take\Request::class, $request);
@@ -126,7 +89,7 @@ class TaskController extends Controller
             ?? throw new AppModelNotFoundException('Task', ['id' => $taskId]);
 
         $responseTask->setTaskDetail(TaskHelper::getInfo($task))
-            ->setDisplay($task->display);
+            ->setDisplay(TaskDisplay::translate($task->display));
 
         DebugUtils::log("timestamp", $requestData->localySavedTask?->timestamp);
         // dump($requestData->localySavedTask?->timestamp);
@@ -139,38 +102,29 @@ class TaskController extends Controller
             taskId: $taskId,
             localySavedTaskUtcTimestamp: $localySavedTaskTimeStamp
         );
-        if ($saveTask) {
-            if ($task->version === $saveTask->taskVersion) {
-                $exercises = ExerciseHelper::takeTaskInfo(
-                    taskInfoId: $task->taskInfoId,
-                    savedTask: $saveTask
-                );
-            } else {
+        $useSavedTask = $saveTask && $task->version === $saveTask->taskVersion;
+        if (!$useSavedTask) {
                 $responseTask->setPrevSavedValues(
                     SavedTaskValues::create()
-                        ->setExercises(
-                            array_map(
-                                function ($exercise) {
-                                    if ($exercise instanceof FillInBlanksSaveValue) {
-                                        return FillInBlanksSaveRequest::create()
-                                            ->setContent($exercise->content);
-                                    } else if ($exercise instanceof FixErrorsSaveValue) {
-                                        return FixErrorsSaveRequest::create()
-                                            ->setContent($exercise->content);
-                                    }
-                                },
-                                $saveTask->content->exercises
-                            )
-                        )
+                        ->setExercises($saveTask->content->exercises)
                 );
             }
-        }
+        $exercises = ExerciseHelper::takeTaskInfo(
+            taskInfoId: $task->taskInfoId,
+            savedTask: $useSavedTask ? $saveTask : null
+        );
         $responseTask->entries = [];
         $taskEntries = &$responseTask->entries;
         TaskHelper::getTaskEntries(
             taskInfoId: $task->taskInfoId,
             exercises: $exercises,
-            entries: $taskEntries,
+            exerciseToDto: function (TakeExercise $exercise) {
+                $exerciseDto =  Take\DefsExercise::create()
+                    ->setInstructions(DefsExerciseInstructions::create()
+                        ->setContent($exercise->instructions));
+                $exercise->impl->setAsContentTo($exerciseDto);
+                return $exerciseDto;
+            },
             groupToDto: function (array $resources) {
                 $groupDto = Take\DefsGroup::create()
                     ->setResources(array_map(fn (string $resource) =>
@@ -178,18 +132,17 @@ class TaskController extends Controller
                         ->setContent($resource), $resources));
                 return $groupDto;
             },
-            exerciseToDto: function (TakeExercise $exercise) {
-                $exerciseDto =  Take\DefsExercise::create()
-                    ->setInstructions(DefsExerciseInstructions::create()
-                        ->setContent($exercise->instructions));
-                $exercise->impl->setAsContentTo($exerciseDto);
-                return $exerciseDto;
-            }
+            entries: $taskEntries
         );
         return Take\Response::create()
             ->setTask($responseTask);
     }
 
+    /**
+     * @throws ApplicationException
+     * @throws AuthenticationException
+     * @throws InvalidValue
+     */
     public function save(HttpRequest $request, int $id): Response
     {
         $user = Auth::getUser() ?? throw new AuthenticationException();
@@ -213,6 +166,9 @@ class TaskController extends Controller
         return response(status: Response::HTTP_NO_CONTENT);
     }
 
+    /**
+     * @throws ApplicationException
+     */
     public function store(HttpRequest $request): Create\Response
     {
         $requestData = RequestHelper::getDtoFromRequest(Create\Request::class, $request);
@@ -595,7 +551,7 @@ class TaskController extends Controller
             if($taskInfoId === null){
                 throw new AppModelNotFoundException("Task", ['id' => $taskId]);
             }
-            
+
             $deleted = DB::table(TaskConstants::TABLE_NAME)
                 ->delete($taskId);
             if ($deleted === 0) {
@@ -606,7 +562,7 @@ class TaskController extends Controller
             $taskReviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                 ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=',$taskInfoId)
                 ->exists();
-            
+
 
             if (!$taskReviewTemplateExists) {
                 DB::table(TaskInfoConstants::TABLE_NAME)

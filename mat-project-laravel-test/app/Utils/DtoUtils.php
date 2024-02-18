@@ -7,7 +7,9 @@ namespace App\Utils {
     use App\Exceptions\InternalException;
     use App\Helpers\Database\DBJsonHelper;
     use BackedEnum;
+    use Exception;
     use Illuminate\Support\Facades\Response;
+    use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
     use Throwable;
     use App\Types\DBTranslationEnumTrait;
@@ -16,12 +18,13 @@ namespace App\Utils {
     {
 
         /**
-         * @param DBTranslationEnumTrait<int> $case
+         * @template T of DBTranslationEnumTrait<int>
+         * @param T $case
          * @return ResponseOrderedEnumElement
          */
         public static function createOrderedEnumDto(DBTranslationEnumTrait $case):ResponseOrderedEnumElement{
             return ResponseOrderedEnumElement::create()
-            ->setName(DBTranslationEnumTrait::translate($case))
+            ->setName($case::translate($case))
             ->setOrderedId($case->value);
         }
 
@@ -29,7 +32,10 @@ namespace App\Utils {
             return JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR;
         }
 
-        public static function prepareDtoForJsonResponse(ClassStructure $dto,string $field="",string $wrap=""){
+        /**
+         * @throws InvalidValue
+         */
+        public static function prepareDtoForJsonResponse(ClassStructure $dto, string $field="", string $wrap=""){
             $exported = self::exportDto($dto);
             if($field){
                 $exported = self::accessExportedField($exported,$field);
@@ -41,8 +47,8 @@ namespace App\Utils {
         }
 
         /**
-         * @throws \Swaggest\JsonSchema\InvalidValue
-         * @throws \Exception
+         * @throws InvalidValue
+         * @throws Exception
          */
         public static function exportDto(ClassStructure $dto):mixed{
             try{
@@ -97,8 +103,8 @@ namespace App\Utils {
         }
 
           /**
-         * @throws \Swaggest\JsonSchema\InvalidValue
-         * @throws \Exception
+         * @throws InvalidValue
+         * @throws Exception
          */
         public static function dtoToJson(ClassStructure $dto,string $field="",string $wrap="",int $otherJsonOptions = 0):string{
            $exported = self::exportDto($dto);
@@ -111,7 +117,10 @@ namespace App\Utils {
             return self::exportedDtoToJson($exported,$otherJsonOptions);
         }
 
-        public static function exportedDtoToJson(mixed $exportedDto,int $otherJsonOptions = 0):string{
+        /**
+         * @throws \JsonException
+         */
+        public static function exportedDtoToJson(mixed $exportedDto, int $otherJsonOptions = 0):string{
             return json_encode($exportedDto,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR|$otherJsonOptions);
         }
 

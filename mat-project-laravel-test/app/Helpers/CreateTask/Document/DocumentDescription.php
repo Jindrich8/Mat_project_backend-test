@@ -2,6 +2,7 @@
 
 namespace App\Helpers\CreateTask\Document {
 
+    use App\Exceptions\XMLInvalidElementValueException;
     use App\Helpers\CreateTask\TaskRes;
     use App\Helpers\CreateTask\XMLNoAttributesNode;
     use App\Helpers\CreateTask\Document\Document;
@@ -15,7 +16,7 @@ namespace App\Helpers\CreateTask\Document {
     use Illuminate\Support\Str;
 
     class DocumentDescription extends XMLNodeBaseWParentNode{
-        
+
         public static function create(Document $document){
             $desc = new self($document);
             return $desc;
@@ -35,7 +36,10 @@ namespace App\Helpers\CreateTask\Document {
         $task->description = ($task->description ?? "").$value;
     }
 
-    protected function validate(XMLContextBase $context): void
+        /**
+         * @throws XMLInvalidElementValueException
+         */
+        protected function validate(XMLContextBase $context): void
     {
         parent::validate($context);
 

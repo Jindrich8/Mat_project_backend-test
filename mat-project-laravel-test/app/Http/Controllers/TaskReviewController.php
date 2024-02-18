@@ -20,6 +20,7 @@ use App\Dtos\InternalTypes\TaskReviewExercisesContent;
 use App\Models\TaskReview;
 use App\Http\Requests\StoreTaskReviewRequest;
 use App\Http\Requests\UpdateTaskReviewRequest;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use App\Dtos\Task\Review;
 use App\Dtos\Task\Review\Get\DefsExerciseInstructions;
@@ -56,6 +57,7 @@ use App\Utils\Utils;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
 
 class TaskReviewController extends Controller
@@ -270,6 +272,10 @@ class TaskReviewController extends Controller
     }
 
 
+    /**
+     * @throws ApplicationException
+     * @throws AuthenticationException
+     */
     public function list(Request $request): Review\List\Response
     {
         $userId = UserHelper::getUserId();
@@ -318,6 +324,7 @@ class TaskReviewController extends Controller
             );
 
         $filters = $requestData->filters;
+        $filterErrorData = null;
         if ($filters->tags) {
             $invalidTags = TaskHelper::filterTaskByTags(
                 $filters->tags,
@@ -389,8 +396,10 @@ class TaskReviewController extends Controller
         }
 
         if ($filterErrorData) {
+            $details = Review\List\Errors\FilterErrorDetails::create()
+                ->setErrorData($filterErrorData);
             throw new ApplicationException(
-                Response::HTTP_BAD_REQUEST,
+                ResponseAlias::HTTP_BAD_REQUEST,
                 ErrorResponse::create()
                     ->setUserInfo(
                         UserSpecificPartOfAnError::create()
@@ -398,8 +407,7 @@ class TaskReviewController extends Controller
                             ->setDescription("Please correct request fields.")
                     )
                     ->setDetails(
-                        Review\List\Errors\FilterErrorDetails::create()
-                            ->setErrorData($filterErrorData)
+                       $details
                     )
             );
         }
@@ -416,6 +424,7 @@ class TaskReviewController extends Controller
         /**
          * @var array<int,ResponseEnumElement> $tags
          */
+        $tagsByTaskInfoId = TaskHelper::getTagsByTaskInfoId($taskInfoIds);
         $tags = Utils::arrayMapWKey(
             fn (int $key, array $tag) => [
                 $key,
@@ -423,7 +432,7 @@ class TaskReviewController extends Controller
                     ->setId($tag[0])
                     ->setName($tag[1])
             ],
-            TaskHelper::getTagsByTaskInfoId($taskInfoIds)
+            $tagsByTaskInfoId
         );
         unset($taskInfoIds);
 
@@ -472,8 +481,6 @@ class TaskReviewController extends Controller
                 )
                 ->setTaskPreviewInfo($taskPreviewInfo);
         });
-
-        $taskInfoId = DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_INFO_ID);
 
         return Review\List\Response::create()
             ->setReviews($reviews->all());

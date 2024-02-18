@@ -3,16 +3,18 @@
 namespace Dev\DtoGen {
     use Dev\DtoGen\PathHelper;
     use Illuminate\Support\Str;
+    use Swaggest\JsonSchema\RemoteRef\BasicFetcher;
+    use Swaggest\JsonSchema\RemoteRefProvider;
 
-    class RelativeSchemaRefResolver implements \Swaggest\JsonSchema\RemoteRefProvider
+    class RelativeSchemaRefResolver implements RemoteRefProvider
     {
-        private \Swaggest\JsonSchema\RemoteRef\BasicFetcher $fetcher;
+        private BasicFetcher $fetcher;
         private string $dir;
 
         public function __construct(string $dir)
         {
             $this->dir = $dir;
-            $this->fetcher = new \Swaggest\JsonSchema\RemoteRef\BasicFetcher();
+            $this->fetcher = new BasicFetcher();
         }
 
         function getSchemaData($url)

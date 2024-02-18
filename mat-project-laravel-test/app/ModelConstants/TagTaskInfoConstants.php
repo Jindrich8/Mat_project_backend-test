@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class TagTaskInfoConstants 
+class TagTaskInfoConstants
 {
     const TABLE_NAME = 'tag_task_infos';
 

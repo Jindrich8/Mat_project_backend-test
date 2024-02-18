@@ -3,6 +3,8 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\InternalException;
+    use App\Exceptions\XMLInvalidElementException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Helpers\CreateTask\Document\DocumentContent;
     use App\Helpers\CreateTask\TaskRes;
     use App\Helpers\CreateTask\XMLNoValueNode;
@@ -32,8 +34,8 @@ namespace App\Helpers\CreateTask {
 
         public static function create(DocumentContent $parent){
             $node = new self($parent);
-            
-            
+
+
             $members = GroupMembersNode::create($node);
             $node->members = $members;
             $resources = GroupResourcesNode::create($node);
@@ -43,13 +45,13 @@ namespace App\Helpers\CreateTask {
             // ($members->children ??= new XMLChildren())->addChildWithPossiblyDifferentParent($node);
             // $node->indexes = [];
 
-            
+
             $node->setChildren(
                 XMLChildren::construct()
                 ->addChild($resources)
                 ->addChild($members)
             );
-            
+
             return $node;
         }
 
@@ -86,11 +88,6 @@ namespace App\Helpers\CreateTask {
             return $resources;
          }
 
-        public function reset()
-        {
-            parent::reset();
-        }
-
         private function getParent():XMLNodeBase{
             return $this->indexes ? $this->getGroupMembers() : $this->parent;
         }
@@ -116,9 +113,10 @@ namespace App\Helpers\CreateTask {
             return $this->getParent()->name;
         }
 
-        
 
-
+        /**
+         * @throws XMLInvalidElementException
+         */
         public function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
         {
             parent::validateStart($attributes, $context, $name);
@@ -133,12 +131,15 @@ namespace App\Helpers\CreateTask {
 
             $prevIndex = $taskRes->addGroup();
             if ($prevIndex !== null && Utils::lastArrayValue($this->indexes) !== $prevIndex) {
-                array_push($this->indexes, $prevIndex);
+                $this->indexes[] = $prevIndex;
             }
 
-            
+
         }
 
+        /**
+         * @throws XMLMissingRequiredElementsException
+         */
         protected function validate(XMLContextBase $context): void
         {
             parent::validate($context);

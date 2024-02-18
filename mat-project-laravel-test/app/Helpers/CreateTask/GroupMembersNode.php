@@ -3,6 +3,7 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\InternalException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\CreatableNodeTrait;
     use App\Types\GetXMLParserPosition;
@@ -19,7 +20,8 @@ namespace App\Helpers\CreateTask {
 
         private ?ExerciseNode $exerciseNode;
 
-        private function getExerciseNode(){
+        private function getExerciseNode(): ExerciseNode
+        {
             $exercise = $this->exerciseNode;
             if(!$exercise){
              throw new InternalException(
@@ -30,7 +32,8 @@ namespace App\Helpers\CreateTask {
             return $exercise;
          }
 
-        public static function create(GroupNode $parent){
+        public static function create(GroupNode $parent): GroupMembersNode
+        {
             $node = new self($parent);
             $node->exerciseNode = ExerciseNode::create($node);
             $node->setChildren(
@@ -44,8 +47,8 @@ namespace App\Helpers\CreateTask {
         public function __construct(GroupNode $group){
             $config = TaskSrcConfig::get();
             parent::__construct(
-                parent:$group,
-            name:$config->groupMembersName
+                name: $config->groupMembersName,
+                parent: $group
             );
             $this->exerciseNode = null;
         }
@@ -64,6 +67,9 @@ namespace App\Helpers\CreateTask {
             }
         }
 
+        /**
+         * @throws XMLMissingRequiredElementsException
+         */
         protected function validate(XMLContextBase $context): void
         {
             parent::validate($context);
@@ -72,8 +78,8 @@ namespace App\Helpers\CreateTask {
             $exerciseCount = $taskRes->getExerciseCount();
             if($group->start >= $exerciseCount){
                 $this->missingRequiredElements(
-                    getPosCallback:$context,
-                    missingElements:[$this->getExerciseNode()->name]
+                    missingElements: [$this->getExerciseNode()->name],
+                    getPosCallback: $context
                 );
             }
         }

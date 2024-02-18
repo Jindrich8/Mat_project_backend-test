@@ -5,7 +5,13 @@ namespace Dev\DtoGen {
     use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Illuminate\Support\Str;
+    use Swaggest\JsonSchema\Context;
     use Swaggest\JsonSchema\JsonSchema;
+    use Swaggest\JsonSchema\Schema;
+    use Swaggest\PhpCodeBuilder\JsonSchema\ClassHookCallback;
+    use Swaggest\PhpCodeBuilder\JsonSchema\PhpBuilder;
+    use Swaggest\PhpCodeBuilder\PhpClass;
+    use Swaggest\PhpCodeBuilder\PhpCode;
     use Swaggest\PhpCodeBuilder\PhpConstant;
     use Swaggest\PhpCodeBuilder\PhpFunction;
     use Swaggest\PhpCodeBuilder\PhpStdType;
@@ -28,12 +34,12 @@ namespace Dev\DtoGen {
             EOF;
             $relResolverDir ??= MyFileInfo::dirname($schemaFilePath);
 
-            $remoteRefProvider = $relResolverDir ? 
-             new RelativeSchemaRefResolver($relResolverDir) 
+            $remoteRefProvider = $relResolverDir ?
+             new RelativeSchemaRefResolver($relResolverDir)
             : null;
 
-            $schemaContext = new \Swaggest\JsonSchema\Context($remoteRefProvider);
-            $swaggerSchema = \Swaggest\JsonSchema\Schema::import($schemaData,$schemaContext);
+            $schemaContext = new Context($remoteRefProvider);
+            $swaggerSchema = Schema::import($schemaData,$schemaContext);
 
             $appPath = $basePath;
             $appPath = <<<'EOF'
@@ -45,7 +51,7 @@ namespace Dev\DtoGen {
             $app = new MyApp();
             $app->setNamespaceRoot($appNs, '.');
 
-            $builder = new \Swaggest\PhpCodeBuilder\JsonSchema\PhpBuilder();
+            $builder = new PhpBuilder();
             $builder->namesFromDescriptions =true;
             $builder->buildSetters = true;
             $builder->makeEnumConstants = true;
@@ -53,8 +59,8 @@ namespace Dev\DtoGen {
             $rootName = Str::studly($rootName);
             echo "RelResolverDir: '$relResolverDir'\n";
             $quotedSeparator = null;
-            $builder->classCreatedHook = new \Swaggest\PhpCodeBuilder\JsonSchema\ClassHookCallback(
-                function (\Swaggest\PhpCodeBuilder\PhpClass $class,string $path,JsonSchema $schema) 
+            $builder->classCreatedHook = new ClassHookCallback(
+                function (PhpClass $class, string $path, JsonSchema $schema)
                 use ($app,$appPath, $appNs, $rootName, $schemaFilePath, $separator, $quotedSeparator,$relResolverDir,$schemaBase) {
                     $classSchemaFilePath = Str::before($path,'#');
                     if(!$classSchemaFilePath){
@@ -71,7 +77,7 @@ namespace Dev\DtoGen {
                     if ($fromRefs = $schema->getFromRefs()) {
                         $desc .= "\nBuilt from " . implode("\n" . ' <- ', $fromRefs);
                     }
-                    
+
                     $class->setDescription(trim($desc));
                     $createFuncBody = <<<'EOF'
                 $instance = parent::create();
@@ -89,8 +95,8 @@ namespace Dev\DtoGen {
                     $createFuncBody.="\n\$instance->$name = $const;";
                    }
                    }
-                
-                
+
+
                    if($hasConstants){
                     $createFuncBody.="\nreturn \$instance;";
                 $createFunc = new PhpFunction(name:'create',visibility:'public',isStatic:true);
@@ -102,7 +108,7 @@ namespace Dev\DtoGen {
                     echo "classSchemaFilePath '$classSchemaFilePath' starts with '$schemaBase'\n";
                     if(Str::startsWith($classSchemaFilePath,$schemaBase)){
                         echo "TRUE\n";
-                        
+
                    $namespace = implode('\\',array_map(fn($part)=>Str::studly($part),explode('\\',Str::replace(
                     search:['/','\\'],
                    replace:'\\',
@@ -115,7 +121,7 @@ namespace Dev\DtoGen {
                     if ('#' === $path) {
                         $class->setName($rootName); // Class name for root schema
                     } elseif (strpos($path, "#/" . PhpDtosGenerator::DEFS . "/") === 0) {
-                        $class->setName(\Swaggest\PhpCodeBuilder\PhpCode::makePhpClassName(
+                        $class->setName(PhpCode::makePhpClassName(
                             substr($path, strlen("#/" . PhpDtosGenerator::DEFS . "/"))
                         ));
                     } else {
@@ -139,6 +145,7 @@ namespace Dev\DtoGen {
                             if ($schemaFilePath && !Str::startsWith($path,'#')) {
                                 $i = 0;
                                 $len = min(strlen($path), strlen($schemaFilePath));
+                                /** @noinspection PhpStatementHasEmptyBodyInspection */
                                 for (; $i < $len && $path[$i] === $schemaFilePath[$i]; ++$i);
                                 $pathParts[0] = substr($path, $i);
                             }
@@ -172,12 +179,12 @@ END;
                                     $className = $result;
                                 }
                             }
-                        } 
-                        $class->setName(\Swaggest\PhpCodeBuilder\PhpCode::makePhpClassName(
+                        }
+                        $class->setName(PhpCode::makePhpClassName(
                             $className
                         ));
                         echo "Class: " . $class->getFullyQualifiedName() . "\n";
-                       
+
                     }
                     $app->addClass($class);
                 }

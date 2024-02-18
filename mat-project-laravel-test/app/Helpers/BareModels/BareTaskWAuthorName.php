@@ -17,6 +17,7 @@ namespace App\Helpers\BareModels {
     use App\Utils\Utils;
     use Illuminate\Database\Query\Builder;
     use DB;
+    use Illuminate\Database\Query\JoinClause;
 
     class BareTaskWAuthorName
     {
@@ -39,7 +40,7 @@ namespace App\Helpers\BareModels {
         }
 
         /**
-         * 
+         *
          */
         public static function fromRecord(array|object $task, string $authorNameColName, string $taskReviewIdColName)
         {
@@ -47,15 +48,15 @@ namespace App\Helpers\BareModels {
                 id: DBHelper::access($task, TaskConstants::COL_ID),
                 taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
                 name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
-                difficulty: TaskDifficulty::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_DIFFICULTY)),
                 display: TaskDisplay::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_ORIENTATION)),
+                difficulty: TaskDifficulty::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_DIFFICULTY)),
+                minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),
+                maxClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MAX_CLASS)),
                 description: DBHelper::access($task, TaskInfoConstants::COL_DESCRIPTION),
                 authorName: DBHelper::access($task, $authorNameColName),
                 isPublic: DBHelper::access($task, TaskConstants::COL_IS_PUBLIC),
                 version: DBHelper::access($task, TaskConstants::COL_VERSION),
                 userId: DBHelper::access($task, TaskConstants::COL_USER_ID),
-                minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),
-                maxClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MAX_CLASS)),
                 taskReviewId: DBHelper::tryToAccess($task, $taskReviewIdColName,null)
             );
 
@@ -125,7 +126,7 @@ namespace App\Helpers\BareModels {
                 )
                 ->leftJoin(
                     TaskReviewConstants::TABLE_NAME,
-                    function (\Illuminate\Database\Query\JoinClause $join) {
+                    function (JoinClause $join) {
                         $join->on(
                             TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID,
                             '=',

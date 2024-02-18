@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class TaskConstants 
+class TaskConstants
 {
     const TABLE_NAME = 'tasks';
 

@@ -61,6 +61,7 @@ namespace Dev\DtoGen {
                 case false:
                     $skipLen = mb_strlen($skip, $encoding);
                     $newOffset = $offset;
+                    /** @noinspection PhpStatementHasEmptyBodyInspection */
                     for (; $newOffset < $length && mb_substr($str, $newOffset, $skipLen) === $skip; ++$newOffset);
                     return $newOffset - $offset;
 

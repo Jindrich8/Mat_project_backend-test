@@ -2,13 +2,13 @@
 
 namespace App\Types {
 
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttributeErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttributeValueErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValueErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValuePartErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredAttributesErrorData;
-    use App\Dtos\Errors\ErrorResponse\XMLMissingRequiredElementsErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValueErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredAttributesErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValuePartErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeValueErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLMissingRequiredElementsErrorData;
     use App\Exceptions\InternalException;
     use App\Exceptions\XMLInvalidAttributeException;
     use App\Exceptions\XMLInvalidAttributeValueException;
@@ -53,14 +53,14 @@ namespace App\Types {
             return $this->name;
         }
 
-      
+
         /**
          * This method exists for determination of nodes with same parent node
          */
         public abstract function getParentObjectId():?object;
 
-        
-        
+
+
 
         /**
          * @param string $name
@@ -198,7 +198,7 @@ namespace App\Types {
                 if ($parseAndRequiredOrFalse === false) {
                     $this->invalidAttribute($attribute, $context);
                 }
-                if(array_key_exists($attribute,$usedRequiredAttributes) 
+                if(array_key_exists($attribute,$usedRequiredAttributes)
                 || array_key_exists($attribute,$usedNonRequiredAttributes)){
                     $this->duplicateAttribute($attribute,$context);
                 }
@@ -254,7 +254,7 @@ namespace App\Types {
                 line: $line,
                 byteIndex: $byteIndex
             );
-         
+
             throw new XMLInvalidElementValueException(
                 element: $this->name,
                 errorData: XMLInvalidElementValueErrorData::create()
@@ -290,8 +290,8 @@ namespace App\Types {
                     'node'=>$this
                 ]);
             }
-            
-         
+
+
             throw new XMLInvalidElementValuePartException(
                 element: $this->name,
                 errorData: XMLInvalidElementValuePartErrorData::create()
@@ -308,9 +308,9 @@ namespace App\Types {
         string $description,
         string $message = ''){
             $this->invalidValue(
-            message:$message ? $message : "Element '{$this->name}' value should not be empty",
-        description:$description
-    );  
+            description: $description,
+                message: $message ?: "Element '{$this->name}' value should not be empty"
+    );
         }
 
         protected function invalidAttributeValue(string $attribute, string $description, GetXMLParserPosition $getPosCallback)

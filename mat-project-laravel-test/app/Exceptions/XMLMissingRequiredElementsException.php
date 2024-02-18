@@ -8,7 +8,7 @@ namespace App\Exceptions{
     use App\Utils\Utils;
 
 class XMLMissingRequiredElementsException extends XMLParsingException{
-   
+
     /**
      * @param string $element
      * @param array<string|array<string>> $missingRequiredElements
@@ -35,11 +35,12 @@ class XMLMissingRequiredElementsException extends XMLParsingException{
 );
 
         if(!$description){
+            $mapped = array_map(
+                fn($missing) => is_array($missing) ? Utils::wrapAndImplode("'", ' or ', $missing) : $missing,
+                $missingRequiredElements);
             $description = "Missing required elements: '"
             .Utils::arrayToStr(
-                array_map(
-                fn($missing)=>is_array($missing) ? Utils::wrapAndImplode("'",' or ',$missing) : $missing,
-                $missingRequiredElements)
+                    $mapped
                 )
             .".";
         }

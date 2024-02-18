@@ -2,6 +2,7 @@
 
 namespace App\Helpers\CreateTask {
 
+    use App\Exceptions\XMLInvalidElementValueException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\CreatableNodeTrait;
     use App\Types\XMLContextBase;
@@ -15,17 +16,17 @@ namespace App\Helpers\CreateTask {
     class ResourcesResourceNode extends XMLNodeBaseWParentNode
     {
 
-        public static function create(GroupResourcesNode $parent){
-            $node = new self($parent);
-            return $node;
+        public static function create(GroupResourcesNode $parent): ResourcesResourceNode
+        {
+            return new self($parent);
         }
 
         private function __construct(GroupResourcesNode $parent){
             $config = TaskSrcConfig::get();
             parent::__construct(
-                parent:$parent,
-                maxCount:$config->maxResourceCountInResources,
-            name:$config->resourcesResource->name
+                name: $config->resourcesResource->name,
+                parent: $parent,
+                maxCount: $config->maxResourceCountInResources
             );
         }
 
@@ -36,7 +37,7 @@ namespace App\Helpers\CreateTask {
             $taskRes->addResourceToCurrentGroup();
         }
 
-        
+
 
     public function appendValue(string $value, XMLContextBase $context): void
     {
@@ -45,7 +46,10 @@ namespace App\Helpers\CreateTask {
        $resource->content = ($resource->content ?? "").$value;
     }
 
-    protected function validate(XMLContextBase $context): void
+        /**
+         * @throws XMLInvalidElementValueException
+         */
+        protected function validate(XMLContextBase $context): void
     {
         parent::validate($context);
         $resource = $context->getTaskRes()->getLastResourceOfCurrentGroup();

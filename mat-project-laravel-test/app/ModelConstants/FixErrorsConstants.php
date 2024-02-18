@@ -5,7 +5,7 @@ Do not change this file!
 */
 namespace App\ModelConstants;
 
-class FixErrorsConstants 
+class FixErrorsConstants
 {
     const TABLE_NAME = 'fix_errors';
 

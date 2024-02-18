@@ -4,24 +4,20 @@ namespace App\Helpers {
 
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\ErrorResponse;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
     use App\Exceptions\EnumConversionException;
     use App\Exceptions\InternalException;
-    use App\Utils\DebugUtils;
-    use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Illuminate\Http\Request;
-    use BackedEnum;
     use App\Types\BackedEnumTrait;
-    use App\Utils\DtoUtils;
     use App\Utils\ValidateUtils;
-    use Illuminate\Http\Client\Request as ClientRequest;
     use Illuminate\Http\Response;
+    use Illuminate\Validation\ValidationException;
+    use Swaggest\JsonSchema\Exception;
+    use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
-    use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
+    use Symfony\Component\HttpFoundation\Response as ResponseAlias;
     use Validator;
 
     class RequestHelper
@@ -60,6 +56,9 @@ namespace App\Helpers {
             return null;
         }
 
+        /**
+         * @throws ValidationException
+         */
         public static function validateAndExtractRequestData(array|Request $data): array
         {
             $validatedData = $data;
@@ -82,16 +81,17 @@ namespace App\Helpers {
          * @param class-string<T> $dtoClass
          * @param mixed $data
          * @return T
+         * @throws ApplicationException
          */
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
             try {
                 $dto = $dtoClass::import($data);
                 return $dto;
-            } catch (\Swaggest\JsonSchema\Exception | \Swaggest\JsonSchema\InvalidValue $e) {
+            } catch (Exception | InvalidValue $e) {
                 $message = "";
                 $messagePosfix = "";
-                if ($e instanceof \Swaggest\JsonSchema\InvalidValue) {
+                if ($e instanceof InvalidValue) {
                     $message = $e->error;
                     $matches = [];
                     if (preg_match_all(<<<'EOF'
@@ -109,14 +109,13 @@ namespace App\Helpers {
                 } else {
                     $message = $e->getMessage();
                 }
-                if (preg_match(<<<'EOF'
-            /(.*?)\s*,?(?:data:|at |#|\$|{|\[)/u
-            EOF, $message, $matches)) {
+                $regex = '/(.*?)\\s*,?(?:data:|at\\s|#|\\$|{|\\[)/u';
+                if (preg_match(pattern: $regex, subject: $message, matches: $matches)) {
                     $message = $matches[1];
                 }
                 $message = rtrim($message, ', ') . $messagePosfix . '.';
                 throw new ApplicationException(
-                    Response::HTTP_BAD_REQUEST,
+                    ResponseAlias::HTTP_BAD_REQUEST,
                     ErrorsErrorResponse::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
@@ -132,6 +131,7 @@ namespace App\Helpers {
          * @param class-string<T> $dtoClass
          * @param Request $request
          * @return T
+         * @throws ApplicationException
          */
         public static function getDtoFromRequest(string $dtoClass, Request $request): ClassStructure
         {
@@ -143,6 +143,9 @@ namespace App\Helpers {
         }
 
 
+        /**
+         * @throws ValidationException
+         */
         public static function getData(Request $request): mixed
         {
             $validated = self::validateAndExtractRequestData($request);

@@ -12,8 +12,10 @@ use Dev\DtoGen\PathHelper;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use Illuminate\Support\Facades\Schema;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Illuminate\Support\Arr;
+use Symfony\Component\Finder\Finder;
 
 
 $ModelsDir = __DIR__ . 'app/Models';
@@ -30,7 +32,7 @@ $LineSep = PHP_EOL;
 echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
 if (ScriptArgsBuilder::create()
     ->optionSet(name: "modelsDir", set: function ($value) use (&$ModelsDir) {
-        $ModelsDir = parsePath($value, real: true);
+        $ModelsDir = PathHelper::parsePath($value, real: true);
     })
     ->option(name: "constantsFileNamePattern", var: $ConstantsFileNamePattern)
     ->option(name: 'destinationDir', var: $DestinationDir)
@@ -64,25 +66,19 @@ foreach ($finder as $file) {
     if (!$realPath){
         echo "SKIPPING DUE TO NON EXITENCE\n";
     }
-    $obj = new SplFileObject($realPath);;
+    $obj = new SplFileObject($realPath);
     $continue = false;
     while (true) {
         $line = $obj->getCurrentLine();
-        if (!is_string($line) || $obj->eof()){
+        if ($obj->eof()){
             echo "SKIPPING DUE TO MISSING namespace App\\Models\n";
             continue 2;
-        } 
+        }
         $line = trim($line);
-        if (preg_match(<<<'EOF'
-        /^namespace\s*App\\Models\s*[;{]$/
-        EOF, $line)) {
+        if (preg_match('/^namespace\\s*App\\\\Models\\s*[;{]$/', $line)) {
             $continue = true;
             break;
         }
-    }
-    if (!$continue){
-        echo "SKIPPING DUE TO MISSING namespace App\\Models\n";
-        continue;
     }
 
     $modelName = $file->getFilenameWithoutExtension();
@@ -102,7 +98,7 @@ foreach ($finder as $file) {
     $table = $instance->getTable();
     $columns = [];
     LaravelServer::execute(function () use (&$columns, $instance) {
-        array_push($columns, Schema::getColumnListing($instance->getTable()));
+        $columns[] = Schema::getColumnListing($instance->getTable());
     });
     $columns = Arr::flatten($columns);
 
@@ -116,7 +112,7 @@ foreach ($finder as $file) {
     array_unshift($constantStrs,$IndentationStr."const TABLE_NAME = '".$instance->getTable()."';","");
     $constantsStr = implode($LineSep, $constantStrs);
     $searchClassBracket = true;
-    
+
     if (!File::exists($DestinationDir)) {
         if (!File::makeDirectory($DestinationDir, recursive: true)) {
             throw new Exception("Could not create destination directory");
@@ -124,7 +120,7 @@ foreach ($finder as $file) {
     }
     $destClassName = $DestinationPrefix . $modelName . $DestinationSuffix;
     $destFileName = $destClassName . '.php';
-   $namespace = parsePath($DestinationDir);
+   $namespace = PathHelper::parsePath($DestinationDir);
    $namespace = Str::after($namespace,DIRECTORY_SEPARATOR.'app'. DIRECTORY_SEPARATOR);
    $namespace = Str::ucfirst($namespace);
     $modelClassStr = <<<EOF
@@ -135,7 +131,7 @@ foreach ($finder as $file) {
     */
     namespace App\\$namespace;
 
-    class $destClassName 
+    class $destClassName
     {
     $constantsStr
     }
@@ -148,8 +144,12 @@ foreach ($finder as $file) {
 LaravelServer::dispose();
 
 $delete = array_diff(
-    array_map(fn($path)=>parsePath($path),PathHelper::getAllEntriesInDir($DestinationDir)),
-    array_map(fn($path)=>parsePath($path),$generatedFiles)
+    array_map(/**
+     * @throws Exception
+     */ fn($path)=>PathHelper::parsePath($path),PathHelper::getAllEntriesInDir($DestinationDir)),
+    array_map(/**
+     * @throws Exception
+     */ fn($path)=>PathHelper::parsePath($path),$generatedFiles)
 );
 File::delete($delete);
 
@@ -157,20 +157,20 @@ class LaravelServer
 {
     private static ?Kernel $kernel = null;
     private static int $status = 0;
-    private static ?\Symfony\Component\Console\Input\ArgvInput $input = null;
+    private static ?ArgvInput $input = null;
 
-    public static function execute(callable $call)
+    public static function execute(callable $call): void
     {
         $kernel = self::getKernel();
         $call();
     }
 
-    public static function dispose()
+    public static function dispose(): void
     {
         self::getKernel()->terminate(self::$input, self::$status);
     }
 
-    private static function getKernel()
+    private static function getKernel(): ?Kernel
     {
         if (!self::$kernel) {
             $app = require_once __DIR__ . '/bootstrap/app.php';
@@ -202,22 +202,7 @@ class LaravelServer
 
 
 
-function parsePath(string $path, string $sep = DIRECTORY_SEPARATOR, bool $real = false)
-{
-    $replaced = Str::replace(['/', '\\'], $sep, $path);
-    if ($real) {
-        $replaced = realpath($replaced);
-        if ($replaced === false) {
-            throw new Exception("Path should exist '$path'");
-        }
-    }
-    return $replaced;
-}
 
-function SetSeparatorsTo(string $path, string $sep = DIRECTORY_SEPARATOR)
-{
-    return Str::replace(['/', '\\'], $sep, $path);
-}
 
 function phpFilesChange(int $lastTime, string|array $targetPath): bool
 {
@@ -233,7 +218,7 @@ function phpFilesChange(int $lastTime, string|array $targetPath): bool
     }
 }
 
-function filesChange(\Symfony\Component\Finder\Finder $finder, int $lastTime): bool
+function filesChange(Finder $finder, int $lastTime): bool
 {
     foreach ($finder as $file) {
         $time = $file->getMTime();

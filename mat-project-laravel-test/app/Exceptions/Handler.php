@@ -5,7 +5,7 @@ namespace App\Exceptions;
 use App\Dtos\Defs\Errors\Access\UnathenticatedError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ErrorResponse;
-use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
+
 use App\Utils\DebugUtils;
 use App\Utils\ExceptionUtils;
 use App\Utils\Utils;

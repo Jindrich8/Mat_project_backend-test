@@ -9,20 +9,20 @@ namespace Dev\Utils {
 
         private array $flagOptionToVarMap = [];
         private array $valueOptionToVarMap = [];
-    
+
         private array $longOptions = ["help"];
         private string $shortOptions = "h";
-    
+
         private array $passedOptions = [];
         private array $passedValidOptions = [];
         private bool $invalidOptions = false;
         private array $arguments = [];
 
         private bool $help = false;
-    
+
         public function __construct(){
         }
-    
+
         public static function create(){
             return new self();
         }
@@ -30,7 +30,7 @@ namespace Dev\Utils {
         public function helpRequested(){
             return $this->help;
         }
-    
+
         /**
          * @param string $name
          * @param false &$var
@@ -39,17 +39,16 @@ namespace Dev\Utils {
         public function flag(string $name,bool &$var,bool $shortOption = false){
             self::checkOptionName($name,$shortOption);
 
-           if($shortOption){
             $this->flagOptionToVarMap[$name]=&$var;
-            $this->shortOptions .= $name;
+            if($shortOption){
+                $this->shortOptions .= $name;
            }
            else{
-            $this->flagOptionToVarMap[$name]=&$var;
-            $this->longOptions[]=$name;
+               $this->longOptions[]=$name;
            }
            return $this;
         }
-    
+
         /**
          * @param string $name
          * @param false &$var
@@ -59,12 +58,11 @@ namespace Dev\Utils {
         public function option(string $name,string &$var,bool $shortOption = false,callable $transformValue=null){
             self::checkOptionName($name,$shortOption);
             $argName = ScriptOption::transformToSpecialName($name,ScriptOptionType::VALUE_OPTIONAL);
+            $this->valueOptionToVarMap[$name]=&$var;
             if($shortOption){
-                $this->valueOptionToVarMap[$name]=&$var;
                 $this->shortOptions .= $argName;
             }
             else{
-                $this->valueOptionToVarMap[$name]=&$var;
                 $this->longOptions[]=$argName;
             }
             return $this;
@@ -79,12 +77,11 @@ namespace Dev\Utils {
             self::checkOptionName($name,$shortOption);
 
             $argName = ScriptOption::transformToSpecialName($name,ScriptOptionType::VALUE_OPTIONAL);
+            $this->valueOptionToVarMap[$name]=$set;
             if($shortOption){
-                $this->valueOptionToVarMap[$name]=$set;
                 $this->shortOptions .= $argName;
             }
             else{
-                $this->valueOptionToVarMap[$name]=$set;
                 $this->longOptions[]=$argName;
             }
             return $this;
@@ -94,22 +91,21 @@ namespace Dev\Utils {
             self::checkOptionName($name,$shortOption);
 
             $argName = ScriptOption::transformToSpecialName($name,ScriptOptionType::VALUE_REQUIRED);
-            if($shortOption){
-                $this->valueOptionToVarMap[$name]=&$var;
-                $this->shortOptions .= $argName;
+             $this->valueOptionToVarMap[$name]=&$var;
+             if($shortOption){
+                 $this->shortOptions .= $argName;
             }
             else{
-                $this->valueOptionToVarMap[$name]=&$var;
                 $this->longOptions[]=$argName;
             }
             return $this;
          }
-    
+
          public function getArguments(&$arguments){
             $arguments = $this->arguments;
             return $this;
          }
-    
+
          public function showInvalidOptions(){
             if($this->invalidOptions){
             echo "\nInvalid options specified.\n",
@@ -119,7 +115,7 @@ namespace Dev\Utils {
             }
             return $this;
          }
-    
+
          public function showNoArguments(){
             if($this->arguments){
                 echo "\nThis script does not support any arguments.",
@@ -168,7 +164,7 @@ namespace Dev\Utils {
           * @param int[] $nums
           */
          private static function scriptOptionTypeToNum(ScriptOptionType $type,int $valueRequired=0,int $valueOptional=1,int $flag=2):int{
-            
+
             return match($type){
                 ScriptOptionType::VALUE_REQUIRED => $valueRequired,
                 ScriptOptionType::VALUE_OPTIONAL => $valueOptional,
@@ -176,17 +172,17 @@ namespace Dev\Utils {
             };
          }
 
-         
+
 
          private function showHelp(){
-            
+
             $options = $this->decodeOptions();
-            
+
             usort($options, fn(ScriptOption $value1,ScriptOption $value2)=>
             self::scriptOptionTypeToNum($value1->type)-self::scriptOptionTypeToNum($value2->type));
 
             $prevType = null;
-            
+
             foreach($options as $option){
                 if($prevType !== $option->type){
                     $prevType = $option->type;
@@ -198,7 +194,7 @@ namespace Dev\Utils {
                  " ",$option->name,"\n";
             }
          }
-    
+
          public function fetchScriptArguments(array|null &$arguments = null){
             $restIndex = -1;
             $validOptions = getopt($this->shortOptions,$this->longOptions,$restIndex);
@@ -249,7 +245,7 @@ namespace Dev\Utils {
                 throw new Exception("Long options cannot be empty strings.");
             }
          }
-    
+
          private static function checkShortOptionName(string $name){
             if(mb_strlen($name) !== 1){
                 throw new Exception("Short options should have only one character name\nPassed name: '$name'.");

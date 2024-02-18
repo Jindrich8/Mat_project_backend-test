@@ -98,7 +98,7 @@ namespace App\Helpers\CreateTask {
                     message: "There is no current group!",
                     context: ['taskRes' => $this]
                 );
-            };
+            }
         }
 
         public function addResourceToCurrentGroup(): void
@@ -228,7 +228,7 @@ namespace App\Helpers\CreateTask {
                  $taskInfo->difficulty = $this->task->difficulty;
                  $taskInfo->min_class = $this->task->minClass;
                  $taskInfo->max_class = $this->task->maxClass;
-                 
+
                  $success = $taskInfo->save();
                  if (!$success) {
                      throw new InternalException(
@@ -241,11 +241,11 @@ namespace App\Helpers\CreateTask {
                  }
                  $taskInfoId = $taskInfo->id;
              }
-             
+
              DebugUtils::log("Task info successfully inserted",['taskInfoId' => $taskInfoId]);
               // insert groups and resources
               {
-                    
+
                 $insertGroupsBindings = [];
                 foreach ($this->groupsAndResources as $groupAndResource) {
                     $group = &$groupAndResource[0];
@@ -258,8 +258,8 @@ namespace App\Helpers\CreateTask {
                         GroupConstants::TABLE_NAME,
                         GroupConstants::COL_ID,
                         columns: [
-                            GroupConstants::COL_TASK_INFO_ID, 
-                            GroupConstants::COL_START, 
+                            GroupConstants::COL_TASK_INFO_ID,
+                            GroupConstants::COL_START,
                             GroupConstants::COL_LENGTH
                         ],
                         values: $insertGroupsBindings,
@@ -334,10 +334,10 @@ namespace App\Helpers\CreateTask {
                             ExerciseConstants::TABLE_NAME,
                             ExerciseConstants::COL_ID,
                             columns: [
-                                ExerciseConstants::COL_TASK_INFO_ID, 
-                                ExerciseConstants::COL_ORDER, 
-                                ExerciseConstants::COL_INSTRUCTIONS, 
-                                ExerciseConstants::COL_WEIGHT, 
+                                ExerciseConstants::COL_TASK_INFO_ID,
+                                ExerciseConstants::COL_ORDER,
+                                ExerciseConstants::COL_INSTRUCTIONS,
+                                ExerciseConstants::COL_WEIGHT,
                                 ExerciseConstants::COL_EXERCISEABLE_TYPE
                             ],
                             values: $exerciseBindings,
@@ -350,7 +350,7 @@ namespace App\Helpers\CreateTask {
                             array_splice($ids,0,$exerciseCount);
                         }
                     }
-                
+
             }
             return $taskInfoId;
         }
@@ -375,7 +375,7 @@ namespace App\Helpers\CreateTask {
                 $taskId = $task->id;
                 }
                 DebugUtils::log("Task successfully inserted",['taskId' => $taskId]);
-               
+
                 return $taskId;
             });
 
@@ -391,9 +391,9 @@ namespace App\Helpers\CreateTask {
                     TaskConstants::COL_IS_PUBLIC => $this->task->isPublic,
                     TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION." + 1")
                 ];
-               
+
                 DebugUtils::log("Task successfully inserted",['taskId' => $taskId]);
-                
+
                $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
                 ->select([TaskConstants::COL_TASK_INFO_ID])
                 ->where(TaskConstants::COL_ID,'=',$taskId)
@@ -419,7 +419,7 @@ namespace App\Helpers\CreateTask {
                             ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
                             ->delete();
                     }
-                
+
                 // Here we are inserting new task info (by passing null as id) if review template exists,
                 // otherwise we will just update existing one
                 $newTaskInfoId = $this->insertTaskInfoAndContent($reviewTemplateExists ? null : $taskInfoId);

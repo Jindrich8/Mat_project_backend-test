@@ -4,6 +4,7 @@ namespace App\Types {
 
     /**
      * @template T
+     * @phpstan-extends \BackedEnum
      */
     trait DBTranslationEnumTrait
     {
