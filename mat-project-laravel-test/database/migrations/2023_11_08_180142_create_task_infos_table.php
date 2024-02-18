@@ -10,12 +10,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private static string $table = 'task_infos';
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('tasks', function (Blueprint $table) {
+        Schema::create(self::$table, function (Blueprint $table) {
             $table->id()->generatedAs()->always();
             $table->string('name',250);
             $table->unsignedTinyInteger('orientation');
@@ -25,11 +26,11 @@ return new class extends Migration
             $table->unsignedTinyInteger('max_class');
             $table->autoTimestamps();
         });
-        DBUtils::addIntEnumConstraint('tasks','orientation',TaskDisplay::class);
-        DBUtils::addIntEnumConstraint('tasks','difficulty',TaskDifficulty::class);
+        DBUtils::addIntEnumConstraint(self::$table,'orientation',TaskDisplay::class);
+        DBUtils::addIntEnumConstraint(self::$table,'difficulty',TaskDifficulty::class);
         
         DBUtils::addCheckConstraint(
-            table:'tasks',
+            table:self::$table,
             condition:"min_class >= 0 AND max_class < ".count(TaskClass::cases())." AND max_class >= min_class"
         );
     }
@@ -40,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tasks');
+        Schema::dropIfExists(self::$table);
     }
 };

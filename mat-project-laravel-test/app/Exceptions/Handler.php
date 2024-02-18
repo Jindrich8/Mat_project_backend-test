@@ -2,14 +2,16 @@
 
 namespace App\Exceptions;
 
+use App\Dtos\Defs\Errors\Access\UnathenticatedError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ErrorResponse;
-use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
+
 use App\Utils\DebugUtils;
 use App\Utils\ExceptionUtils;
 use App\Utils\Utils;
 use Exception;
 use Http;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
@@ -57,6 +59,18 @@ class Handler extends ExceptionHandler
 
         $this->renderable(function(Throwable $e,HttpRequest $request)use($renderModelNotFoundException){
             DebugUtils::log("Rendering  '".get_debug_type($e)."'",$e);
+            if($e instanceof AuthenticationException){
+                new ApplicationException(
+                    HttpFoundationResponse::HTTP_UNAUTHORIZED,
+                ErrorResponse::create()
+                ->setUserInfo(
+                    UserSpecificPartOfAnError::create()
+                    ->setMessage("You are not authenticated.")
+                    ->setDescription("You need to authenticate yourself to be able to do this action.")
+                )
+                ->setDetails(UnathenticatedError::create())
+            );
+            }
             
             $prevE = $e->getPrevious();
             if(($response = ExceptionUtils::tryRender($e,$request)) 
@@ -73,7 +87,7 @@ class Handler extends ExceptionHandler
             
             if($e instanceof HttpExceptionInterface){
                $status = $e->getStatusCode();
-                if($status !== 500){
+                if($status !== HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR){
                return (new ApplicationException(
                 userStatus:$status,
                 userResponse:ErrorResponse::create()

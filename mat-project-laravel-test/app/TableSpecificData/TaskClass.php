@@ -2,14 +2,14 @@
 
 namespace App\TableSpecificData {
 
-    use App\Types\BackedEnumTrait;
+    use App\Types\DBTranslationEnumTrait;
 
     enum TaskClass:int
     {
         /**
-         * @use BackedEnumTrait<int>
+         * @use DBTranslationEnumTrait<int>
          */
-        use BackedEnumTrait;
+        use DBTranslationEnumTrait;
         
         case ZS_1 = 0;
         case ZS_2 = 1;

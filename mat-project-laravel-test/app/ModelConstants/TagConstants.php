@@ -1,8 +1,11 @@
 <?php
-
+/*
+This file was carefully crafted by mean machine.
+Do not change this file!
+*/
 namespace App\ModelConstants;
 
-class TagConstants 
+class TagConstants
 {
     const TABLE_NAME = 'tags';
 

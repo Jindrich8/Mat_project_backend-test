@@ -9,6 +9,7 @@ use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponseContent;
 use App\Helpers\CCreateExerciseHelper;
 use App\Helpers\CExerciseHelper;
 use App\Helpers\Database\DBHelper;
+use App\ModelConstants\FixErrorsConstants;
 use App\Models\FixErrors;
 use App\Utils\Utils;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
     public function fetchTake(array &$savedValues): array
     {
         $ids = array_keys($savedValues);
-        $table = FixErrors::getTableName();
+        $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
         $exercises = DB::table($table)
             ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
@@ -52,7 +53,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
 
     public function fetchEvaluate(array &$ids): array
     {
-        $table = FixErrors::getTableName();
+        $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
         $exercises = DB::table($table)
             ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
@@ -79,5 +80,12 @@ class FixErrorsExerciseHelper implements CExerciseHelper
     public function getCreateHelper(): CCreateExerciseHelper
     {
         return $this->createHelper ??= new CreateFixErrorsExercise();
+    }
+
+    public function delete(array &$ids): void
+    {
+        DB::table(FixErrorsConstants::TABLE_NAME)
+        ->whereIn(FixErrorsConstants::COL_EXERCISEABLE_ID,$ids)
+        ->delete();
     }
 }

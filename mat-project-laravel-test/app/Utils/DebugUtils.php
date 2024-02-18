@@ -4,6 +4,7 @@ namespace App\Utils {
 
     use App\Exceptions\InternalException;
     use BackedEnum;
+    use Exception;
     use UnitEnum;
 
     class DebugUtils
@@ -27,17 +28,17 @@ namespace App\Utils {
             self::backedEnumToStr($enum)
             : self::unitEnumToStr($enum);
         }
-        
+
         public static function unitEnumToStr(UnitEnum $unitEnum){
             return $unitEnum::class."::$unitEnum->name";
         }
-    
+
         public static function backedEnumToStr(BackedEnum $backedEnum){
             return $backedEnum::class."::{$backedEnum->name} => '$backedEnum->value'";
         }
 
         public static function printStackTrace(){
-            $e = new \Exception();
+            $e = new Exception();
            DebugUtils::log("Trace",$e->getTraceAsString());
         }
         public static function jsonEncode(mixed $value):string{
@@ -51,21 +52,25 @@ namespace App\Utils {
 
         public static function stringsAreBinaryEqual(string $a, string $b):bool{
             $areEqual = self::stringsAreEqual($a,$b);
-            if(!$areEqual) return $areEqual;
+            if(!$areEqual) return false;
 
             $unpackedA = unpack('C*',$a);
             $unpackedB = unpack('C*',$b);
 
             $areEqual = $unpackedA === $unpackedB;
-            if(!$areEqual) return $areEqual;
+            if(!$areEqual) return false;
             $packedA = pack('C*',$a);
             $packedB = pack('C*',$b);
-            $areEqual =self::stringsAreEqual($packedA,$packedB) 
-            && self::stringsAreEqual($a,$packedA) 
+            return self::stringsAreEqual($packedA,$packedB)
+            && self::stringsAreEqual($a,$packedA)
             && self::stringsAreEqual($b,$packedB);
-            
         }
 
+        /**
+         * @param string $a
+         * @param string $b
+         * @return bool
+         */
         private static function stringsAreEqual(string $a, string $b):bool{
             return $a === $b && strlen($a) == strlen($b);
         }

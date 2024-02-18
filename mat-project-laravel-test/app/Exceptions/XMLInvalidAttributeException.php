@@ -5,8 +5,6 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ErrorResponse;
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidAttribute as ErrorResponseXMLInvalidAttribute;
 
 class XMLInvalidAttributeException extends XMLParsingException{
 

@@ -4,42 +4,6 @@
   "description": "Represents task review response.",
   "type": "object",
   "$defs": {
-    "exercise": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "const": "exercise"
-        },
-        "points":{
-          "$ref":"@/defs/types/review/points.json"
-        },
-        "instructions": {
-          "type": "object",
-          "properties": {
-            "content": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "content"
-          ]
-        },
-        "details": {
-          "anyOf": [
-            {
-              "$ref": "@/defs/exercises/*/review_response.json"
-            }
-          ]
-        }
-      },
-      "required": [
-        "type",
-        "points",
-        "instructions",
-        "details"
-      ]
-    },
     "group": {
       "type": "object",
       "properties": {
@@ -66,7 +30,7 @@
           "items": {
             "oneOf": [
               {
-                "$ref": "#/$defs/exercise"
+                "$ref": "@/defs/types/review/exercise.json"
               },
               {
                 "$ref": "#/$defs/group"
@@ -114,17 +78,18 @@
                 "$ref": "#/$defs/group"
               },
               {
-                "$ref": "#/$defs/exercise"
+                "$ref": "@/defs/types/review/exercise.json"
               }
             ]
           }
         }
       },
       "required": [
-        "task_detail",
+        "id",
+        "name",
+        "points",
         "evaluation_timestamp",
         "display",
-        "points",
         "entries"
       ]
     }

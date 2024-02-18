@@ -16,7 +16,7 @@ $Context = new Context();
 echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";
 if (ScriptArgsBuilder::create()
     ->optionSet(name: "dir", set: function ($value) use ($Context) {
-        $Context->SchemasDir = parsePath($value, real: true);
+        $Context->SchemasDir = PathHelper::parsePath($value, real: true);
     })
     ->option(name: "refKey", var: $Context->ExpandableRefkey)
     ->option(name: "sep", var: $Context->PathSeparator)
@@ -165,17 +165,19 @@ function processFile(
                 }
                 $isStarNamePattern = (bool)$isStarNamePattern;
 
-                $expanded = array_values(
+                $expanded = array_unique(
+                    array_values(
                     array_filter(
                         glob(PathHelper::getPotentialyNonExistentAbsolutePath($filePathPattern, '/')),
                         fn (string $value) => MyFileInfo::getExtensionsPart($value) === '.json'
                     )
-                );
+                )
+            );
 
                 $specialFilePath = $Context->specialFromNormal($filePathPattern, '/');
                 echo "Patterns: ";
                 dump([$filePathPattern, $specialFilePath]);
-                $specialExpanded = glob($specialFilePath);
+                $specialExpanded = array_unique(glob($specialFilePath));
 
                 if (count($expanded) < count($specialExpanded)) {
                     echo "Special expanded ";
@@ -198,6 +200,8 @@ function processFile(
                     }
                     array_push($expanded, ...$files);
                 }
+                echo "Expanded: ";
+                dump($expanded);
                 $jsonObjects = array_map(
                     fn ($expandedFile) => [
                         EXPANDED_REF => $Context->normalizePathForOutput(realpath($expandedFile)) . $defPath

@@ -2,13 +2,27 @@
 
 namespace Dev\DtoGen {
 
+    use Exception;
     use Illuminate\Support\Str;
     use Symfony\Component\Finder\Finder;
 
     class PathHelper
     {
-
-        public static function getPotentialyNonExistentAbsolutePath(string $path, string $separator = DIRECTORY_SEPARATOR)
+        /**
+         * @throws Exception
+         */
+        public static function parsePath(string $path, string $sep = DIRECTORY_SEPARATOR, bool $real = false): array|false|string
+        {
+            $replaced = Str::replace(['/', '\\'], $sep, $path);
+            if ($real) {
+                $replaced = realpath($replaced);
+                if ($replaced === false) {
+                    throw new Exception("Path should exist '$path'");
+                }
+            }
+            return $replaced;
+        }
+        public static function getPotentialyNonExistentAbsolutePath(string $path, string $separator = DIRECTORY_SEPARATOR): string
         {
             $parts = array_filter(explode($separator, $path), fn ($value) => strlen($value));
             $absolutes = array();
@@ -29,8 +43,7 @@ namespace Dev\DtoGen {
          */
         public static function getAllSubdirsInDir(string $dir): array
         {
-            $subdirs = array_filter(self::getAllEntriesInDir($dir), fn ($entry) => is_dir($entry));
-            return $subdirs;
+            return array_filter(self::getAllEntriesInDir($dir), fn ($entry) => is_dir($entry));
         }
 
         /**
@@ -39,8 +52,7 @@ namespace Dev\DtoGen {
          */
         public static function getNamesOfAllEntriesInDir(string $dir): array
         {
-            $entries = array_diff(scandir($dir), ['.', '..']);
-            return $entries;
+            return array_diff(scandir($dir), ['.', '..']);
         }
 
         /**
@@ -49,12 +61,11 @@ namespace Dev\DtoGen {
          */
         public static function getNamesOfAllSubdirsInDir(string $dir): array
         {
-            $names = array_filter(
+            return array_filter(
                 self::getNamesOfAllEntriesInDir($dir),
                 fn ($entry) =>
                 is_dir(PathHelper::concatPaths($dir, $entry))
             );
-            return $names;
         }
 
         /**
@@ -63,17 +74,18 @@ namespace Dev\DtoGen {
          */
         public static function getAllEntriesInDir(string $dir): array
         {
-            $entries = array_map(
+            return array_map(
                 fn ($v) =>
                 PathHelper::concatPaths($dir, $v),
                 self::getNamesOfAllEntriesInDir($dir)
             );
-            return $entries;
         }
 
         /**
          * @param string $path1
          * @param string $path2
+         * @param string $separator
+         * @return string
          */
         public static function concatPaths(string $path1, string $path2, string $separator = DIRECTORY_SEPARATOR): string
         {
@@ -89,11 +101,15 @@ namespace Dev\DtoGen {
             } else if ($path2) {
                 return Str::replaceStart($path2, '', $separator);
             }
+            else{
+                return '';
+            }
         }
 
         /**
-         * @param string $separator null = DIRECTORY_SEPARATOR
-         * @param string $paths
+         * @param string|null $separator null = DIRECTORY_SEPARATOR
+         * @param mixed ...$paths
+         * @return string
          */
         public static function concatMultiplePaths(?string $separator = DIRECTORY_SEPARATOR, ...$paths): string
         {
@@ -116,7 +132,7 @@ namespace Dev\DtoGen {
             return $result;
         }
 
-        public static function getFinderForReadableEntries(string|array $searchIn)
+        public static function getFinderForReadableEntries(string|array $searchIn): Finder
         {
             return Finder::create()->in($searchIn)->ignoreDotFiles(true)
                 ->ignoreUnreadableDirs(true);

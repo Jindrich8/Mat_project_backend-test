@@ -15,7 +15,11 @@
                     "$ref": "@/defs/errors/*.json"
                 },
                 {
-                    "$ref": "../task/*/error.json"
+                    "$ref": "@/task/**/error.json"
+                },
+                {
+                    "$comment": "This is for some reason required to force php glob to generate at least 2 levels deep error.json files.",
+                    "$ref": "@/task/*/**/error.json"
                 }
             ]
         }

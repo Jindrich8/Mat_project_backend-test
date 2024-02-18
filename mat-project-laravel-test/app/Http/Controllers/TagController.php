@@ -8,8 +8,10 @@ use App\Http\Requests\StoreTagsRequest;
 use App\Http\Requests\UpdateTagsRequest;
 use App\Models\Tag;
 use App\Dtos\Tags\All\Response;
+use App\Helpers\Database\DBHelper;
 use App\Helpers\RequestHelper;
 use App\Helpers\ResponseHelper;
+use App\ModelConstants\TagConstants;
 use App\Utils\Utils;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +26,7 @@ class TagController extends Controller
      */
     public function getAll(HttpRequest $request)
     {
-        $tagIdName = Tag::getPrimaryKeyName();
+        $tagIdName = TagConstants::COL_ID;
        $tags = DB::table(TagConstants::TABLE_NAME)
         ->select([$tagIdName,TagConstants::COL_NAME])
         ->get();

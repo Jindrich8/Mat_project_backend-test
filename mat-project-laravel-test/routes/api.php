@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TakeAndSaveController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskCreateInfoController;
+use App\Http\Controllers\TaskReviewController;
 use App\Utils\RouteUtils;
 
 /*
@@ -65,17 +66,17 @@ RouteUtils::get('/my_task/{id}/detail',fn(Request $request,string $id)=>
 #region User
 
 RouteUtils::get('/review/list',fn(Request $request) =>
-    ReviewController::construct()
+    TaskReviewController::construct()
     ->list($request)
 );
 
 RouteUtils::get('/review/{id}/detail',fn(Request $request,string $id) =>
-    ReviewController::construct()
+    TaskReviewController::construct()
     ->detail($request,RequestHelper::translateId($id))
 );
 
 RouteUtils::get('/review/{id}/delete',fn(Request $request,string $id) =>
-    ReviewController::construct()
+    TaskReviewController::construct()
     ->delete($request,RequestHelper::translateId($id))
 );
 

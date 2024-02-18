@@ -15,6 +15,7 @@ use App\Utils\StrUtils;
 use DB;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Swaggest\JsonSchema\Context;
+use Swaggest\JsonSchema\InvalidValue;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
@@ -37,13 +38,13 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
         $content = FillInBlanksContent::create();
         $this->contents[]=$content;
         $this->createNode ??= FillInBlanksXMLCreateNode::create();
-        /* 
+        /*
         The order of change and setContent methods is importnat,
          because change calls reset, which sets the content to null*/
         $this->createNode->change($parent,$name);
         $this->createNode->setContent($content);
         return $this->createNode;
-        
+
     }
 
     public function getState(): CCreateExerciseHelperState
@@ -51,6 +52,9 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
        return $this->createNode->getParsingState();
     }
 
+    /**
+     * @throws InvalidValue
+     */
     public function insertAll(array $ids): void
     {
         $count = count($ids);

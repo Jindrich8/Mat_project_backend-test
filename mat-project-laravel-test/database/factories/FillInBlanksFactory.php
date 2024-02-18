@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\FillInBlanks;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\FillInBlanks>
+ * @extends Factory<FillInBlanks>
  */
 class FillInBlanksFactory extends Factory
 {

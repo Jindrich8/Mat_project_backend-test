@@ -2,7 +2,7 @@
 
 namespace App\Helpers\Exercises\FixErrors {
 
-    use App\Dtos\InternalTypes\FixErrorsContent\FixErrorsContent;
+    use App\Dtos\InternalTypes\FixErrorsContent;
     use App\Exceptions\InternalException;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;

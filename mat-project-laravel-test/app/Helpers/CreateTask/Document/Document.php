@@ -11,9 +11,10 @@ namespace App\Helpers\CreateTask\Document {
     use App\Helpers\CreateTask\XMLNoValueNode;
     use App\Types\XMLNoValueNodeTrait;
     use App\Helpers\CreateTask\XMLOneUseNode;
-    use App\Models\TaskInfo;
+    use App\Models\Task;
     use App\MyConfigs\TaskSrcConfig;
     use App\TableSpecificData\TaskDisplay;
+    use App\Type\TaskResTask;
     use App\Types\XMLAttributes;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
@@ -30,9 +31,9 @@ namespace App\Helpers\CreateTask\Document {
             //report(new InternalException('Document instanted'));
             $docDesc = DocumentDescription::create($doc);
            // report(new InternalException('Document description created'));
-            if($docDesc->getParentObjectId() === null){
+           /* if($docDesc->getParentObjectId() === null){
                 // dump("DOCUMENT DESCRIPTION DOES NOT HAVE PARENT!!!");
-            }
+            }*/
            // report(new InternalException('Document setChildren'));
             $doc->setChildren(
                 XMLChildren::construct()
@@ -72,7 +73,7 @@ namespace App\Helpers\CreateTask\Document {
                       $context
                   );
               }
-                  $context->getTaskRes()->task->orientation = $orientation->value;
+                  $context->getTaskRes()->task->display = $orientation;
           }
         )
         );
@@ -80,9 +81,9 @@ namespace App\Helpers\CreateTask\Document {
 
        function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
        {
-        $context->getTaskRes()->task = new TaskInfo();
+        $context->getTaskRes()->task = new TaskResTask();
         parent::validateStart($attributes,$context,$name);
        }
-        
+
     }
 }

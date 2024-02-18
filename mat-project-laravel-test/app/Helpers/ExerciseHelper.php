@@ -22,6 +22,7 @@ use DateTimeZone;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class ExerciseHelper
 {
@@ -34,6 +35,14 @@ class ExerciseHelper
    */
   public static function getHelper(ExerciseType $type): CExerciseHelper
   {
+    $helper = self::tryGetHelper($type);
+    if(!$helper){
+      throw new UnsupportedVariantException($type);
+    }
+    return $helper;
+  }
+
+  public static function tryGetHelper(ExerciseType $type):CExerciseHelper|null{
     return match ($type) {
       ExerciseType::FillInBlanks =>
       self::$exerciseHelpers[$type->name] ??= new FillInBlanksExerciseHelper(),
@@ -41,14 +50,23 @@ class ExerciseHelper
       ExerciseType::FixErrors =>
       self::$exerciseHelpers[$type->name] ??= new FixErrorsExerciseHelper(),
 
-      default => throw new UnsupportedVariantException($type),
+      default => null,
     };
+  }
+
+  public static function getHelpers(){
+    foreach(ExerciseType::cases() as $case){
+      $helper = self::tryGetHelper($case);
+      if($helper){
+        yield $helper;
+      }
+    }
   }
 
   /**
    * @template R
    * @template T
-   * @param int $taskId
+   * @param int $taskInfoId
    * @param callable(CExerciseHelper,array<int,mixed>):array<int,T> $fetchConcreteOnes
    * @param callable(int $id,string|null $instructions,T $cExercise):R $toClass
    * @param ?Carbon $localySavedTaskUtcTimestamp
@@ -56,17 +74,17 @@ class ExerciseHelper
    * @return R[]
    * @throws UnsupportedVariantException
    */
-  public static function fetchRealExercises(int $taskId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProvider $savedTask = null, bool $shouldFetchInstructions = true): array
+  public static function fetchRealExercises(int $taskInfoId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProvider $savedTask = null, bool $shouldFetchInstructions = true): array
   {
 
-    $exerciseIDName = Exercise::getPrimaryKeyName();
+    $exerciseIDName = ExerciseConstants::COL_ID;
     $columns = [$exerciseIDName, ExerciseConstants::COL_EXERCISEABLE_TYPE];
     if ($shouldFetchInstructions) {
       $columns[] = ExerciseConstants::COL_INSTRUCTIONS;
     }
     $exercises = DB::table(ExerciseConstants::TABLE_NAME)
       ->select($columns)
-      ->where(ExerciseConstants::COL_TASK_ID, $taskId)
+      ->where(ExerciseConstants::COL_TASK_INFO_ID, $taskInfoId)
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
@@ -124,11 +142,11 @@ class ExerciseHelper
    * @return TakeExercise[]
    * @throws UnsupportedVariantException
    */
-  public static function take(int $taskId, ?SavedTaskContentProvider $savedTask): array
+  public static function takeTaskInfo(int $taskInfoId, ?SavedTaskContentProvider $savedTask): array
   {
 
     return  ExerciseHelper::fetchRealExercises(
-      taskId: $taskId,
+      taskInfoId: $taskInfoId,
       /**
        * @param CExerciseHelper $helper
        * @param array<int,mixed> $savedValues indexed by exercise id
@@ -145,23 +163,23 @@ class ExerciseHelper
   }
 
   /**
-   * @param int $taskId
+   * @param int $taskInfoId
    * @return EvaluateExercise[]
    */
-  public static function evaluate(int $taskId): array
+  public static function evaluateTaskInfo(int $taskInfoId): array
   {
-    $exerciseIDName = Exercise::getPrimaryKeyName();
+    $exerciseIDName = ExerciseConstants::COL_ID;
     /**
-     * @var array<array|\stdClass> $exercises
+     * @var array<array|stdClass> $exercises
      */
     $exercises = DB::table(ExerciseConstants::TABLE_NAME)
       ->select([
         $exerciseIDName,
-      ExerciseConstants::COL_WEIGHT, 
-      ExerciseConstants::COL_EXERCISEABLE_TYPE, 
+      ExerciseConstants::COL_WEIGHT,
+      ExerciseConstants::COL_EXERCISEABLE_TYPE,
       ExerciseConstants::COL_INSTRUCTIONS
       ])
-      ->where(ExerciseConstants::COL_TASK_ID, $taskId)
+      ->where(ExerciseConstants::COL_TASK_INFO_ID, $taskInfoId)
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();

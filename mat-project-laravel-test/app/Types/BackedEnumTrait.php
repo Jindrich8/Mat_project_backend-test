@@ -7,9 +7,10 @@ namespace App\Types {
 
     /**
      * @template T
+     * @phpstan-extends BackedEnum
      */
     trait BackedEnumTrait{
-        
+
         /**
          * @return T[]
          */

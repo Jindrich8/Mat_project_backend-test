@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('weight');
             $table->string('exerciseable_type');
             $table->text('instructions');
-            $table->foreignId('task_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('task_info_id')->constrained()->cascadeOnDelete();
             $table->autoTimestamps();
             $table->index(['exerciseable_type','id']);
         });

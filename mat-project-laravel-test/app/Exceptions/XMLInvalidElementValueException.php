@@ -1,9 +1,8 @@
 <?php
 namespace App\Exceptions{
 
-    use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValue;
-    use App\Dtos\Errors\ErrorResponse\XMLInvalidElementValueErrorData;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValue;
+    use App\Dtos\Defs\Errors\XML\XMLInvalidElementValueErrorData;
 
 class XMLInvalidElementValueException extends XMLParsingException{
 

@@ -14,12 +14,16 @@
             "type":"string",
             "format":"timestamp"
         },
+        "task_has_changed":{
+            "type":"boolean"
+        },
         "task_detail":{
-            "$ref":"@/defs/types/task/detail_info.json"
+            "$ref":"@/defs/types/review/task_detail_info.json"
         }
     },
     "required": [
         "id",
+        "task_has_changed",
         "points",
         "evaluation_timestamp",
         "task_detail"

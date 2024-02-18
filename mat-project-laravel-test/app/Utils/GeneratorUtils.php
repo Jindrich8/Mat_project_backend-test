@@ -10,13 +10,13 @@ namespace App\Utils {
          * @template TKey
          * @template TYield
          * @template TSend
-         * @param \Generator<TKey,TYield,TSend> $generator
+         * @param Generator<TKey,TYield,TSend> $generator
          * @param TKey|null &$key
          * @param TYield|null &$value
          * @return ($key is null ? false : ($value is null ? false : true))
          */
         public static function getCurrent(Generator $generator,mixed &$key,mixed &$value):bool{
-           return ($value = $generator->current()) !== null 
+           return ($value = $generator->current()) !== null
            && ($key = $generator->key());
         }
     }

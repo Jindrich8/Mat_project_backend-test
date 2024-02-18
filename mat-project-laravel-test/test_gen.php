@@ -9,7 +9,7 @@ use Dev\DtoGen\PathHelper;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
-use App\Dtos\TaskInfo\Create\Request;
+use App\Dtos\Task\Create\Request;
 use App\Dtos\Errors\XML\InvalidAttribute;
 
 $request = Request::create()
@@ -17,10 +17,10 @@ $request = Request::create()
         Request\Data::create()
             ->setTask(
                 Request\DataTask::create()
-                    ->setName("TaskInfo name")
-                    ->setDescription("TaskInfo description")
+                    ->setName("Task name")
+                    ->setDescription("Task description")
                     ->setOrientation('Horizontal')
-                    ->setSource('TaskInfo source')
+                    ->setSource('Task source')
             )
     );
 

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('task_review_template_id');
             $table->fixedFloat4('score');
             $table->fixedFloat4('max_points');
+            $table->json('exercises');
             $table->autoTimestamps();
         });
         

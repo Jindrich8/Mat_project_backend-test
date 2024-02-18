@@ -2,9 +2,6 @@
 namespace App\Exceptions;
 
 use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
-use App\Dtos\Errors\ErrorResponse\ApplicationErrorObject;
-use App\Dtos\Errors\ErrorResponse\ErrorResponse;
-use Dev\DtoGen\StrUtils;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 

@@ -3,6 +3,10 @@
         "$posfix":"#properties/code/const",
         "defs/errors": {
             "-1": "general.json",
+            "access":{
+                "-10":"Unauthenticated.json",
+                "-11":"Unauthorized.json"
+            },
             "XML": {
                 "-100": "InvalidAttribute.json",
                 "-101": "InvalidAttributeValue.json",
@@ -21,6 +25,11 @@
             },
             "evaluate/errors": {
                 "1":"task_changed.json"
+            },
+            "review":{
+                "list/errors":{
+                    "1":"form.json"
+                }
             }
         }
     }

@@ -15,7 +15,8 @@ namespace App\Helpers\CreateTask {
     {
         use XMLNoValueNodeTrait;
 
-        public static function create(GroupNode $parent){
+        public static function create(GroupNode $parent): GroupResourcesNode
+        {
             $node = new self($parent);
             $node->setChildren(
                 XMLChildren::construct()
@@ -26,8 +27,8 @@ namespace App\Helpers\CreateTask {
 
         private function __construct(GroupNode $group){
             parent::__construct(
-                parent:$group,
-            name:TaskSrcConfig::get()->groupResourcesName
+                name: TaskSrcConfig::get()->groupResourcesName,
+                parent: $group
             );
         }
 

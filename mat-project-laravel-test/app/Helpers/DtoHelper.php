@@ -6,6 +6,7 @@ namespace App\Helpers {
     use App\Dtos\Defs\Types\Errors\RangeError;
     use App\Dtos\Defs\Types\Request\TimestampRange;
     use App\Utils\TimeStampUtils;
+    use Carbon\Carbon;
 
     class DtoHelper
     {
@@ -43,7 +44,7 @@ namespace App\Helpers {
          /**
          * @param string $minTimestamp
          * @param string $maxTimestamp
-         * @return RangeError|array{\Carbon\Carbon,\Carbon\Carbon}
+         * @return RangeError|array{Carbon,Carbon}
          */
         public static function validateTimestampRange(string $minTimestamp, string $maxTimestamp):RangeError|array{
             $rangeError = null;

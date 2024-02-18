@@ -20,7 +20,7 @@
                         "format": "timestamp"
                     },
                     "task_preview_info": {
-                        "$ref": "@/defs/types/task/preview_info.json"
+                        "$ref": "@/defs/types/review/task_preview_info.json"
                     }
                 },
                 "required": [

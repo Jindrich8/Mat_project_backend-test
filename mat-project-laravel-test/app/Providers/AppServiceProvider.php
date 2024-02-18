@@ -65,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
        * @param string $keyName Name of PK FK column
        * @param string $references PK key that is referenced by this PK FK key
        * @param string $onTable Table on which is referenced key located
-       * @param \App\Types\DBCascadeType|null $cascadeType Whether to cascade on delete or update or never
+       * @param DBCascadeType|null $cascadeType Whether to cascade on delete or update or never
        * Creates a PK FK column that references specified PK column on specified table
        */
       function (string $keyName, string $references, string $onTable, DBCascadeType|null $cascadeType = null) {

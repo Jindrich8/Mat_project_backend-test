@@ -4,6 +4,7 @@ namespace App\Http\Responses;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class LoginResponse implements LoginResponseContract
 {
@@ -16,7 +17,7 @@ class LoginResponse implements LoginResponseContract
     {
         // replace this with your own code
         // the user can be located with Auth facade
-        $output = new \Symfony\Component\Console\Output\ConsoleOutput(2);
+        $output = new ConsoleOutput(2);
         report(new Exception("LoginResponse::toResponse"));
         throw new Exception("LoginResponse::toResponse");
 

@@ -3,23 +3,26 @@
     "type": "object",
     "properties": {
         "id": {
-            "$ref": "../id.json"
+            "$ref": "@/defs/types/id.json"
         },
         "name": {
             "type": "string",
             "minLength": 1
         },
         "difficulty": {
-            "$ref": "../response/ordered_enum_element.json"
+            "$ref": "@/defs/types/response/ordered_enum_element.json"
         },
         "class_range": {
-            "$ref": "../response/ordered_enum_range.json"
+            "$ref": "@/defs/types/response/ordered_enum_range.json"
         },
         "tags": {
             "type": "array",
             "items": {
-                "$ref": "../response/enum_element.json"
+                "$ref": "@/defs/types/response/enum_element.json"
             }
+        },
+        "task_review_id":{
+            "$ref":"@/defs/types/id.json"
         },
         "author": {
             "$ref":"@/defs/types/task/author_info.json"

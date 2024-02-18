@@ -2,15 +2,11 @@
 
 namespace App\Types {
 
-    use App\Dtos\Errors\ErrorResponse\XMLUnsupportedConstruct;
     use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
     use App\Utils\DebugUtils;
     use App\Utils\StrUtils;
-    use App\Utils\Utils;
-    use Closure;
     use Illuminate\Support\Str;
-    use IntlBreakIterator;
     use XMLParser;
 
     enum XMLParserEntryType
@@ -63,7 +59,7 @@ namespace App\Types {
         private function __construct(XMLParserEvents $events)
         {
             /**
-             * <element>abcd efg hgg lg</element> <a> 
+             * <element>abcd efg hgg lg</element> <a>
              */
             $this->setValidPosition(
                 column: 1,
@@ -119,7 +115,7 @@ namespace App\Types {
             $this->data[] = $data;
             if (!xml_parse($this->parser, $data, $isFinal)) {
                 $this->updateEntryType(XMLParserEntryType::ERROR);
-                
+
                 $errorCode = xml_get_error_code($this->parser);
                 $this->getLastValidPosition(
                     column: $column,
@@ -129,7 +125,8 @@ namespace App\Types {
                 $this->updatePos();
                 $errorStr = "";
                 $libxmlError = libxml_get_last_error();
-                if ($errorCode !== false) {
+                /** @noinspection PhpStrictComparisonWithOperandsOfDifferentTypesInspection */
+                if (false !== $errorCode) {
                     $errorStr = xml_error_string($errorCode);
                 }
                 if ($libxmlError && !$errorStr) {
@@ -562,7 +559,7 @@ namespace App\Types {
                     if ($dataPart === null) {
                         if ($this->dataByteIndex === 0) {
                             return;
-                        } 
+                        }
                         $this->dataShouldNotBeEmpty();
                     }
                     $dataPartLen = strlen($dataPart);
@@ -606,13 +603,13 @@ namespace App\Types {
             return $pos;
         }
 
-        private function dataShouldNotBeEmpty(string $message = "")
+        private function dataShouldNotBeEmpty(string $message = ""): void
         {
             $this->throwInternalException(
-                $message ? $message : "Data should not be empty"
+                $message ?: "Data should not be empty"
             );
         }
 
-        
+
     }
 }

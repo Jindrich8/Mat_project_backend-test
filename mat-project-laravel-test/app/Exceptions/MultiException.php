@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
@@ -9,7 +10,7 @@ use JsonSerializable;
 /**
  * @template T extends \Exception
  */
-class MultiException extends \Exception
+class MultiException extends Exception
 {
     /**
      * @param array<T> $exceptions

@@ -11,6 +11,7 @@ use App\Dtos\Task\Evaluate;
 use App\Dtos\Task\Review;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\CreateTask\TaskRes;
+use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use App\Dtos\Task\Take;
 use App\Exceptions\InternalException;
@@ -30,6 +31,9 @@ use DateTimeZone;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 use App\Dtos\CreateInfo\Response;
 use App\Dtos\CreateInfo\Response\Tag as ResponseTag;
+use App\Dtos\Defs\Types\Response\ResponseEnumElement;
+use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
+use App\ModelConstants\TagConstants;
 use App\Models\Tag;
 use App\TableSpecificData\TaskDifficulty;
 use App\Types\ConstructableTrait;
@@ -39,15 +43,18 @@ class TaskCreateInfoController extends Controller
 {
     use ConstructableTrait;
 
-    public function getCreateInfo(): Response\Response
+    public function getCreateInfo(Request $request): Response
     {
-        $response = Response\Response::create()
+        $difficulties = TaskDifficulty::getValues();
+        $classes = TaskClass::getValues();
+
+        $response = Response::create()
             ->setTags(
                 DB::table(TagConstants::TABLE_NAME)
-                    ->pluck(TagConstants::COL_NAME, Tag::getPrimaryKeyName())
+                    ->pluck(TagConstants::COL_NAME, TagConstants::COL_ID)
                     ->map(
                         fn ($name, $id) =>
-                        Response\ResponseEnumElement::create()
+                        ResponseEnumElement::create()
                             ->setName($name)
                             ->setId($id)
                     )
@@ -55,18 +62,18 @@ class TaskCreateInfoController extends Controller
             ->setDifficulties(
                 Utils::arrayMapWKey(fn ($index, $name) => [
                     $index,
-                    Response\ResponseOrderedEnumElement::create()
+                    ResponseOrderedEnumElement::create()
                         ->setName($name)
                         ->setOrderedId($index)
-                ], TaskDifficulty::getValues())
+                ], $difficulties)
             )
             ->setClasses(
                 Utils::arrayMapWKey(fn ($index, $name) => [
                     $index,
-                    Response\ResponseOrderedEnumElement::create()
+                    ResponseOrderedEnumElement::create()
                         ->setName($name)
                         ->setOrderedId($index)
-                ], TaskClass::getValues())
+                ], $classes)
             );
 
         return $response;

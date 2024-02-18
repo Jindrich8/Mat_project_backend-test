@@ -14,13 +14,20 @@ class Utils{
      * @template TKey
      * @template R
      * @template RKey
-     * @param callable(TKey $key,T $value):array{RKey,R}
+     * @param callable(TKey $key,T $value):array{0:RKey,1:R}
      * @param array<TKey,T> $array
      * @return array<RKey,R>
      */
     public static function arrayMapWKey(callable $map,array &$array){
+        /**
+         * @var array<RKey,R> $mapped
+         */
         $mapped = [];
         foreach($array as $key => $value){
+            /**
+             * @var RKey $rKey
+             * @var R $rValue
+             */
             [$rKey,$rValue]=$map($value,$key);
             $mapped[$rKey]=$rValue;
         }

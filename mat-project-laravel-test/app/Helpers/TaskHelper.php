@@ -19,14 +19,18 @@ namespace App\Helpers {
     use App\Exceptions\ConversionException;
     use App\Exceptions\InternalException;
     use App\Helpers\BareModels\BareTaskWAuthorName;
+    use App\Helpers\CreateTask\ParseEntry;
     use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
+    use App\ModelConstants\ExerciseConstants;
     use App\ModelConstants\GroupConstants;
     use App\ModelConstants\ResourceConstants;
     use App\ModelConstants\SavedTaskConstants;
     use App\ModelConstants\TagConstants;
     use App\ModelConstants\TagTaskConstants;
+    use App\ModelConstants\TagTaskInfoConstants;
     use App\ModelConstants\TaskConstants;
+    use App\ModelConstants\TaskInfoConstants;
     use App\Models\Group;
     use App\Models\Resource;
     use App\Models\SavedTask;
@@ -51,33 +55,33 @@ namespace App\Helpers {
     class TaskHelper
     {
         /**
-         * @template T 
+         * @template T
          * @template TExerciseDto of ClassStructure
          * @template TGroupDto of ClassStructure
-         * @param int $taskId
+         * @param int $taskInfoId
          * @param T[] $exercises
          * @param callable(T $exercise):TExerciseDto $exerciseToDto
          * @param callable(string[] $resources):TGroupDto $groupToDto
          * @param array &$entries
          */
         public static function getTaskEntries(
-            int $taskId,
+            int $taskInfoId,
             array $exercises,
             callable $exerciseToDto,
             callable $groupToDto,
             array &$entries
         ) {
-            $groupIdName = Group::getPrimaryKeyName();
+            $groupIdName = GroupConstants::COL_ID;
             $groups = DB::table(GroupConstants::TABLE_NAME)
                 ->select([$groupIdName, GroupConstants::COL_START, GroupConstants::COL_LENGTH])
-                ->where(GroupConstants::COL_TASK_ID, '=', $taskId)
+                ->where(GroupConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
                 ->orderBy(GroupConstants::COL_START, direction: 'asc')
                 ->orderBy(GroupConstants::COL_LENGTH, direction: 'desc')
                 ->get();
 
             $resources = DB::table(ResourceConstants::TABLE_NAME)
                 ->select([
-                    ResourceConstants::COL_GROUP_ID, 
+                    ResourceConstants::COL_GROUP_ID,
                     ResourceConstants::COL_CONTENT
                     ])
                 ->whereIn(ResourceConstants::COL_GROUP_ID, $groups->keys())
@@ -152,10 +156,10 @@ namespace App\Helpers {
             $user = Auth::user();
             if ($user !== null) {
                 TimeStampUtils::timestampToUtc($localySavedTaskUtcTimestamp);
-                $savedTaskTable = SavedTask::getTableName();
+                $savedTaskTable = SavedTaskConstants::TABLE_NAME;
                 $builder = DB::table($savedTaskTable)
                     ->select([
-                        SavedTaskConstants::COL_DATA, 
+                        SavedTaskConstants::COL_DATA,
                         SavedTaskConstants::COL_TASK_VERSION
                         ])
                     ->where(SavedTaskConstants::COL_USER_ID, '=', $user->id)
@@ -167,21 +171,18 @@ namespace App\Helpers {
                 }
                 $savedTask = $builder->first();
                 if ($savedTask) {
-                    $savedTaskData = $savedTask[SavedTaskConstants::COL_DATA];
-                    $taskVersion = $savedTaskData[SavedTaskConstants::COL_TASK_VERSION];
-                    $decodedSavedData = TaskSaveContent::import(
-                        (object)[
-                            TaskSaveContent::EXERCISES =>
-                            DBJsonHelper::decode(
-                                $savedTaskData,
-                                table: $savedTaskTable,
-                                column: SavedTaskConstants::COL_DATA,
-                                id: [SavedTaskConstants::COL_USER_ID => $user->id, SavedTaskConstants::COL_TASK_ID => $taskId]
-                            )
-                        ]
+                    $decodedSavedData =DtoUtils::importDto(
+                        dto:TaskSaveContent::class,
+                        json:$savedTask[SavedTaskConstants::COL_DATA],
+                        table: $savedTaskTable,
+                        column: SavedTaskConstants::COL_DATA,
+                        id: [SavedTaskConstants::COL_USER_ID => $user->id, SavedTaskConstants::COL_TASK_ID => $taskId],
+                        wrapper:TaskSaveContent::EXERCISES,
+
                     );
+
                     return new SaveTask(
-                        taskVersion:$taskVersion,
+                        taskVersion:$savedTask[SavedTaskConstants::COL_TASK_VERSION],
                         content:$decodedSavedData
                     );
                 }
@@ -269,18 +270,22 @@ namespace App\Helpers {
         }
 
 
-        public static function getTagsByTaskId()
+        /**
+         * @param int[] &$taskInfoIds
+         */
+        public static function getTagsByTaskInfoId(array &$taskInfoIds)
         {
             /**
              * @var array<int,list<array{int,string}>> $tagsByTaskId
              */
             $tagsByTaskId = [];
-            $tagTaskTable = TagTask::getTableName();
-            $tagTable = Tag::getPrimaryKeyName();
-            foreach (DB::table($tagTaskTable)
+            $tagTaskInfoTable = TagTaskInfoConstants::TABLE_NAME;
+            $taskInfoTable = TaskInfoConstants::TABLE_NAME;
+            $tagTable = TagConstants::COL_ID;
+            foreach (DB::table($tagTaskInfoTable)
                 ->select([
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TAG_ID),
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TASK_ID),
+                    DBHelper::colFromTableAsCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TAG_ID),
+                    DBHelper::colFromTableAsCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TASK_INFO_ID),
                     DBHelper::colExpression(
                         table: $tagTable,
                         column: TagConstants::COL_NAME,
@@ -290,27 +295,31 @@ namespace App\Helpers {
                 ->join(
                     $tagTable,
                     DBHelper::colExpression(
-                        table: $tagTaskTable,
-                        column: TagTaskConstants::COL_TAG_ID
+                        table: $tagTaskInfoTable,
+                        column: TagTaskInfoConstants::COL_TAG_ID
                     ),
                     '=',
                     DBHelper::colExpression(
                         table: $tagTable,
-                        column: Tag::getPrimaryKeyName()
+                        column: TagConstants::COL_ID
                     )
                 )
+                ->whereIn(
+                    DBHelper::colFromTableAsCol($taskInfoTable,TagTaskInfoConstants::COL_TASK_INFO_ID),
+                    $taskInfoIds
+                    )
                 ->get() as $tag) {
                 /**
-                 * @var int $taskId
+                 * @var int $taskInfoId
                  */
-                $taskId = $tag[TagTaskConstants::COL_TASK_ID];
-                $tagsByTaskId[$taskId] ??= [];
+                $taskInfoId = $tag[TagTaskInfoConstants::COL_TASK_INFO_ID];
+                $tagsByTaskId[$taskInfoId] ??= [];
 
                 /**
                  * @var array{int,string}
                  */
-                $tagData = [$tag[TagTaskConstants::COL_TAG_ID] + 0, $tag['name'] . ''];
-                $tagsByTaskId[$taskId][] = $tagData;
+                $tagData = [$tag[TagTaskInfoConstants::COL_TAG_ID] + 0, $tag['name'] . ''];
+                $tagsByTaskId[$taskInfoId][] = $tagData;
             }
             return $tagsByTaskId;
         }
@@ -318,14 +327,14 @@ namespace App\Helpers {
         /**
          * Returns tag names indexed by their ids
          */
-        public static function getTaskTags(int $taskId)
+        public static function getTaskInfoTags(int $taskInfoId)
         {
-            $tagTaskTable = TagTask::getTableName();
-            $tagTable = Tag::getPrimaryKeyName();
+            $tagTaskTable = TagTaskInfoConstants::TABLE_NAME;
+            $tagTable = TagConstants::COL_ID;
             $tags = DB::table($tagTaskTable)
                 ->select([
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TAG_ID),
-                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskConstants::COL_TASK_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskInfoConstants::COL_TAG_ID),
+                    DBHelper::colFromTableAsCol($tagTaskTable, TagTaskInfoConstants::COL_TASK_INFO_ID),
                     DBHelper::colExpression(
                         table: $tagTable,
                         column: TagConstants::COL_NAME,
@@ -336,28 +345,29 @@ namespace App\Helpers {
                     $tagTable,
                     DBHelper::colExpression(
                         table: $tagTaskTable,
-                        column: TagTaskConstants::COL_TAG_ID
+                        column: TagTaskInfoConstants::COL_TAG_ID
                     ),
                     '=',
                     DBHelper::colExpression(
                         table: $tagTable,
-                        column: Tag::getPrimaryKeyName()
+                        column: TagConstants::COL_ID
                     )
                 )
                 ->where(
                     DBHelper::colExpression(
                         table: $tagTaskTable,
-                        column: TagTaskConstants::COL_TASK_ID
+                        column: TagTaskInfoConstants::COL_TASK_INFO_ID
                     ),
                     '=',
-                    $taskId
+                    $taskInfoId
                 )
                 ->get();
 
-            $access = null;
-            return $tags->mapWithKeys(function ($tag, $key) use ($access) {
-                $access ??= Utils::getAccessor($tag);
-                return [$access($tag, TagTaskConstants::COL_TAG_ID) + 0 => $access($tag, 'name') . ''];
+            return $tags->mapWithKeys(function ($tag, $key) {
+                return [
+                    DBHelper::access($tag, TagTaskInfoConstants::COL_TAG_ID) + 0
+                => DBHelper::access($tag, 'name') . ''
+            ];
             });
         }
 
@@ -367,7 +377,7 @@ namespace App\Helpers {
          * @return string[]
          * Returns all invalid tags
          */
-        public static function filterByTags(array &$tags, Builder $builder): array
+        public static function filterTaskByTags(array &$tags, Builder $builder,string $taskInfoIdColName = TaskConstants::COL_TASK_INFO_ID): array
         {
             $areInvalid = false;
             $translatedTags = [];
@@ -378,39 +388,71 @@ namespace App\Helpers {
                         $areInvalid = true;
                         $translatedTags = [];
                     }
-                    $invalidTags[] = $tag;
+                    $translatedTags[] = $tag;
                 } else if (!$areInvalid) {
                     $translatedTags[] = $translatedId;
                 }
             }
             if (!$areInvalid) {
-                $taskIds = DB::table(TagTask::getTableName())
-                    ->select([TagTaskConstants::COL_TASK_ID])
-                    ->whereIn(TagTaskConstants::COL_TAG_ID, $translatedTags)
-                    ->get()->toArray();
-                $builder->whereIn(Task::getPrimaryKeyName(), $taskIds);
+                $taskInfoIds = DB::table(TagTaskInfoConstants::TABLE_NAME)
+                    ->select([TagTaskInfoConstants::COL_TASK_INFO_ID])
+                    ->whereIn(TagTaskInfoConstants::COL_TAG_ID, $translatedTags)
+                    ->get()->unique()->all();
+                $builder->whereIn($taskInfoIdColName, $taskInfoIds);
                 return [];
             }
             return $translatedTags;
         }
 
+        public static function deleteActualExercisesByTaskInfo(int $taskInfoId): void
+        {
+            $typesByIds = DB::table(ExerciseConstants::TABLE_NAME)
+            ->select([
+                ExerciseConstants::COL_ID,
+                ExerciseConstants::COL_EXERCISEABLE_TYPE
+                ])
+            ->where(ExerciseConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
+            ->pluck(ExerciseConstants::COL_EXERCISEABLE_TYPE,key:ExerciseConstants::COL_ID);
+
+            $idsByType = [];
+            foreach($typesByIds as $id => $type){
+                $idsByType[$type][] =$id;
+            }
+            unset($typesByIds);
+            foreach($idsByType as $type => $ids){
+                if($ids){
+                    ExerciseHelper::getHelper(ExerciseType::fromThrow($type))
+                    ->delete($ids);
+                }
+            }
+        }
 
 
-        public static function filterByDifficultyRange(int $min, int $max, Builder $builder): RangeError|null
+
+        public static function filterTaskInfoByDifficultyRange(int $min, int $max, Builder $builder,bool $withPrefix = false): RangeError|null
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskDifficulty::class);
             if (!$RangeError) {
-                $builder->whereBetween(TaskConstants::COL_DIFFICULTY, [$min, $max]);
+                $column = $withPrefix ?
+                DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,TaskInfoConstants::COL_DIFFICULTY)
+                : TaskInfoConstants::COL_DIFFICULTY;
+                $builder->whereBetween($column, [$min, $max]);
             }
             return $RangeError;
         }
 
-        public static function filterByClassRange(int $min, int $max, Builder $builder): RangeError|null
+        public static function filterTaskInfoByClassRange(int $min, int $max, Builder $builder,bool $withPrefix = false): RangeError|null
         {
             $RangeError = DtoHelper::validateEnumRange($min, $max, TaskClass::class);
             if (!$RangeError) {
-                $builder->where(TaskConstants::COL_MIN_CLASS, '>=', $min);
-                $builder->where(TaskConstants::COL_MAX_CLASS, '<=', $max);
+                $minClass = TaskInfoConstants::COL_MIN_CLASS;
+                $maxClass = TaskInfoConstants::COL_MAX_CLASS;
+                if($withPrefix){
+                    $minClass = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,$minClass);
+                    $maxClass = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,$maxClass);
+                }
+                $builder->where($minClass, '>=', $min);
+                $builder->where($maxClass, '<=', $max);
             }
             return $RangeError;
         }
@@ -431,11 +473,15 @@ namespace App\Helpers {
 
         public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder): RangeError|null
         {
-            $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
+            return self::filterByTimestampColumn($range,$builder,column:TaskConstants::COL_CREATED_AT);
+        }
+
+        public static function filterByTimestampColumn(TimestampRange $range, Builder $builder,string $column):?RangeError{
+             $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
-                    TaskConstants::COL_CREATED_AT,
+                    $column,
                     [$minTimestamp, $maxTimestamp]
                 );
                 $rangeOrError = null;

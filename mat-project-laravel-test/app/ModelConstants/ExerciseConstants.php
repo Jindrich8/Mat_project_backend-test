@@ -1,8 +1,11 @@
 <?php
-
+/*
+This file was carefully crafted by mean machine.
+Do not change this file!
+*/
 namespace App\ModelConstants;
 
-class ExerciseConstants 
+class ExerciseConstants
 {
     const TABLE_NAME = 'exercises';
 

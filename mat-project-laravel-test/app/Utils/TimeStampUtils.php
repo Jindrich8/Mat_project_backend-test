@@ -26,6 +26,18 @@ namespace App\Utils {
             return $carbon;
         }
 
+        public static function parseIsoTimestampToUtc(string $timestamp):Carbon{
+            $carbon = self::tryParseIsoTimestampToUtc($timestamp);
+            if(!$carbon){
+                throw new InternalException("Could not parse timestamp '$timestamp' to utc.",
+                context:[
+                    'timestamp' => $timestamp
+                ]
+                );
+            }
+            return $carbon;
+        }
+
         public static function timestampToUtc(Carbon &$timestamp):void{
             if(!$timestamp->isUtc()){
                $timestamp->setTimezone(DateTimeZone::UTC);

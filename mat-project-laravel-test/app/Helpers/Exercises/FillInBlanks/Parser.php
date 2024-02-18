@@ -2,12 +2,13 @@
 
 namespace App\Helpers\Exercises\FillInBlanks {
 
-    use App\Dtos\InternalTypes\FillInBlanksContent\Combobox;
-    use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent;
-    use App\Dtos\InternalTypes\FillInBlanksContent\TextInput;
+    use App\Dtos\InternalTypes\Combobox;
+    use App\Dtos\InternalTypes\FillInBlanksContent;
+    use App\Dtos\InternalTypes\TextInput;
     use App\Exceptions\InternalException;
+    use App\Exceptions\XMLInvalidElementValueException;
+    use App\Exceptions\XMLInvalidElementValuePartException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\GetXMLParserPosition;
     use App\Types\TrimType;
     use App\Types\XMLContextBase;
     use App\Types\XMLDynamicNodeBase;
@@ -38,15 +39,9 @@ namespace App\Helpers\Exercises\FillInBlanks {
          * Empty string means no token
          */
         private string $prevToken;
-        /**
-         * @var string $prevNotEscToken
-         * Empty string means no token
-         */
-        private string $prevNotEscToken;
         private string $prevText;
         private XMLValidParserPosition $prevTokenPos;
         private XMLValidParserPosition $prevNotEscTokenPos;
-        private bool $hasPrevCmpStartToken;
         private bool $escapeNextChar;
         private XMLValidParserPosition $prevCmpStartTokenPos;
 
@@ -61,7 +56,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
         private array $cmbValues;
         private ?string $cmbSelectedValue;
 
-        public function reset()
+        public function reset(): void
         {
             parent::reset();
             $config = TaskSrcConfig::get()->getFillInBlanksConfig();
@@ -77,12 +72,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
             ];
             $this->state = State::TEXT;
             $this->prevToken = "";
-            $this->prevNotEscToken = "";
             $this->prevText = "";
             $this->prevTokenPos = new XMLValidParserPosition();
             $this->prevNotEscTokenPos = new XMLValidParserPosition();
             $this->prevCmpStartTokenPos = new XMLValidParserPosition();
-            $this->hasPrevCmpStartToken = false;
             $this->cmbValues = [];
             $this->cmbSelectedValue = null;
             $this->content = null;
@@ -91,7 +84,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->escapeNextChar = false;
         }
 
-        protected function getContent(){
+        protected function getContent(): ?FillInBlanksContent
+        {
             if(!$this->content){
                 $this->throwInternalException(
                     message:"Content should not be null!"
@@ -107,11 +101,13 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->hasUiCmp = false;
             $this->trimming = true;
             $this->escapeNextChar = false;
-            $this->hasPrevCmpStartToken = false;
             $this->prevTokenPos->setPos(1,1,0);
             $this->prevNotEscTokenPos->setPos(1,1,0);
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         public function appendValue(string $value, XMLContextBase $context): void
         {
             if($this->trimming){
@@ -125,6 +121,9 @@ namespace App\Helpers\Exercises\FillInBlanks {
         }
 
 
+        /**
+         * @throws XMLInvalidElementValueException|XMLInvalidElementValuePartException
+         */
         protected function validate(XMLContextBase $context): void
         {
             parent::validate($context);
@@ -166,7 +165,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
         }
 
 
-        private function changeState(State $newState)
+        private function changeState(State $newState): void
         {
             if ($newState === $this->state) {
                 return;
@@ -181,14 +180,14 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->state = $newState;
         }
 
-        private function getAndResetPrevText()
+        private function getAndResetPrevText(): string
         {
             $prevText = $this->prevText;
             $this->prevText = "";
             return $prevText;
         }
 
-        private function addItemToContent(string|Combobox|TextInput $item)
+        private function addItemToContent(string|Combobox|TextInput $item): void
         {
             if (!is_string($item)) {
                 $this->hasUiCmp = true;
@@ -202,10 +201,13 @@ namespace App\Helpers\Exercises\FillInBlanks {
 
         private function currentCmpIsCombobox(): bool
         {
-            return $this->cmbValues ? true : false;
+            return (bool)$this->cmbValues;
         }
 
-        private function addComboboxOptionWithoutPrevText(string $text, int $endByteIndex)
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
+        private function addComboboxOptionWithoutPrevText(string $text, int $endByteIndex): void
         {
             $prevText = $this->getAndResetPrevText();
             $option = $prevText . $text;
@@ -236,7 +238,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->cmbValues[$option] = $option;
         }
 
-        private function addCurrentComboboxToContent()
+        private function addCurrentComboboxToContent(): void
         {
             sort($this->cmbValues,SORT_STRING);
             /**
@@ -262,7 +264,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
             $this->cmbSelectedValue = null;
         }
 
-        private function addTextInputWithoutPrevTextToContent(string $text, int $endByteIndex)
+        private function addTextInputWithoutPrevTextToContent(string $text, int $endByteIndex): void
         {
             $prevText = $this->getAndResetPrevText();
             $correctText = $prevText . $text;
@@ -273,8 +275,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
         }
 
 
-
-        protected function parse(string $input, XMLContextBase $context)
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
+        protected function parse(string $input, XMLContextBase $context): void
         {
             $byteOffset = 0;
 
@@ -306,11 +310,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
                 $byteOffset = strlen($ch);
                 ++$column;
             }
-            $escaping = false;
 
             // dump("VALUE: '$input'");
             $token = "";
-            for (;; $textByteOffset = (int)($byteOffset + strlen($token))) {
+            for (;; $textByteOffset = $byteOffset + strlen($token)) {
                 if ($token) {
                     $this->prevTokenPos->setPos(
                         column: $column,
@@ -326,7 +329,6 @@ namespace App\Helpers\Exercises\FillInBlanks {
                         if($token === $this->cmpStartToken){
                             $this->prevCmpStartTokenPos
                             ->setPosFromProvider($this->prevTokenPos);
-                            $this->hasPrevCmpStartToken = true;
                         }
                     }
                     else{
@@ -344,7 +346,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     linePos: $line,
                     byteOffset: $byteOffset
                 );
-                
+
                 // dump(":$line, $column - token: $token");
 
                 if (!$token) {
@@ -396,7 +398,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                             ]
                         );
                     }
-                    
+
                     $text = StrUtils::substrAsciiBetween($input, $textByteOffset, $byteOffset);
                     // dump("Adding option: prevText:'{$this->prevText}' text: '$text'");
                     $this->addComboboxOptionWithoutPrevText(
@@ -451,87 +453,107 @@ namespace App\Helpers\Exercises\FillInBlanks {
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         private function missingCmpEndToken(
             int $column,
             int $line,
             int $byteIndex,
             int $byteLength
-        ){
+        ): void
+        {
             $this->invalidValuePart(
-                column:$column,
-                line:$line,
-                byteIndex:$byteIndex,
-                byteLength:$byteLength,
-                message:"Unclosed fillable component",
-                description:"Close it with '{$this->cmpEndToken}' character."
+                column: $column,
+                line: $line,
+                byteIndex: $byteIndex,
+                byteLength: $byteLength,
+                description: "Close it with '{$this->cmpEndToken}' character.",
+                message: "Unclosed fillable component"
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         private function invalidCmpStartToken(
             int $column,
             int $line,
             int $byteIndex
-        ) {
+        ): void
+        {
             $this->invalidValuePart(
                 column: $column,
                 line: $line,
                 byteIndex: $byteIndex,
                 byteLength: strlen($this->cmpStartToken),
-                message: "Invalid open fillable component character '{$this->cmpStartToken}'",
-                description: "Escape it with '{$this->escapeToken}' character."
+                description: "Escape it with '{$this->escapeToken}' character.",
+                message: "Invalid open fillable component character '{$this->cmpStartToken}'"
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         private function invalidCmpEndToken(
             int $column,
             int $line,
             int $byteIndex
-        ) {
+        ): void
+        {
             $this->invalidValuePart(
                 column: $column,
                 line: $line,
                 byteIndex: $byteIndex,
                 byteLength: strlen($this->cmpStartToken),
-                message: "Invalid close fillable component character '{$this->cmpEndToken}'",
-                description: "Escape it with '{$this->escapeToken}' character."
+                description: "Escape it with '{$this->escapeToken}' character.",
+                message: "Invalid close fillable component character '{$this->cmpEndToken}'"
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         private function invalidEscapeSequence(
             string $ch,
             int $column,
             int $line,
             int $byteIndex,
             int $byteLength
-        ) {
+        ): void
+        {
             $this->invalidValuePart(
-                byteLength: $byteLength,
                 column: $column,
                 line: $line,
                 byteIndex: $byteIndex,
-                message: "Unknown escape sequence '{$this->prevToken}{$ch}'",
-                description: "There is no need to escape '{$ch}'."
+                byteLength: $byteLength,
+                description: "There is no need to escape '{$ch}'.",
+                message: "Unknown escape sequence '{$this->prevToken}{$ch}'"
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValuePartException
+         */
         private function duplicateComboboxOption(
             string $option,
             int $column,
             int $line,
             int $byteIndex,
             int $byteLength = -1
-        ) {
+        ): void
+        {
             if ($byteLength < 0) {
                 $byteLength = strlen($option);
             }
             // duplicate combobox option
             $this->invalidValuePart(
-                byteLength: $byteLength,
                 column: $column,
                 line: $line,
                 byteIndex: $byteIndex,
-                message: "Combobox already has '{$option}' option",
-                description: "Combobox needs to have unique options"
+                byteLength: $byteLength,
+                description: "Combobox needs to have unique options",
+                message: "Combobox already has '{$option}' option"
             );
         }
     }

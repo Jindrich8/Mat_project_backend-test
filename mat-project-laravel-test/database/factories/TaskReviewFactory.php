@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\TaskReview;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TaskReview>
+ * @extends Factory<TaskReview>
  */
 class TaskReviewFactory extends Factory
 {

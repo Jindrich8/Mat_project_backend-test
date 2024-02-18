@@ -5,7 +5,7 @@ use Illuminate\Support\Str;
 use Symfony\Component\Finder\SplFileInfo;
 
 class MyFileInfo{
-    
+
     private SplFileInfo $file;
     public function __construct(SplFileInfo $file){
        $this->file = $file;
@@ -32,43 +32,25 @@ class MyFileInfo{
     }
 
     /**
-     * Returns directory name without endig separator
+     * Returns directory name without ending separator
      */
-    public function getDirname(){
+    public function getDirname(): false|string
+    {
          $path = $this->getPath();
-        return $path !== false ? MyFileInfo::dirname($path) 
-        : $path;
+        return $path !== false ? MyFileInfo::dirname($path)
+        : false;
     }
 
-    public function getPathWithoutExtensions(){
-        $path = $this->getPath();
-        return $path !== false ? MyFileInfo::omitAllExtensions($path) 
-        : $path;
-    }
-
-    public static function omitAllExtensions(string $path,string $separator = DIRECTORY_SEPARATOR){
+    public static function omitAllExtensions(string $path,string $separator = DIRECTORY_SEPARATOR): string
+    {
        $path = PathHelper::getPotentialyNonExistentAbsolutePath($path,separator:$separator);
        $newPath = Str::before(ltrim($path,'.'),'.');
        if($newPath === false) return $path;
        return $newPath;
     }
-    public static function getExtensionsPart(string $path){
-      $extensions = mb_strstr($path,'.',encoding:'UTF-8');
-       if(!$extensions){
-        $extensions = '';
-       }
-       return $extensions;
-    }
 
-     public static function dirnameWSep(string $path,string $sep = DIRECTORY_SEPARATOR){
-        $dirSepPos = mb_strrpos($path,$sep);
-        if($dirSepPos === false){
-            return '.';
-        }
-       return mb_substr($path,0,$dirSepPos);
-    }
-
-    public static function dirname(string $path){
+    public static function dirname(string $path): string
+    {
         $dirSepPos = mb_strrpos($path,DIRECTORY_SEPARATOR);
         if($dirSepPos === false){
             return '.';
@@ -76,7 +58,8 @@ class MyFileInfo{
        return mb_substr($path,0,$dirSepPos);
     }
 
-    public static function filename(string $path){
+    public static function filename(string $path): array|string
+    {
         $dirSepPos = mb_strrpos($path,DIRECTORY_SEPARATOR);
         if($dirSepPos === false){
             return pathinfo($path,PATHINFO_FILENAME);

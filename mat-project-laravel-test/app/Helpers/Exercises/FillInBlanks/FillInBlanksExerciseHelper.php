@@ -37,7 +37,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
      */
     private static function fetchContents(array &$ids)
     {
-        $table = FillInBlanks::getTableName();
+        $table = FillInBlanksConstants::TABLE_NAME;
         $idName = FillInBlanks::getPrimaryKeyName();
         $exercises = DB::table($table)
             ->select([$idName, FillInBlanksConstants::COL_CONTENT])
@@ -48,19 +48,16 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
              * @var int $exerciseId
              */
             $exerciseId = DBHelper::access($exercise, $idName);
-            $decodedContent = DBJsonHelper::decode(
+
+            
+            $content = DtoUtils::importDto(
+                dto: FillInBlanksContent::class,
                 json: DBHelper::access($exercise, FillInBlanksConstants::COL_CONTENT),
                 table: $table,
                 column: FillInBlanksConstants::COL_CONTENT,
-                id: $exerciseId
+                id: $exerciseId,
+                wrapper: FillInBlanksContent::CONTENT
             );
-
-            /**
-             * @var FillInBlanksContent
-             */
-            $content = FillInBlanksContent::import((object)[
-                FillInBlanksContent::CONTENT => $decodedContent
-            ]);
             yield $exerciseId => $content;
         }
     }
@@ -146,5 +143,12 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
     public function getCreateHelper(): CCreateExerciseHelper
     {
         return $this->createHelper ??= new CreateFillInBlanksExercise();
+    }
+
+    public function delete(array &$ids): void
+    {
+        DB::table(FillInBlanksConstants::TABLE_NAME)
+        ->whereIn(FillInBlanksConstants::COL_EXERCISEABLE_ID,$ids)
+        ->delete();
     }
 }

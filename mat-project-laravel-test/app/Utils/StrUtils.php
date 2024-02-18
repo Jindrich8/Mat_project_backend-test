@@ -8,6 +8,7 @@ namespace App\Utils {
     use App\Types\CharIteratorKeyType;
     use App\Types\TrimType;
     use Doctrine\DBAL\Platforms\TrimMode;
+    use Generator;
     use Illuminate\Support\Str;
     use IntlBreakIterator;
     use IntlChar;
@@ -117,7 +118,7 @@ namespace App\Utils {
         }
 
         /**
-         * @return \Generator<int, string, mixed, void>
+         * @return Generator<int, string, mixed, void>
          * Return [chEnd => $ch] key value pairs
          */
         public static function iterateOverString(string $str,int $byteOffset = 0, int $len = -1, ?string $locale = null)
@@ -199,7 +200,8 @@ namespace App\Utils {
             );
             }
             $oldByteOffset = $byteOffset;
-            for(;$byteOffset < $byteLen && $str[$byteOffset] === $skipChar;++$byteOffset);
+            /** @noinspection PhpStatementHasEmptyBodyInspection */
+            for(; $byteOffset < $byteLen && $str[$byteOffset] === $skipChar; ++$byteOffset);
             return $byteOffset - $oldByteOffset;
         }
 

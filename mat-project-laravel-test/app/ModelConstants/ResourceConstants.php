@@ -1,8 +1,11 @@
 <?php
-
+/*
+This file was carefully crafted by mean machine.
+Do not change this file!
+*/
 namespace App\ModelConstants;
 
-class ResourceConstants 
+class ResourceConstants
 {
     const TABLE_NAME = 'resources';
 

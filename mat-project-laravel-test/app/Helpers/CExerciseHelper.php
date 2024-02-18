@@ -26,4 +26,9 @@ interface CExerciseHelper
    
     public function getCreateHelper():CCreateExerciseHelper;
 
+    /**
+     * @param int[] &$ids
+     */
+    public function delete(array &$ids):void;
+
 }
