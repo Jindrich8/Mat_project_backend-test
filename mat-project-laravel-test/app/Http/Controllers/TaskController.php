@@ -109,16 +109,15 @@ class TaskController extends Controller
         );
         $useSavedTask = $saveTask && $task->version === $saveTask->taskVersion;
         $savedValuesInfo = null;
-        if($saveTask){
+        if ($saveTask) {
             $savedValuesInfo = NewerServerSavedTaskInfo::create();
-            if(!$useSavedTask){
+            if (!$useSavedTask) {
                 $savedValuesInfo->setPrevSavedValues(
                     SavedTaskValues::create()
-                    ->setExercises($saveTask->content->exercises)
+                        ->setExercises($saveTask->content->exercises)
                 );
             }
-        }
-        else{
+        } else {
             $savedValuesInfo = OlderServerSavedTaskInfo::create();
         }
         $responseTask->setSavedValuesInfo($savedValuesInfo);
@@ -240,8 +239,8 @@ class TaskController extends Controller
         $userId = UserHelper::tryGetUserId();
         $requestData = RequestHelper::getDtoFromRequest(Evaluate\Request::class, $request);
         $responseTask = Review\Get\Task::create();
-        
-       /**
+
+        /**
          * @param ExerciseReview[]|null $evaluatedExercises
          * @param App\Dtos\Task\Review\Get\Task &$responseTask
          * @return BareTaskWAuthorName
@@ -249,126 +248,125 @@ class TaskController extends Controller
          * Evaluates task and sets response to responseTask
          * Adds evaluated exercises to evalutedExercises if evalutedExercises are not null
          */
-    $do = function(array|null &$evaluatedExercises,&$responseTask) use($id, $userId,$requestData){
-        $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true,sharedLock:$userId !== null)
-            ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
-        if ($task->version !== $requestData->version) {
-            throw new ApplicationException(
-                userStatus: Response::HTTP_CONFLICT,
-                userResponse: ErrorResponse::create()
-                    ->setUserInfo(
-                        UserSpecificPartOfAnError::create()
-                            ->setMessage("Task changed.")
-                            ->setDescription("Task was updated, so filled data do not longer represents valid data for this task.")
-                    )
-                    ->setDetails(
-                        TaskChangedTaskEvaluateError::create()
-                    )
-            );
-        }
-
-        $responseTask->setDisplay($task->display);
-
-        $exercises = ExerciseHelper::evaluateTaskInfo(
-            taskInfoId: $task->taskInfoId
-        );
-        $taskPoints = 0;
-        $taskmax = 0;
-        $taskEntries = &$responseTask->setEntries([])->entries;
-        TaskHelper::getTaskEntries(
-            taskInfoId: $task->taskInfoId,
-            exercises: $exercises,
-            exerciseToDto: function (EvaluateExercise $exercise) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
-                $exerciseDto = ExerciseReview::create()
-                    ->setInstructions(ReviewExerciseInstructions::create()
-                        ->setContent($exercise->instructions));
-
-                $exerciseValue = array_shift($requestData->exercises);
-                $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
-
-                $exerciseDto->points->has = ($exerciseDto->points->has * $exercise->weight) / $exerciseDto->points->max;
-                $exerciseDto->points->max = $exercise->weight;
-
-                $taskPoints += $exerciseDto->points->has;
-                $taskmax += $exerciseDto->points->max;
-                if($evaluatedExercises){
-                $evaluatedExercises[] = $exerciseDto;
-                }
-                return $exerciseDto;
-            },
-            groupToDto: function (array $resources) {
-                $groupDto = Review\Get\DefsGroup::create()
-                    ->setResources(
-                        array_map(
-                            fn (string $resource) =>
-                            Review\Get\DefsGroupResourcesItems::create()
-                                ->setContent($resource),
-                            $resources
+        $do = function (array|null &$evaluatedExercises, &$responseTask) use ($id, $userId, $requestData) {
+            $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true, sharedLock: $userId !== null)
+                ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
+            if ($task->version !== $requestData->version) {
+                throw new ApplicationException(
+                    userStatus: Response::HTTP_CONFLICT,
+                    userResponse: ErrorResponse::create()
+                        ->setUserInfo(
+                            UserSpecificPartOfAnError::create()
+                                ->setMessage("Task changed.")
+                                ->setDescription("Task was updated, so filled data do not longer represents valid data for this task.")
                         )
-                    );
-                return $groupDto;
-            },
-            entries: $taskEntries
-        );
-
-        $responseTask->setPoints(
-            ExercisePoints::create()
-                ->setHas($taskPoints)
-                ->setMax($taskmax)
-        );
-        return $task;
-    };
-
-    if($userId === null){
-        $evaluatedExercises = null;
-       $do($evaluatedExercises,$responseTask);
-    }
-    else{
-        DB::transaction(function()use($do,$userId,$responseTask){
-            /**
-             * @var ExerciseReview[] $evaluatedExercises
-             */
-            $evaluatedExercises = [];
-            $task = $do($evaluatedExercises,$responseTask);
-            $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
-                ->select([TaskReviewTemplateConstants::COL_ID])
-                ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $task->taskInfoId)
-                ->sharedLock()
-                ->value(TaskReviewTemplateConstants::COL_ID);
-
-            if ($templateId === null) {
-                $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
-                    ->insertGetId([
-                        TaskReviewTemplateConstants::COL_TASK_ID => $task->id,
-                        TaskReviewTemplateConstants::COL_TASK_INFO_ID => $task->taskInfoId
-                    ]);
+                        ->setDetails(
+                            TaskChangedTaskEvaluateError::create()
+                        )
+                );
             }
 
-            $exercises = TaskReviewExercisesContent::create()
-            ->setContent($evaluatedExercises);
-            $taskReviewData = [
-                TaskReviewConstants::COL_USER_ID => $userId,
-                TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID => $templateId,
-                TaskReviewConstants::COL_MAX_POINTS => $responseTask->points->max,
-                TaskReviewConstants::COL_SCORE => $responseTask->points->has / $responseTask->points->max,
-                TaskReviewConstants::COL_EXERCISES => DtoUtils::dtoToJson(
-                    dto:$exercises,
-                    field:TaskReviewExercisesContent::CONTENT
+            $responseTask->setDisplay($task->display);
+
+            $exercises = ExerciseHelper::evaluateTaskInfo(
+                taskInfoId: $task->taskInfoId
+            );
+            $taskPoints = 0;
+            $taskmax = 0;
+            $taskEntries = &$responseTask->setEntries([])->entries;
+            TaskHelper::getTaskEntries(
+                taskInfoId: $task->taskInfoId,
+                exercises: $exercises,
+                exerciseToDto: function (EvaluateExercise $exercise) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
+                    $exerciseDto = ExerciseReview::create()
+                        ->setInstructions(ReviewExerciseInstructions::create()
+                            ->setContent($exercise->instructions));
+
+                    $exerciseValue = array_shift($requestData->exercises);
+                    $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
+
+                    $exerciseDto->points->has = ($exerciseDto->points->has * $exercise->weight) / $exerciseDto->points->max;
+                    $exerciseDto->points->max = $exercise->weight;
+
+                    $taskPoints += $exerciseDto->points->has;
+                    $taskmax += $exerciseDto->points->max;
+                    if ($evaluatedExercises) {
+                        $evaluatedExercises[] = $exerciseDto;
+                    }
+                    return $exerciseDto;
+                },
+                groupToDto: function (array $resources) {
+                    $groupDto = Review\Get\DefsGroup::create()
+                        ->setResources(
+                            array_map(
+                                fn (string $resource) =>
+                                Review\Get\DefsGroupResourcesItems::create()
+                                    ->setContent($resource),
+                                $resources
+                            )
+                        );
+                    return $groupDto;
+                },
+                entries: $taskEntries
+            );
+
+            $responseTask->setPoints(
+                ExercisePoints::create()
+                    ->setHas($taskPoints)
+                    ->setMax($taskmax)
+            );
+            return $task;
+        };
+
+        if ($userId === null) {
+            $evaluatedExercises = null;
+            $do($evaluatedExercises, $responseTask);
+        } else {
+            DB::transaction(function () use ($do, $userId, $responseTask) {
+                /**
+                 * @var ExerciseReview[] $evaluatedExercises
+                 */
+                $evaluatedExercises = [];
+                $task = $do($evaluatedExercises, $responseTask);
+                $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
+                    ->select([TaskReviewTemplateConstants::COL_ID])
+                    ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $task->taskInfoId)
+                    ->sharedLock()
+                    ->value(TaskReviewTemplateConstants::COL_ID);
+
+                if ($templateId === null) {
+                    $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
+                        ->insertGetId([
+                            TaskReviewTemplateConstants::COL_TASK_ID => $task->id,
+                            TaskReviewTemplateConstants::COL_TASK_INFO_ID => $task->taskInfoId
+                        ]);
+                }
+
+                $exercises = TaskReviewExercisesContent::create()
+                    ->setContent($evaluatedExercises);
+                $taskReviewData = [
+                    TaskReviewConstants::COL_USER_ID => $userId,
+                    TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID => $templateId,
+                    TaskReviewConstants::COL_MAX_POINTS => $responseTask->points->max,
+                    TaskReviewConstants::COL_SCORE => $responseTask->points->has / $responseTask->points->max,
+                    TaskReviewConstants::COL_EXERCISES => DtoUtils::dtoToJson(
+                        dto: $exercises,
+                        field: TaskReviewExercisesContent::CONTENT
                     )
-            ];
+                ];
 
                 $inserted = DB::table(TaskReviewConstants::TABLE_NAME)
                     ->insert($taskReviewData);
-                    if(!$inserted){
-                        throw new InternalException(
-                            message:"Could not insert task review.",
-                            context:[
-                                'taskReviewData' => $taskReviewData
-                            ]
-                            );
-                    }
-        });
-    }
+                if (!$inserted) {
+                    throw new InternalException(
+                        message: "Could not insert task review.",
+                        context: [
+                            'taskReviewData' => $taskReviewData
+                        ]
+                    );
+                }
+            });
+        }
         return Review\Get\Response::create()
             ->setTask($responseTask);
     }
@@ -483,8 +481,8 @@ class TaskController extends Controller
         });
 
         $taskInfoIds = [];
-        foreach($bareTasks as $bareTask){
-           $taskInfoIds[$bareTask->taskInfoId] = true;
+        foreach ($bareTasks as $bareTask) {
+            $taskInfoIds[$bareTask->taskInfoId] = true;
         }
         $taskInfoIds = array_keys($taskInfoIds);
         $tagsByTaskInfoId = TaskHelper::getTagsByTaskInfoId($taskInfoIds);
@@ -577,32 +575,31 @@ class TaskController extends Controller
     {
         DB::transaction(function () use ($taskId) {
             $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
-            ->select([TaskConstants::COL_TASK_INFO_ID])
-            ->where(TaskConstants::COL_ID, '=', $taskId)
-            ->value(TaskConstants::COL_TASK_INFO_ID);
-            if($taskInfoId === null){
+                ->select([TaskConstants::COL_TASK_INFO_ID])
+                ->where(TaskConstants::COL_ID, '=', $taskId)
+                ->value(TaskConstants::COL_TASK_INFO_ID);
+            if ($taskInfoId === null) {
                 throw new AppModelNotFoundException("Task", ['id' => $taskId]);
             }
 
             $deleted = DB::table(TaskConstants::TABLE_NAME)
                 ->delete($taskId);
             if ($deleted === 0) {
-               // we have there some concurrent query, so we let it to do the rest
-               return;
+                // we have there some concurrent query, so we let it to do the rest
+                return;
             }
 
             $taskReviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
-                ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=',$taskInfoId)
+                ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
                 ->exists();
 
 
             if (!$taskReviewTemplateExists) {
                 DB::table(TaskInfoConstants::TABLE_NAME)
                     ->delete($taskInfoId);
-                    // We do not need to delete groups, tags, or exercises,
-                    // because all of them should be deleted by cascade
-            }
-            else{
+                // We do not need to delete groups, tags, or exercises,
+                // because all of them should be deleted by cascade
+            } else {
                 TaskHelper::deleteActualExercisesByTaskInfo($taskInfoId);
             }
         });
@@ -649,7 +646,7 @@ class TaskController extends Controller
         $userId = UserHelper::getUserId();
         $requestData = RequestHelper::getDtoFromRequest(MyList\Request::class, $request);
 
-        $bareTasks = BareTask::tryFetch(function (Builder $builder) use ($requestData,$userId) {
+        $bareTasks = BareTask::tryFetch(function (Builder $builder) use ($requestData, $userId) {
             /**
              * @var MyList\Errors\FilterErrorDetailsErrorData|null $error
              */
@@ -782,8 +779,8 @@ class TaskController extends Controller
                 }
             );
         });
-        $taskInfoIds = $bareTasks->map(fn(BareTask $bareTask)=>$bareTask->taskInfoId)
-        ->all();
+        $taskInfoIds = $bareTasks->map(fn (BareTask $bareTask) => $bareTask->taskInfoId)
+            ->all();
         $tagsByTaskInfoId = TaskHelper::getTagsByTaskInfoId($taskInfoIds);
         unset($taskInfoIds);
 
