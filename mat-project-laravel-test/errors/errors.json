@@ -3,6 +3,7 @@
         "$posfix":"#properties/code/const",
         "defs/errors": {
             "-1": "general.json",
+            "-2":"not_found.json",
             "access":{
                 "-10":"Unauthenticated.json",
                 "-11":"Unauthorized.json"
