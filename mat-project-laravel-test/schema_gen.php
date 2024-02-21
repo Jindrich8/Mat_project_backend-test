@@ -4,10 +4,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Illuminate\Support\Str;
 use  Dev\DtoGen\MyFileInfo;
 use Dev\DtoGen\PathHelper;
-use  Dev\DtoGen\StarPattern;
 use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
-use SplFileInfo as GlobalSplFileInfo;
 use Symfony\Component\Finder\SplFileInfo;
 
 const EXPANDED_REF = '$ref';
@@ -168,7 +166,7 @@ function processFile(
                 $expanded = array_unique(
                     array_values(
                     array_filter(
-                        glob(PathHelper::getPotentialyNonExistentAbsolutePath($filePathPattern, '/')),
+                        PathHelper::globstar(PathHelper::getPotentialyNonExistentAbsolutePath($filePathPattern, '/')),
                         fn (string $value) => MyFileInfo::getExtensionsPart($value) === '.json'
                     )
                 )
@@ -177,7 +175,7 @@ function processFile(
                 $specialFilePath = $Context->specialFromNormal($filePathPattern, '/');
                 echo "Patterns: ";
                 dump([$filePathPattern, $specialFilePath]);
-                $specialExpanded = array_unique(glob($specialFilePath));
+                $specialExpanded = array_unique(PathHelper::globstar($specialFilePath));
 
                 if (count($expanded) < count($specialExpanded)) {
                     echo "Special expanded ";
