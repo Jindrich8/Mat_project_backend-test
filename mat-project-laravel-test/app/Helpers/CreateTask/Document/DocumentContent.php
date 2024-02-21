@@ -2,20 +2,12 @@
 
 namespace App\Helpers\CreateTask\Document {
 
-    use App\Helpers\CreateTask\TaskRes;
-    use App\Helpers\CreateTask\XMLNoAttributesNode;
-    use App\Helpers\CreateTask\Document\Document;
     use App\Helpers\CreateTask\ExerciseNode;
     use App\Helpers\CreateTask\GroupNode;
-    use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Helpers\CreateTask\XMLNoValueNode;
     use App\Types\XMLNoValueNodeTrait;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeValueType;
-    use App\Utils\Utils;
 
     class DocumentContent extends XMLNodeBaseWParentNode{
         use XMLNoValueNodeTrait;

@@ -14,29 +14,25 @@ use App\Dtos\Defs\Types\Review\ExerciseReview;
 use App\Dtos\Defs\Types\Review\ReviewExerciseInstructions;
 use App\Dtos\Defs\Types\Task\AuthorInfo;
 use App\Dtos\Defs\Types\Task\TaskDetailInfo;
-use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
 use App\Dtos\Defs\Types\Task\TaskPreviewInfo;
-use App\Dtos\Defs\Types\Task\TaskPreviewInfoAuthor;
 use App\Dtos\Errors\ErrorResponse;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
-use App\Dtos\Task as TaskDto;
-use App\Dtos\Task\Create;
-use App\Dtos\Task\Evaluate;
-use App\Dtos\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
-use App\Dtos\Task\List;
-use App\Dtos\Task\List\Error\EnumArrayError;
-use App\Dtos\Task\List\Error\GeneralErrorDetails;
-use App\Dtos\Task\List\OrderByItems as ListOrderByItems;
-use App\Dtos\Task\List\Request\OrderByItems;
-use App\Dtos\Task\MyList;
-use App\Dtos\Task\MyList\OrderByItems as MyListOrderByItems;
-use App\Dtos\Task\Review;
-use App\Dtos\Task\Take;
-use App\Dtos\Task\Take\DefsExerciseInstructions;
-use App\Dtos\Task\Take\NewerServerSavedTaskInfo;
-use App\Dtos\Task\Take\OlderServerSavedTaskInfo;
-use App\Dtos\Task\Take\SavedTaskInfo;
-use App\Dtos\Task\Take\SavedTaskValues;
+use App\Dtos\Defs\Endpoints\Task as TaskDto;
+use App\Dtos\Defs\Endpoints\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
+use App\Dtos\Defs\Endpoints\Task\Create;
+use App\Dtos\Defs\Endpoints\Task\Save;
+use App\Dtos\Defs\Endpoints\Task\Update;
+use App\Dtos\Defs\Endpoints\Task\Detail;
+use App\Dtos\Defs\Endpoints\Task\Evaluate;
+use App\Dtos\Defs\Endpoints\Task\List;
+use App\Dtos\Defs\Endpoints\Task\MyList;
+use App\Dtos\Defs\Endpoints\Task\Review;
+use App\Dtos\Defs\Endpoints\Task\Take;
+use App\Dtos\Defs\Endpoints\Task\MyDetail;
+use App\Dtos\Defs\Endpoints\Task\Take\DefsExerciseInstructions;
+use App\Dtos\Defs\Endpoints\Task\Take\NewerServerSavedTaskInfo;
+use App\Dtos\Defs\Endpoints\Task\Take\OlderServerSavedTaskInfo;
+use App\Dtos\Defs\Endpoints\Task\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
 use App\Exceptions\InternalException;
@@ -85,18 +81,18 @@ class TaskController extends Controller
      * @throws ApplicationException
      * @throws AppModelNotFoundException
      */
-    public function take(HttpRequest $request, int $id): Take\Response
+    public function take(HttpRequest $request, int $id): Take\TakeTaskResponse
     {
-        $requestData = RequestHelper::getDtoFromRequest(Take\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(Take\TakeTaskRequest::class, $request);
         $taskId = $id;
-        $responseTask = Take\Task::create();
+        $responseTask = Take\TakeResponseTask::create();
         $task = BareTaskWAuthorName::tryFetchById($taskId, publicOnly: true)
             ?? throw new AppModelNotFoundException('Task', ['id' => $taskId]);
 
         $responseTask->setTaskDetail(TaskHelper::getInfo($task))
-            ->setDisplay(TaskDisplay::translate($task->display));
+            ->setDisplay($task->display->translate());
 
-        DebugUtils::log("timestamp", $requestData->localySavedTask?->timestamp);
+        DebugUtils::log("timestamp", $requestData->localySavedTask?->timestamp ?? null);
         // dump($requestData->localySavedTask?->timestamp);
         $localySavedTaskTimeStamp = $requestData->localySavedTask ?
             TimeStampUtils::tryParseIsoTimestampToUtc($requestData->localySavedTask->timestamp)
@@ -146,7 +142,7 @@ class TaskController extends Controller
             },
             entries: $taskEntries
         );
-        return Take\Response::create()
+        return Take\TakeTaskResponse::create()
             ->setTask($responseTask);
     }
 
@@ -158,7 +154,7 @@ class TaskController extends Controller
     public function save(HttpRequest $request, int $id): Response
     {
         $userId = UserHelper::getUserId();
-        $requestData = RequestHelper::getDtoFromRequest(TaskDto\Save\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(Save\SaveTaskRequest::class, $request);
         $success = DB::table(SavedTask::getTableName())
             ->updateOrInsert(
                 attributes: [
@@ -166,7 +162,7 @@ class TaskController extends Controller
                     SavedTaskConstants::COL_USER_ID => $userId
                 ],
                 values: [
-                    SavedTaskConstants::COL_DATA => TaskDto\Save\Request::export($requestData->exercises)
+                    SavedTaskConstants::COL_DATA => Save\SaveTaskRequest::export($requestData->exercises)
                 ]
             );
         if (!$success) {
@@ -181,9 +177,9 @@ class TaskController extends Controller
     /**
      * @throws ApplicationException
      */
-    public function store(HttpRequest $request): Create\Response
+    public function store(HttpRequest $request): Create\TaskCreateResponse
     {
-        $requestData = RequestHelper::getDtoFromRequest(Create\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(Create\TaskCreateRequest::class, $request);
         $parseEnty = new ParseEntry();
         $taskRes = $parseEnty->parse([$requestData->task->source]);
         $requestTask = &$requestData->task;
@@ -204,13 +200,13 @@ class TaskController extends Controller
         $task->maxClass = TaskClass::fromThrow($requestTask->classRange->max);
 
         $taskId = $taskRes->insert();
-        return Create\Response::create()
+        return Create\TaskCreateResponse::create()
             ->setTaskId($taskId);
     }
 
     public function update(HttpRequest $request, int $id): Response
     {
-        $requestData = RequestHelper::getDtoFromRequest(TaskDto\Update\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(Update\TaskUpdateRequest::class, $request);
         $parseEntry = new ParseEntry();
         $taskRes = $parseEntry->parse([$requestData->task->source]);
         $requestTask = &$requestData->task;
@@ -234,15 +230,14 @@ class TaskController extends Controller
         return response(status: Response::HTTP_NO_CONTENT);
     }
 
-    public function evaluate(HttpRequest $request, int $id): TaskDto\Review\Get\Response
+    public function evaluate(HttpRequest $request, int $id): Review\Get\ReviewTaskResponse
     {
         $userId = UserHelper::tryGetUserId();
-        $requestData = RequestHelper::getDtoFromRequest(Evaluate\Request::class, $request);
-        $responseTask = Review\Get\Task::create();
-
+        $requestData = RequestHelper::getDtoFromRequest(Evaluate\EvaluateTaskRequest::class, $request);
+        $responseTask = Review\Get\GetResponseTask::create();
         /**
          * @param ExerciseReview[]|null $evaluatedExercises
-         * @param App\Dtos\Task\Review\Get\Task &$responseTask
+         * @param \App\Dtos\Defs\Endpoints\Task\Review\Get\GetResponseTask &$responseTask
          * @return BareTaskWAuthorName
          * Fetches the task and locks it if userId is not null
          * Evaluates task and sets response to responseTask
@@ -266,7 +261,7 @@ class TaskController extends Controller
                 );
             }
 
-            $responseTask->setDisplay($task->display);
+            $responseTask->setDisplay($task->display->translate());
 
             $exercises = ExerciseHelper::evaluateTaskInfo(
                 taskInfoId: $task->taskInfoId
@@ -367,13 +362,13 @@ class TaskController extends Controller
                 }
             });
         }
-        return Review\Get\Response::create()
+        return Review\Get\ReviewTaskResponse::create()
             ->setTask($responseTask);
     }
 
-    public function list(HttpRequest $request): TaskDto\List\Response
+    public function list(HttpRequest $request): List\ListTasksResponse
     {
-        $requestData = RequestHelper::getDtoFromRequest(List\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(List\ListTasksRequest::class, $request);
 
         $bareTasks = BareTaskWAuthorName::tryFetch(function (Builder $builder) use ($requestData) {
             /**
@@ -445,18 +440,18 @@ class TaskController extends Controller
 
             $transformOrderBy = function (array $orderBy) {
                 /**
-                 * @var OrderByItems[] $orderBy
+                 * @var List\ListRequestOrderByItems[] $orderBy
                  */
                 foreach ($orderBy as $filterAndOrder) {
                     yield $filterAndOrder->filterName =>
-                        $filterAndOrder->type === ListOrderByItems::DESC ? 'DESC' : 'ASC';
+                        $filterAndOrder->type === List\ListRequestOrderByItems::DESC ? 'DESC' : 'ASC';
                 }
             };
 
             TaskHelper::distinctOrderBy(
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
-                    if ($filterName === ListOrderByItems::CLASS_RANGE) {
+                    if ($filterName === List\ListRequestOrderByItems::CLASS_RANGE) {
                         $builder->orderBy(
                             DBHelper::tableCol(TaskInfoConstants::TABLE_NAME, TaskInfoConstants::COL_MIN_CLASS),
                             $direction
@@ -466,9 +461,9 @@ class TaskController extends Controller
                             $direction
                         );
                     } else {
-                        if ($filterName === ListOrderByItems::DIFFICULTY) {
+                        if ($filterName === List\ListRequestOrderByItems::DIFFICULTY) {
                             $column = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME, TaskInfoConstants::COL_DIFFICULTY);
-                        } else if ($filterName === ListOrderByItems::NAME) {
+                        } else if ($filterName === List\ListRequestOrderByItems::NAME) {
                             $column = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME, TaskInfoConstants::COL_NAME);
                         } else {
                             return false;
@@ -502,8 +497,8 @@ class TaskController extends Controller
                 )
                 ->setClassRange(
                     ResponseOrderedEnumRange::create()
-                        ->setmin(DtoUtils::createOrderedEnumDto($task->minClass))
-                        ->setmax(DtoUtils::createOrderedEnumDto($task->maxClass))
+                        ->setMin(DtoUtils::createOrderedEnumDto($task->minClass))
+                        ->setMax(DtoUtils::createOrderedEnumDto($task->maxClass))
                 )
                 ->setTags(
                     array_map(function (array $tag) {
@@ -523,11 +518,11 @@ class TaskController extends Controller
             return $info;
         })->all();
 
-        return List\Response::create()
+        return List\ListTasksResponse::create()
             ->setTasks($tasks);
     }
 
-    public function detail(HttpRequest $request, int $taskId): TaskDto\Detail\Response
+    public function detail(HttpRequest $request, int $taskId): Detail\TaskDetailResponse
     {
         $task = BareTaskWAuthorName::tryFetchById($taskId, publicOnly: true);
         if (!$task) {
@@ -546,8 +541,8 @@ class TaskController extends Controller
             )
             ->setClassRange(
                 ResponseOrderedEnumRange::create()
-                    ->setMin($task->minClass)
-                    ->setMax($task->maxClass)
+                    ->setMin(DtoUtils::createOrderedEnumDto($task->minClass))
+                    ->setMax(DtoUtils::createOrderedEnumDto($task->maxClass))
             )
             ->setDifficulty(
                 ResponseOrderedEnumElement::create()
@@ -567,7 +562,7 @@ class TaskController extends Controller
             );
         }
 
-        return TaskDto\Detail\Response::create()
+        return TaskDto\Detail\TaskDetailResponse::create()
             ->setTask($taskDetailInfo);
     }
 
@@ -606,7 +601,7 @@ class TaskController extends Controller
         return response(status: Response::HTTP_NO_CONTENT);
     }
 
-    public function myDetail(HttpRequest $request, int $taskId): TaskDto\MyDetail\Response
+    public function myDetail(HttpRequest $request, int $taskId): MyDetail\MyTaskDetailResponse
     {
         $task = BareTask::tryFetchById($taskId);
         if (!$task) {
@@ -614,7 +609,7 @@ class TaskController extends Controller
         }
         $tags = TaskHelper::getTaskInfoTags($task->taskInfoId);
 
-        return TaskDto\MyDetail\Response::create()
+        return MyDetail\MyTaskDetailResponse::create()
             ->setTask(
                 MyTaskDetailInfo::create()
                     ->setId($task->id)
@@ -624,8 +619,8 @@ class TaskController extends Controller
                     ->setModificationTimestamp(TimeStampUtils::timestampToString($task->updatedAt))
                     ->setClassRange(
                         ResponseOrderedEnumRange::create()
-                            ->setMin($task->minClass)
-                            ->setMax($task->maxClass)
+                            ->setMin(DtoUtils::createOrderedEnumDto($task->minClass))
+                            ->setMax(DtoUtils::createOrderedEnumDto($task->maxClass))
                     )
                     ->setDifficulty(
                         ResponseOrderedEnumElement::create()
@@ -641,10 +636,10 @@ class TaskController extends Controller
             );
     }
 
-    public function myList(HttpRequest $request): TaskDto\MyList\Response
+    public function myList(HttpRequest $request): MyList\ListMyTasksResponse
     {
         $userId = UserHelper::getUserId();
-        $requestData = RequestHelper::getDtoFromRequest(MyList\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(MyList\ListMyTasksRequest::class, $request);
 
         $bareTasks = BareTask::tryFetch(function (Builder $builder) use ($requestData, $userId) {
             /**
@@ -733,18 +728,18 @@ class TaskController extends Controller
 
             $transformOrderBy = function (array $orderBy) {
                 /**
-                 * @var MyListOrderByItems[] $orderBy
+                 * @var MyList\MyListRequestOrderByItems[] $orderBy
                  */
                 foreach ($orderBy as $filterAndOrder) {
                     yield $filterAndOrder->filterName =>
-                        $filterAndOrder->type === MyListOrderByItems::DESC ? 'DESC' : 'ASC';
+                        $filterAndOrder->type === MyList\MyListRequestOrderByItems::DESC ? 'DESC' : 'ASC';
                 }
             };
 
             TaskHelper::distinctOrderBy(
                 $transformOrderBy($requestData->orderBy),
                 function (string $filterName, $direction) use ($builder) {
-                    if ($filterName === MyListOrderByItems::CLASS_RANGE) {
+                    if ($filterName === MyList\MyListRequestOrderByItems::CLASS_RANGE) {
                         $builder->orderBy(
                             DBHelper::tableCol(
                                 TaskInfoConstants::TABLE_NAME,
@@ -760,12 +755,12 @@ class TaskController extends Controller
                             $direction
                         );
                     } else {
-                        if ($filterName === MyListOrderByItems::DIFFICULTY) {
+                        if ($filterName === MyList\MyListRequestOrderByItems::DIFFICULTY) {
                             $column = DBHelper::tableCol(
                                 TaskInfoConstants::TABLE_NAME,
                                 TaskInfoConstants::COL_DIFFICULTY
                             );
-                        } else if ($filterName === MyListOrderByItems::NAME) {
+                        } else if ($filterName === MyList\MyListRequestOrderByItems::NAME) {
                             $column = DBHelper::tableCol(
                                 TaskInfoConstants::TABLE_NAME,
                                 TaskInfoConstants::COL_NAME
@@ -797,8 +792,8 @@ class TaskController extends Controller
             )
                 ->setClassRange(
                     ResponseOrderedEnumRange::create()
-                        ->setmin(DtoUtils::createOrderedEnumDto($task->minClass))
-                        ->setmax(DtoUtils::createOrderedEnumDto($task->maxClass))
+                        ->setMin(DtoUtils::createOrderedEnumDto($task->minClass))
+                        ->setMax(DtoUtils::createOrderedEnumDto($task->maxClass))
                 )
                 ->setTags(
                     array_map(function (array $tag) {
@@ -813,7 +808,7 @@ class TaskController extends Controller
             return $info;
         })->all();
 
-        return MyList\Response::create()
+        return MyList\ListMyTasksResponse::create()
             ->setTasks($tasks);
     }
 }

@@ -2,60 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksReviewResponse;
-use App\Dtos\Defs\Exercises\FixErrors\FixErrorsReviewResponse;
 use App\Dtos\Defs\Types\Errors\EnumArrayError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
-use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
 use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
 use App\Dtos\Defs\Types\Review\AuthorInfo;
 use App\Dtos\Defs\Types\Review\ExercisePoints;
 use App\Dtos\Defs\Types\Review\ExerciseReview;
 use App\Dtos\Defs\Types\Review\ReviewTaskDetailInfo;
 use App\Dtos\Defs\Types\Review\ReviewTaskPreviewInfo;
-use App\Dtos\Defs\Types\Task\TaskDetailInfo;
 use App\Dtos\Errors\ErrorResponse;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
 use App\Models\TaskReview;
-use App\Http\Requests\StoreTaskReviewRequest;
-use App\Http\Requests\UpdateTaskReviewRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
-use App\Dtos\Task\Review;
-use App\Dtos\Task\Review\Get\DefsExerciseInstructions;
-use App\Dtos\Task\Review\List\ReviewsItems;
+use App\Dtos\Defs\Endpoints\Task\Review;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
-use App\Exceptions\InternalException;
-use App\Helpers\BareModels\BareTaskWAuthorName;
 use App\Helpers\Database\DBHelper;
-use App\Helpers\Database\DBJsonHelper;
 use App\Helpers\Database\UserHelper;
-use App\Helpers\DtoHelper;
-use App\Helpers\ExerciseType;
 use App\Helpers\RequestHelper;
 use App\Helpers\ResponseHelper;
 use App\Helpers\TaskHelper;
-use App\ModelConstants\ExerciseConstants;
-use App\ModelConstants\GroupConstants;
 use App\ModelConstants\TaskConstants;
 use App\ModelConstants\TaskInfoConstants;
 use App\ModelConstants\TaskReviewConstants;
-use App\ModelConstants\TaskReviewExerciseConstants;
 use App\ModelConstants\TaskReviewTemplateConstants;
-use App\ModelConstants\UserConstants;
-use App\Models\TaskReviewExercise;
-use App\Models\TaskReviewTemplate;
+use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
 use App\Types\ConstructableTrait;
-use App\Utils\DBUtils;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
 use App\Utils\Utils;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
@@ -64,7 +43,7 @@ class TaskReviewController extends Controller
 {
     use ConstructableTrait;
 
-    public function get(Request $request, int $id): Review\Get\Response
+    public function get(Request $request, int $id): Review\Get\ReviewTaskResponse
     {
         $userId = UserHelper::getUserId();
         $taskReviewTable = TaskReviewConstants::TABLE_NAME;
@@ -111,6 +90,9 @@ class TaskReviewController extends Controller
                 $userId
             )
             ->first();
+        /**
+         * @var int $taskInfoId
+         */
         $taskInfoId = DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_INFO_ID);
 
         $exercises = DtoUtils::importDto(
@@ -129,7 +111,7 @@ class TaskReviewController extends Controller
         );
 
 
-        $responseTask = Review\Get\Task::create()
+        $responseTask = Review\Get\GetResponseTask::create()
             ->setId(DBHelper::access($review, TaskReviewConstants::COL_ID))
             ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
             ->setDisplay(TaskDisplay::translateFrom(DBHelper::access($review, TaskInfoConstants::COL_ORIENTATION)))
@@ -160,11 +142,11 @@ class TaskReviewController extends Controller
             exerciseToDto: fn (ExerciseReview $exercise) => $exercise
         );
 
-        return Review\Get\Response::create()
+        return Review\Get\ReviewTaskResponse::create()
             ->setTask($responseTask);
     }
 
-    public function detail(Request $request, int $id): Review\Detail\Response
+    public function detail(Request $request, int $id): Review\Detail\TaskReviewDetailResponse
     {
         $userId = UserHelper::getUserId();
         $taskReviewTable = TaskReviewConstants::TABLE_NAME;
@@ -242,7 +224,7 @@ class TaskReviewController extends Controller
         $maxPoints = (float)DBHelper::access($review, TaskReviewConstants::COL_MAX_POINTS);
         $score = (float)DBHelper::access($review, TaskReviewConstants::COL_SCORE);
 
-        $response = Review\Detail\Response::create()
+        $response = Review\Detail\TaskReviewDetailResponse::create()
             ->setId($id)
             ->setPoints(
                 ExercisePoints::create()
@@ -256,16 +238,30 @@ class TaskReviewController extends Controller
                     ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
                     ->setDescription(DBHelper::access($review, TaskInfoConstants::COL_DESCRIPTION))
                     ->setDifficulty(
-                        DtoUtils::createOrderedEnumDto(
-                            TaskDifficulty::fromThrow(DBHelper::access($review, TaskInfoConstants::COL_DIFFICULTY))
+                        DtoUtils::accessAsOrderedEnumDto(
+                            record: $review,
+                            prop: TaskInfoConstants::COL_DIFFICULTY,
+                            enum: TaskDifficulty::class
                         )
                     )
                     ->setTags($tags)
                     ->setAuthor($author)
                     ->setClassRange(
                         ResponseOrderedEnumRange::create()
-                            ->setMin(DBHelper::access($review, TaskInfoConstants::COL_MIN_CLASS))
-                            ->setMax(DBHelper::access($review, TaskInfoConstants::COL_MAX_CLASS))
+                            ->setMin(
+                                DtoUtils::accessAsOrderedEnumDto(
+                                    record: $review,
+                                    prop: TaskInfoConstants::COL_MIN_CLASS,
+                                    enum: TaskClass::class
+                                )
+                            )
+                            ->setMax(
+                                DtoUtils::accessAsOrderedEnumDto(
+                                    record: $review,
+                                    prop: TaskInfoConstants::COL_MAX_CLASS,
+                                    enum: TaskClass::class
+                                )
+                            )
                     )
             );
         return $response;
@@ -276,10 +272,10 @@ class TaskReviewController extends Controller
      * @throws ApplicationException
      * @throws AuthenticationException
      */
-    public function list(Request $request): Review\List\Response
+    public function list(Request $request): Review\List\ListTaskReviewsResponse
     {
         $userId = UserHelper::getUserId();
-        $requestData = RequestHelper::getDtoFromRequest(Review\List\Request::class, $request);
+        $requestData = RequestHelper::getDtoFromRequest(Review\List\ListTaskReviewsRequest::class, $request);
 
         $userId = UserHelper::getUserId();
         $taskReviewTable = TaskReviewConstants::TABLE_NAME;
@@ -407,7 +403,7 @@ class TaskReviewController extends Controller
                             ->setDescription("Please correct request fields.")
                     )
                     ->setDetails(
-                       $details
+                        $details
                     )
             );
         }
@@ -447,16 +443,30 @@ class TaskReviewController extends Controller
             $taskPreviewInfo = ReviewTaskPreviewInfo::create()
                 ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
                 ->setDifficulty(
-                    DtoUtils::createOrderedEnumDto(
-                        TaskDifficulty::fromThrow(DBHelper::access($review, TaskInfoConstants::COL_DIFFICULTY))
+                    DtoUtils::accessAsOrderedEnumDto(
+                        record: $review,
+                        prop: TaskInfoConstants::COL_DIFFICULTY,
+                        enum: TaskDifficulty::class
                     )
                 )
                 ->setTags($tags[$taskInfoId])
                 ->setAuthor($author)
                 ->setClassRange(
                     ResponseOrderedEnumRange::create()
-                        ->setMin(DBHelper::access($review, TaskInfoConstants::COL_MIN_CLASS))
-                        ->setMax(DBHelper::access($review, TaskInfoConstants::COL_MAX_CLASS))
+                        ->setMin(
+                            DtoUtils::accessAsOrderedEnumDto(
+                                record: $review,
+                                prop: TaskInfoConstants::COL_MIN_CLASS,
+                                enum: TaskClass::class
+                            )
+                        )
+                        ->setMax(
+                            DtoUtils::accessAsOrderedEnumDto(
+                                record: $review,
+                                prop: TaskInfoConstants::COL_MAX_CLASS,
+                                enum: TaskClass::class
+                            )
+                        )
                 );
 
             $taskId = DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_ID);
@@ -465,7 +475,7 @@ class TaskReviewController extends Controller
                     ResponseHelper::translateIdForUser($taskId)
                 );
             }
-            return ReviewsItems::create()
+            return Review\List\ListResponseReviewsItems::create()
                 ->setId(
                     ResponseHelper::translateIdForUser(
                         DBHelper::access($review, TaskReviewConstants::COL_ID)
@@ -482,7 +492,7 @@ class TaskReviewController extends Controller
                 ->setTaskPreviewInfo($taskPreviewInfo);
         });
 
-        return Review\List\Response::create()
+        return Review\List\ListTaskReviewsResponse::create()
             ->setReviews($reviews->all());
     }
 

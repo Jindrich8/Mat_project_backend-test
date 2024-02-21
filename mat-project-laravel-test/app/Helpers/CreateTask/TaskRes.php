@@ -48,7 +48,7 @@ namespace App\Helpers\CreateTask {
 
         private ?BareExercise $currentExercise;
 
-        private int $exerciseCount = 0;
+        private int $exerciseCount;
 
         /**
          * @var array<string,array{CCreateExerciseHelper,BareExercise[]}> $exerciseHelpers

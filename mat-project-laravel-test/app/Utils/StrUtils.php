@@ -172,12 +172,7 @@ namespace App\Utils {
         public static function isTrimmableWhite(mixed $char): bool
         {
             return match ($char) {
-                " " => true,
-                "\n" => true,
-                "\r" => true,
-                "\t" => true,
-                "\v" => true,
-                "\0" => true,
+                " ", "\n", "\r", "\t", "\v", "\0" => true,
                 default => false
             };
         }

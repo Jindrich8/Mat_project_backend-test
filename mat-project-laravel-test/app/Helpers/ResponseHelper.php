@@ -2,6 +2,7 @@
 
 namespace App\Helpers {
 
+    use App\Dtos\SuccessResponse;
     use App\Utils\DtoUtils;
     use Illuminate\Http\Response;
     use Swaggest\JsonSchema\InvalidValue;
@@ -12,12 +13,16 @@ namespace App\Helpers {
         /**
          * @throws InvalidValue
          */
-        public static function success(ClassStructure|Response $data): \Illuminate\Foundation\Application|Response|ClassStructure|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
+        public static function success(SuccessResponse|ClassStructure|Response $data): Response|\Illuminate\Contracts\Routing\ResponseFactory
         {
             if($data instanceof ClassStructure){
+                if(!($data instanceof SuccessResponse)){
+                $data = SuccessResponse::create()
+                ->setData($data);
+                }
                 $data = response(
-                content: DtoUtils::dtoToJson($data,wrap:'data')
-            );
+                    content: DtoUtils::dtoToJson($data)
+                );
             }
            return $data;
         }

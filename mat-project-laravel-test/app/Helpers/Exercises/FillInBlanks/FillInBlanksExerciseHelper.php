@@ -3,25 +3,19 @@
 namespace App\Helpers\Exercises\FillInBlanks;
 
 use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksTakeResponse as FillInBlanksFillInBlanksTakeResponse;
-use App\Dtos\InternalTypes\Combobox;
 use App\Dtos\InternalTypes\FillInBlanksContent;
-use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent as FillInBlanksContentFillInBlanksContent;
-use App\Dtos\InternalTypes\TextInput;
-use App\Dtos\Task\Take\Response\FillInBlanksTakeResponse;
+use App\Dtos\InternalTypes;
 use App\Helpers\CCreateExerciseHelper;
 use App\Helpers\CExerciseHelper;
-use App\Helpers\Database\DBJsonHelper;
-use App\Models\FillInBlanks;
-use App\Utils\StrUtils;
-use App\Dtos\Task\Take;
+use App\Dtos\Defs\Exercises\FillInBlanks\Combobox;
+use App\Dtos\Defs\Exercises\FillInBlanks\TextInput;
 use App\Exceptions\InternalException;
 use App\Helpers\Database\DBHelper;
-use App\Helpers\ResponseHelper;
 use App\ModelConstants\FillInBlanksConstants;
 use App\Utils\DtoUtils;
-use App\Utils\GeneratorUtils;
 use App\Utils\Utils;
 use DB;
+use Generator;
 
 class FillInBlanksExerciseHelper implements CExerciseHelper
 {
@@ -33,12 +27,13 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
     }
 
     /**
-     * @param int[] &$ids
+     * @param int[] $ids
+     * @return Generator<int, FillInBlanksContent, mixed, void>
      */
-    private static function fetchContents(array &$ids)
+    private static function fetchContents(array $ids): Generator
     {
         $table = FillInBlanksConstants::TABLE_NAME;
-        $idName = FillInBlanks::getPrimaryKeyName();
+        $idName = FillInBlanksConstants::COL_EXERCISEABLE_ID;
         $exercises = DB::table($table)
             ->select([$idName, FillInBlanksConstants::COL_CONTENT])
             ->whereIn($idName, $ids)
@@ -49,7 +44,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
              */
             $exerciseId = DBHelper::access($exercise, $idName);
 
-            
+
             $content = DtoUtils::importDto(
                 dto: FillInBlanksContent::class,
                 json: DBHelper::access($exercise, FillInBlanksConstants::COL_CONTENT),
@@ -74,26 +69,24 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
             if($savedValue === false){
                 $savedValue = null;
             }
-            $getNextSavedValue = false;
 
             while (($part = Utils::arrayShift($content->content)) !== null) {
-                $getNextSavedValue = true;
-                if ($part instanceof TextInput) {
-                    $txtI = Take\TextInput::create();
+                if ($part instanceof InternalTypes\TextInput) {
+                    $txtI = TextInput::create();
                     if (is_string($savedValue)) {
                         $txtI->setText($savedValue);
                     }
                     $takeParts[] = $txtI;
-                } else if ($part instanceof Combobox) {
-                    $cmb = Take\Combobox::create()
+                } else if ($part instanceof InternalTypes\Combobox) {
+                    $cmb = Combobox::create()
                         ->setValues($part->values);
                     if (is_int($savedValue)) {
                         $cmb->selectedIndex = $savedValue;
                     }
                     $takeParts[] = $cmb;
                 } else if (is_string($part)) {
-                    $getNextSavedValue = false;
                     $takeParts[] = $part;
+                    continue;
                 } else {
                     $partType = get_debug_type($part);
                     throw new InternalException(
@@ -105,8 +98,8 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
                         ]
                     );
                 }
-              
-                if ($getNextSavedValue && $savedValue !== null) {
+
+                if ($savedValue !== null) {
                     $savedValue = next($savedValues);
                     if($savedValue === false){
                         $savedValue = null;
@@ -124,7 +117,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         return $takeExercises;
     }
 
-    public function fetchEvaluate(array &$ids): array
+    public function fetchEvaluate(array $ids): array
     {
         $exercises = self::fetchContents($ids);
         $reviewExercises = [];
@@ -145,7 +138,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         return $this->createHelper ??= new CreateFillInBlanksExercise();
     }
 
-    public function delete(array &$ids): void
+    public function delete(array $ids): void
     {
         DB::table(FillInBlanksConstants::TABLE_NAME)
         ->whereIn(FillInBlanksConstants::COL_EXERCISEABLE_ID,$ids)

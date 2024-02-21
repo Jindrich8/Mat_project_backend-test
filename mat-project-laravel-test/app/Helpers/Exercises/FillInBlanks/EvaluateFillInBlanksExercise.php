@@ -2,20 +2,18 @@
 
 namespace App\Helpers\Exercises\FillInBlanks {
 
+    use App\Dtos\Defs\Exercises\FillInBlanks\DefsCmb;
+    use App\Dtos\Defs\Exercises\FillInBlanks\DefsTxtI;
     use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksEvaluateRequest;
     use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksReviewResponse;
     use App\Dtos\Defs\Types\Review\ExercisePoints;
     use App\Dtos\Defs\Types\Review\ExerciseReview;
     use App\Dtos\InternalTypes\FillInBlanksContent;
-    use App\Dtos\Task\Review\DefsExercise;
-    use App\Dtos\Task\Review\Get\DefsExercise as GetDefsExercise;
     use App\Exceptions\ApplicationException;
     use App\Helpers\CEvaluateExercise;
     use App\Helpers\RequestHelper;
     use App\Dtos\InternalTypes\TextInput;
     use App\Dtos\InternalTypes\Combobox;
-    use App\Dtos\InternalTypes\DefsCmb;
-    use App\Dtos\InternalTypes\DefsTxtI;
 
     class EvaluateFillInBlanksExercise implements CEvaluateExercise
     {

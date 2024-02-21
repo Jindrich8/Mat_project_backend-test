@@ -447,7 +447,9 @@ namespace App\Types {
                     chOffset: $moveByColumns,
                     byteOffset: $this->dataByteIndex
                 );
+                $dataPartLen = null;
                 if ($byteOffset < 0 || $byteOffset >= ($dataPartLen = strlen($dataPart))) {
+                    $dataPartLen = $dataPartLen ?? strlen($dataPart);
                     $moveByColumns -= StrUtils::length(substr($dataPart, $this->dataByteIndex));
                     array_shift($this->data);
                     $byteIndex += $dataPartLen - $this->dataByteIndex;

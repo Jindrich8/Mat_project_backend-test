@@ -3,16 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
-use App\Models\Tags;
-use App\Http\Requests\StoreTagsRequest;
-use App\Http\Requests\UpdateTagsRequest;
-use App\Models\Tag;
-use App\Dtos\Tags\All\Response;
+use App\Dtos\Defs\Endpoints\Tags\All\GetAllTagsResponse;
 use App\Helpers\Database\DBHelper;
-use App\Helpers\RequestHelper;
 use App\Helpers\ResponseHelper;
 use App\ModelConstants\TagConstants;
-use App\Utils\Utils;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
 
@@ -24,21 +18,19 @@ class TagController extends Controller
     /**
      * Get all tags
      */
-    public function getAll(HttpRequest $request)
+    public function getAll(HttpRequest $request): GetAllTagsResponse
     {
         $tagIdName = TagConstants::COL_ID;
        $tags = DB::table(TagConstants::TABLE_NAME)
         ->select([$tagIdName,TagConstants::COL_NAME])
         ->get();
 
-       $response = Response::create()
-        ->setTags(
-            $tags->map(fn($tag)=>ResponseEnumElement::create()
-        ->setName(DBHelper::access($tag,TagConstants::COL_NAME))
-        ->setId(ResponseHelper::translateIdForUser(DBHelper::access($tag,$tagIdName)))
-        )->all()
-        );
-
-        return $response;
+        return GetAllTagsResponse::create()
+         ->setTags(
+             $tags->map(fn($tag)=>ResponseEnumElement::create()
+         ->setName(DBHelper::access($tag,TagConstants::COL_NAME))
+         ->setId(ResponseHelper::translateIdForUser(DBHelper::access($tag,$tagIdName)))
+         )->all()
+         );
     }
 }

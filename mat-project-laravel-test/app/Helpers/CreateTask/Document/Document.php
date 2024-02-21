@@ -2,24 +2,14 @@
 
 namespace App\Helpers\CreateTask\Document {
 
-    use App\Exceptions\InternalException;
-    use App\Exceptions\XMLInvalidElementException;
-    use App\Helpers\CreateTask\ExerciseNode;
-    use App\Helpers\CreateTask\TaskRes;
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Helpers\CreateTask\XMLNoValueNode;
     use App\Types\XMLNoValueNodeTrait;
-    use App\Helpers\CreateTask\XMLOneUseNode;
-    use App\Models\Task;
     use App\MyConfigs\TaskSrcConfig;
-    use App\TableSpecificData\TaskDisplay;
     use App\Type\TaskResTask;
     use App\Types\XMLAttributes;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
-    use App\Types\XMLNodeValueType;
-    use Illuminate\Support\Str;
 
     class Document extends XMLNodeBaseWParentNode
     {

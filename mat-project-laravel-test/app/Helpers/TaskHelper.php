@@ -3,41 +3,27 @@
 namespace App\Helpers {
 
     use App\Dtos\Defs\Errors\GeneralErrorDetails;
-    use App\Dtos\Defs\Types\Errors\InvalidBoundsError;
     use App\Dtos\Defs\Types\Errors\RangeError;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Defs\Types\Request\TimestampRange;
-    use App\Dtos\Defs\Types\Response\ResponseClassRange;
-    use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
     use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
     use App\Dtos\Defs\Types\Task\AuthorInfo;
     use App\Dtos\Defs\Types\Task\TaskDetailInfo;
-    use App\Dtos\Defs\Types\Task\TaskDetailInfoAuthor;
     use App\Dtos\Errors\ErrorResponse;
     use App\Dtos\InternalTypes\TaskSaveContent;
     use App\Exceptions\ApplicationException;
-    use App\Exceptions\ConversionException;
     use App\Exceptions\InternalException;
     use App\Helpers\BareModels\BareTaskWAuthorName;
-    use App\Helpers\CreateTask\ParseEntry;
     use App\Helpers\Database\DBHelper;
-    use App\Helpers\Database\DBJsonHelper;
     use App\Helpers\Database\UserHelper;
     use App\ModelConstants\ExerciseConstants;
     use App\ModelConstants\GroupConstants;
     use App\ModelConstants\ResourceConstants;
     use App\ModelConstants\SavedTaskConstants;
     use App\ModelConstants\TagConstants;
-    use App\ModelConstants\TagTaskConstants;
     use App\ModelConstants\TagTaskInfoConstants;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
-    use App\Models\Group;
-    use App\Models\Resource;
-    use App\Models\SavedTask;
-    use App\Models\Tag;
-    use App\Models\TagTask;
-    use App\Models\Task;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
     use App\Types\SaveTask;
@@ -45,13 +31,10 @@ namespace App\Helpers {
     use App\Utils\TimeStampUtils;
     use App\Utils\Utils;
     use Carbon\Carbon;
-    use DateTime;
     use Illuminate\Database\Query\Builder;
     use Illuminate\Http\Response;
-    use Illuminate\Support\Carbon as SupportCarbon;
-    use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
-    use IntBackedEnum;
+    use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class TaskHelper
     {
@@ -59,19 +42,20 @@ namespace App\Helpers {
          * @template T
          * @template TExerciseDto of ClassStructure
          * @template TGroupDto of ClassStructure
-         * @param int $taskInfoId
          * @param T[] $exercises
          * @param callable(T $exercise):TExerciseDto $exerciseToDto
          * @param callable(string[] $resources):TGroupDto $groupToDto
-         * @param array &$entries
+         * @param array<TGroupDto|TExerciseDto> &$entries
          */
         public static function getTaskEntries(
             int $taskInfoId,
             array $exercises,
             callable $exerciseToDto,
             callable $groupToDto,
-            array &$entries
-        ) {
+            array &$entries,
+            string $groupDtoEntriesKey = 'entries'
+        ): void
+        {
             $groupIdName = GroupConstants::COL_ID;
             $groups = DB::table(GroupConstants::TABLE_NAME)
                 ->select([$groupIdName, GroupConstants::COL_START, GroupConstants::COL_LENGTH])
@@ -92,9 +76,6 @@ namespace App\Helpers {
              */
             $resourcesByGroupId = [];
             while (($resource = $resources->pop()) !== null) {
-                /**
-                 * @var mixed $groupId
-                 */
                 $groupId = DBHelper::access($resource, ResourceConstants::COL_GROUP_ID);
                 /**
                  * @var string $content
@@ -107,12 +88,10 @@ namespace App\Helpers {
 
             /**
              * array{exerciseEnd,entriesArray}
-             * @var array<array{0:int,1:&array<Take\Response\DefsGroup|Take\Response\DefsExercise>}> $stack
+             * @var array<array{0:int,1:&array<TExerciseDto|TGroupDto>}> $stack
+             * @noinspection PhpVarTagWithoutVariableNameInspection
              */
             $stack = [];
-            /**
-             * @var (Take\Response\DefsGroup|Take\Response\DefsExercise)[] &$dest
-             */
             $dest = &$entries;
             $exercisesCount = count($exercises);
             $exerciseEnd = $exercisesCount;
@@ -144,7 +123,7 @@ namespace App\Helpers {
 
                     $dest[] = $groupDto;
                     $stack[] = [$exerciseEnd, &$dest];
-                    $dest = &$groupDto->entries;
+                    $dest = &$groupDto->{$groupDtoEntriesKey};
                     $exerciseEnd = $exI + DBHelper::access($nextGroup, GroupConstants::COL_LENGTH);
                 }
                 $exerciseDto = $exerciseToDto($exercise);

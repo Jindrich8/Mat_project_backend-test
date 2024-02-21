@@ -3,28 +3,36 @@
 namespace App\Utils {
 
     use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
-    use App\Dtos\InternalTypes\FillInBlanksContent\FillInBlanksContent;
     use App\Exceptions\InternalException;
+    use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
-    use BackedEnum;
+    use App\Helpers\EnumHelper;
     use Exception;
-    use Illuminate\Support\Facades\Response;
     use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
     use Throwable;
-    use App\Types\DBTranslationEnumTrait;
+    use BackedEnum;
 
     class DtoUtils
     {
 
         /**
-         * @template T of DBTranslationEnumTrait<int>
+         * @template T of \BackedEnum
+         * @param class-string<T> $enum
+         */
+        public static function accessAsOrderedEnumDto(mixed $record,string $prop,string $enum){
+           $case = DBHelper::accessAsEnum($record,$prop,$enum);
+           return self::createOrderedEnumDto($case);
+        }
+
+        /**
+         * @template T of \BackedEnum
          * @param T $case
          * @return ResponseOrderedEnumElement
          */
-        public static function createOrderedEnumDto(DBTranslationEnumTrait $case):ResponseOrderedEnumElement{
+        public static function createOrderedEnumDto(BackedEnum $case):ResponseOrderedEnumElement{
             return ResponseOrderedEnumElement::create()
-            ->setName($case::translate($case))
+            ->setName(EnumHelper::translate($case))
             ->setOrderedId($case->value);
         }
 
@@ -65,7 +73,12 @@ namespace App\Utils {
          * @template T of ClassStructure
          * @param class-string<T> $dto
          * @param string $json
-         * @return T
+         * @param string $table
+         * @param string $column
+         * @param mixed $id
+         * @param string $wrapper
+         * @param string $field
+         * @return ClassStructure
          */
         public static function importDto(string $dto,string $json,string $table,string $column,mixed $id,string $wrapper = '',string $field = ''):ClassStructure{
             $decoded = null;

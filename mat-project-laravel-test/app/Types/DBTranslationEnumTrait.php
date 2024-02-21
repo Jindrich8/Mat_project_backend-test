@@ -2,6 +2,8 @@
 
 namespace App\Types {
 
+    use App\Helpers\EnumHelper;
+
     /**
      * @template T
      * @phpstan-extends \BackedEnum
@@ -17,12 +19,14 @@ namespace App\Types {
          * @return string
          */
         public static function translateFrom(mixed $value):string{
-          $case =  self::fromThrow($value);
-          return self::translate($case);
+         return EnumHelper::translateFrom(static::class,$value);
         }
 
+        /**
+         * @param \BackedEnum $case
+         */
         public static function translate(self $case){
-            return $case->name;
+            return EnumHelper::translate($case);
         }
     }
 }

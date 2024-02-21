@@ -2,17 +2,11 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use App\Utils\StrUtils as UtilsStrUtils;
 use App\Utils\Utils;
 use Illuminate\Support\Str;
 use  Dev\DtoGen\MyFileInfo;
 use Dev\DtoGen\PathHelper;
-use  Dev\DtoGen\StarPattern;
-use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
-use SplFileInfo as GlobalSplFileInfo;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
 $arguments = [];
 echo "\n\n-------", MyFileInfo::omitAllExtensions(MyFileInfo::filename(__FILE__)), "-------\n";

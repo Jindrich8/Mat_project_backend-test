@@ -10,19 +10,20 @@ namespace App\Helpers {
 
     class DtoHelper
     {
-          /**
+        /**
          * @param int &$min
          * @param int &$max
-         * @param class-string<IntBackedEnum> $enum
+         * @param class-string<\IntBackedEnum> $enum
+         * @return RangeError|null
          */
         public static function validateEnumRange(int &$min, int &$max,string $enum):RangeError|null{
             $rangeError = null;
             /**
-             * @var IntBackedEnum
+             * @var \IntBackedEnum $minCase
              */
             $minCase = $enum::tryFrom($min);
              /**
-             * @var IntBackedEnum
+             * @var \IntBackedEnum $maxCase
              */
             $maxCase = $enum::tryFrom($max);
             if ($minCase !== null && $maxCase !== null) {
@@ -31,12 +32,15 @@ namespace App\Helpers {
                         ->setError(RangeError::MIN_MAX_SWAPPED);
                 }
             } else {
+                $error = InvalidBoundsError::create();
+                if($minCase === null){
+                    $error->setInvalidMin();
+                }
+                if($maxCase === null){
+                    $error->setInvalidMax();
+                }
                 $rangeError = RangeError::create()
-                    ->setError(
-                        InvalidBoundsError::create()
-                            ->setInvalidMin($minCase === null)
-                            ->setInvalidMax($maxCase === null)
-                    );
+                    ->setError($error);
             }
             return $rangeError;
         }
@@ -57,12 +61,15 @@ namespace App\Helpers {
                 $rangeError = RangeError::create()
                     ->setError(RangeError::MIN_MAX_SWAPPED);
             } else {
+                $error = InvalidBoundsError::create();
+                if(!$min){
+                    $error->setInvalidMin();
+                }
+                if(!$max){
+                    $error->setInvalidMax();
+                }
                 $rangeError = RangeError::create()
-                    ->setError(
-                        InvalidBoundsError::create()
-                            ->setInvalidMin((bool)$min)
-                            ->setInvalidMax((bool)$max)
-                    );
+                    ->setError($error);
             }
             return $rangeError;
         }

@@ -2,9 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Dtos\Task\Take\DefsExercise as TakeDefsExercise;
-use App\Dtos\Task\Take\Response\DefsExercise;
-use App\Exceptions\InternalException;
+use App\Dtos\Defs\Endpoints\Task\Take\DefsExercise as TakeDefsExercise;
 
 interface CTakeExercise
 {

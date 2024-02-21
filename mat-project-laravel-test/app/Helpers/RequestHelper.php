@@ -4,6 +4,7 @@ namespace App\Helpers {
 
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
+    use App\Dtos\Request as DtosRequest;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
     use App\Exceptions\EnumConversionException;
@@ -24,7 +25,7 @@ namespace App\Helpers {
     {
 
         /**
-         * @param class-string<BackedEnumTrait<int>> $enum
+         * @param class-string<\IntBackedEnum> $enum
          * @param string $id
          * @throws EnumConversionException
          * @return int
@@ -33,7 +34,7 @@ namespace App\Helpers {
         {
             $translatedId = ValidateUtils::validateInt($id);
             if (is_int($translatedId)) {
-                return $enum::fromThrow($translatedId)->value;
+                return EnumHelper::fromThrow($enum,$translatedId)->value;
             }
             throw new EnumConversionException($enum, $id);
         }
@@ -61,19 +62,14 @@ namespace App\Helpers {
          */
         public static function validateAndExtractRequestData(array|Request $data): array
         {
-            $validatedData = $data;
-            if (Utils::isArray($data)) {
-                if (!Utils::arrayHasKey($data, 'data') || !Utils::isEmptyArray($data['data'])) {
-                    $validatedData = Validator::validate($data, [
-                        'data' => 'required|array'
-                    ]);
-                }
-            } else if (!Utils::isEmptyArray($data->input('data'))) {
-                $validatedData = $data->validate([
-                    'data' => 'required|array'
+            $validatedData =  is_array($data) ?
+                Validator::validate($data, [
+                    DtosRequest::DATA => 'array'
+                ])
+                : $data->validate([
+                    DtosRequest::DATA => 'array'
                 ]);
-            }
-            return $validatedData['data'];
+            return $validatedData[DtosRequest::DATA];
         }
 
         /**
@@ -154,7 +150,7 @@ namespace App\Helpers {
 
         public static function getQuery(Request $request): mixed
         {
-            $query = $request->query() ?:  ['data' => []];
+            $query = $request->query() ?:  [];
             report(new InternalException(
                 "LOG: getQuery '" . var_export($query, true) . "'",
                 context: [

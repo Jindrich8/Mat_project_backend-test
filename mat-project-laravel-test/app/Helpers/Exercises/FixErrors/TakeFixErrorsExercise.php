@@ -3,7 +3,7 @@
 namespace App\Helpers\Exercises\FixErrors;
 
 use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponse;
-use App\Dtos\Task\Take\DefsExercise;
+use App\Dtos\Defs\Endpoints\Task\Take\DefsExercise;
 use App\Helpers\CTakeExercise;
 
 class TakeFixErrorsExercise implements CTakeExercise

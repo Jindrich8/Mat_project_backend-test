@@ -3,10 +3,8 @@
 namespace App\Helpers\Exercises\FillInBlanks;
 
 use App\Dtos\Defs\Exercises\FillInBlanks\FillInBlanksTakeResponse;
-use App\Dtos\InternalTypes\FillInBlanksSavedValue\FillInBlanksSavedValue;
-use App\Dtos\Task\Take\DefsExercise;
+use App\Dtos\Defs\Endpoints\Task\Take\DefsExercise;
 use App\Helpers\CTakeExercise;
-use App\Dtos\Task\Take\Response;
 
 class TakeFillInBlanksExercise implements CTakeExercise
 {
@@ -21,5 +19,5 @@ class TakeFillInBlanksExercise implements CTakeExercise
         $exercise->setDetails($this->response);
     }
 
-    
+
 }

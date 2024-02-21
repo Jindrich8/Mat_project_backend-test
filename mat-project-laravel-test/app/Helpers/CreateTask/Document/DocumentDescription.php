@@ -3,17 +3,9 @@
 namespace App\Helpers\CreateTask\Document {
 
     use App\Exceptions\XMLInvalidElementValueException;
-    use App\Helpers\CreateTask\TaskRes;
-    use App\Helpers\CreateTask\XMLNoAttributesNode;
-    use App\Helpers\CreateTask\Document\Document;
-    use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLContextBase;
-    use App\Types\XMLNodeValueType;
-    use App\Types\XMLValidParserPosition;
-    use App\Utils\StrUtils;
-    use Illuminate\Support\Str;
 
     class DocumentDescription extends XMLNodeBaseWParentNode{
 

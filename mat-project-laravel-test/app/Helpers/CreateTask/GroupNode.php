@@ -6,19 +6,12 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\XMLInvalidElementException;
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Helpers\CreateTask\Document\DocumentContent;
-    use App\Helpers\CreateTask\TaskRes;
-    use App\Helpers\CreateTask\XMLNoValueNode;
-    use App\Helpers\CreateTask\XMLOneUseNode;
     use App\MyConfigs\TaskSrcConfig;
-    use App\TableSpecificData\TaskDisplay;
-    use App\Types\XMLNodeBaseWParentNode;
     use App\Types\XMLNoValueNodeTrait;
     use App\Types\XMLNodeBase;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
-    use App\Types\XMLNodeValueType;
     use App\Utils\Utils;
-    use Illuminate\Support\Str;
 
     class GroupNode extends XMLNodeBase{
         use XMLNoValueNodeTrait;
