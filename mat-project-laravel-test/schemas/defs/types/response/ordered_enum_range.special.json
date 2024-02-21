@@ -3,10 +3,10 @@
     "type":"object",
     "properties": {
         "min":{
-            "$ref":"../ordered_id.json"
+            "$ref":"@/defs/types/response/ordered_enum_element.json"
         },
         "max":{
-            "$ref":"../ordered_id.json"
+            "$ref":"@/defs/types/response/ordered_enum_element.json"
         }
     },
     "required": ["min", "max"]
