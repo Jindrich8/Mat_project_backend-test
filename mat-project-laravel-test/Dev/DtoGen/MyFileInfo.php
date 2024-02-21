@@ -1,7 +1,8 @@
 <?php
 namespace Dev\DtoGen{
 
-use Illuminate\Support\Str;
+    use App\Utils\StrUtils;
+    use Illuminate\Support\Str;
 use Symfony\Component\Finder\SplFileInfo;
 
 class MyFileInfo{
@@ -52,8 +53,13 @@ class MyFileInfo{
     public static function omitAllExtensions(string $path,string $separator = DIRECTORY_SEPARATOR): string
     {
        $path = PathHelper::getPotentialyNonExistentAbsolutePath($path,separator:$separator);
-       $newPath = Str::before(ltrim($path,'.'),'.');
-       if($newPath === false) return $path;
+       $skipped = StrUtils::skipAsciiChar($path,'.',0);
+       $dotPos = strpos($path,'.',$skipped);
+       $newPath = '';
+       if($dotPos !== false){
+        $newPath = substr($path,0,$dotPos);
+       }
+       if(!$newPath) return $path;
        return $newPath;
     }
 

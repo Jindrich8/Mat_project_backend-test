@@ -2,7 +2,8 @@
 
 namespace App\Exceptions;
 
-use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
+use App\Dtos\Errors\ApplicationErrorInformation;
+use App\Dtos\Errors\ErrorResponse;
 use App\Utils\DtoUtils;
 use Exception;
 use Illuminate\Http\Response;
@@ -12,7 +13,7 @@ use Swaggest\JsonSchema\Structure\ClassStructure;
 
 class ApplicationException extends Exception
 {
-    protected readonly ErrorsErrorResponse $userResponse;
+    protected readonly ErrorResponse $userResponse;
     protected readonly int $userStatus;
 
     public function getUserStatus(): int
@@ -20,14 +21,16 @@ class ApplicationException extends Exception
         return $this->userStatus;
     }
 
-    public function getErrorResponse(): ErrorsErrorResponse
+    public function getErrorResponse(): ErrorResponse
     {
         return $this->userResponse;
     }
 
-    public function __construct(int $userStatus,ErrorsErrorResponse $userResponse){
+    public function __construct(int $userStatus,ApplicationErrorInformation $userResponse){
         $this->userStatus = $userStatus;
-        $this->userResponse = $userResponse;
+        $this->userResponse = ErrorResponse::create()
+        ->setError($userResponse);
+
         parent::__construct($userResponse->userInfo->message);
     }
 

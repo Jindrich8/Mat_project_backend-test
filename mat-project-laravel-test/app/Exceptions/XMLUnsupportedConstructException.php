@@ -5,7 +5,7 @@ namespace App\Exceptions {
     use App\Dtos\Defs\Errors\XML\XMLUnsupportedConstruct;
     use App\Dtos\Defs\Errors\XML\XMLUnsupportedConstructErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Utils\Utils;
 
 
@@ -34,7 +34,7 @@ namespace App\Exceptions {
             }
 
             parent::__construct(
-                ErrorResponse::create()
+                ApplicationErrorInformation::create()
                     ->setUserInfo(
                         UserSpecificPartOfAnError::create()
                         ->setMessage($message)

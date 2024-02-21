@@ -39,7 +39,7 @@ namespace App\Types {
          */
         public function getNames():array{
             return  [
-                ...array_keys($this->requiredChildren), 
+                ...array_keys($this->requiredChildren),
             ...array_keys($this->nonRequiredChildren)
         ];
         }
@@ -48,7 +48,7 @@ namespace App\Types {
            return $this->parent;
         }
 
-    
+
         private function checkChildNameAndGetItsParent(XMLNodeBase $child,string $name){
             $name = $child->getName();
         //     if(array_key_exists($name,$this->requiredChildren)){
@@ -63,7 +63,7 @@ namespace App\Types {
         //         "requiredChildrenCount : " . count($this->requiredChildren)."\n"
         //     ."nonRequiredChildrenCount : " . count($this->nonRequiredChildren)."\n"
         // );
-            if(array_key_exists($name,$this->requiredChildren) 
+            if(array_key_exists($name,$this->requiredChildren)
             || array_key_exists($name,$this->nonRequiredChildren)){
                 $e = new InvalidArgumentException(
                 argumentName:"child",
@@ -77,10 +77,10 @@ namespace App\Types {
                 report($e);
                 throw $e;
             }
-            
+
             //report(new InternalException($child->getName()." getting parent obj id"));
             $parent = $child->getParentObjectId();
-            
+
             //report(new InternalException($child->getName()." got parent obj id"));
             if($parent === null){
                 $e = new InvalidArgumentException(
@@ -98,8 +98,11 @@ namespace App\Types {
             //report("child checking was successfull");
             return $parent;
         }
+
         /**
          * @param XMLNodeBase $child
+         * @param bool $required
+         * @return XMLChildren
          */
         public function addChild(XMLNodeBase $child,bool $required = false):self{
           //  report(new InternalException($child->getName()." addChild"));
@@ -152,11 +155,11 @@ namespace App\Types {
          * @return XMLNodeBase|false
          */
         public function tryGetChild(string $name):XMLNodeBase|false{
-            return $this->requiredChildren[$name] 
-            ?? $this->nonRequiredChildren[$name] 
+            return $this->requiredChildren[$name]
+            ?? $this->nonRequiredChildren[$name]
             ?? false;
         }
-        
+
 
         /**
          * @return iterable<string,XMLNodeBase>

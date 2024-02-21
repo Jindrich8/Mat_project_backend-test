@@ -206,6 +206,7 @@ namespace App\Utils {
          * @param int &$bytePos
          * @param int &$linePos
          * @param int &$columnPos
+         * @param int $byteOffset
          * @return int
          * Returns count of skipped chars
          */

@@ -4,7 +4,7 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLMissingRequiredAttributes;
     use App\Dtos\Defs\Errors\XML\XMLMissingRequiredAttributesErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Utils\Utils;
 
 class XMLMissingRequiredAttributesException extends XMLParsingException{
@@ -32,7 +32,7 @@ class XMLMissingRequiredAttributesException extends XMLParsingException{
             .".";
         }
         parent::__construct(
-           ErrorResponse::create()
+           ApplicationErrorInformation::create()
            ->setUserInfo(
             UserSpecificPartOfAnError::create()
             ->setMessage($message)

@@ -4,8 +4,7 @@ namespace App\Exceptions;
 
 use App\Dtos\Defs\Errors\Access\UnathenticatedError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-use App\Dtos\Errors\ErrorResponse;
-
+use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Utils\DebugUtils;
 use App\Utils\ExceptionUtils;
 use App\Utils\Utils;
@@ -48,7 +47,7 @@ class Handler extends ExceptionHandler
             $modelId = Utils::tryGetFirstArrayValue($e->getIds());
             return (new ApplicationException(
                 userStatus:HttpFoundationResponse::HTTP_NOT_FOUND,
-                userResponse:ErrorResponse::create()
+                userResponse:ApplicationErrorInformation::create()
                ->setUserInfo(
                 UserSpecificPartOfAnError::create()
                ->setMessage($model.($modelId ?" with id '$modelId'" : "")." not found")
@@ -62,7 +61,7 @@ class Handler extends ExceptionHandler
             if($e instanceof AuthenticationException){
                 new ApplicationException(
                     HttpFoundationResponse::HTTP_UNAUTHORIZED,
-                ErrorResponse::create()
+                ApplicationErrorInformation::create()
                 ->setUserInfo(
                     UserSpecificPartOfAnError::create()
                     ->setMessage("You are not authenticated.")
@@ -90,7 +89,7 @@ class Handler extends ExceptionHandler
                 if($status !== HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR){
                return (new ApplicationException(
                 userStatus:$status,
-                userResponse:ErrorResponse::create()
+                userResponse:ApplicationErrorInformation::create()
                ->setUserInfo(
                 UserSpecificPartOfAnError::create()
                ->setMessage($e->getMessage())
@@ -101,7 +100,7 @@ class Handler extends ExceptionHandler
             if($e instanceof ItemNotFoundException){
                 return (new ApplicationException(
                     userStatus:HttpFoundationResponse::HTTP_NOT_FOUND,
-                    userResponse:ErrorResponse::create()
+                    userResponse:ApplicationErrorInformation::create()
                    ->setUserInfo(
                     UserSpecificPartOfAnError::create()
                    ->setMessage($e->getMessage())

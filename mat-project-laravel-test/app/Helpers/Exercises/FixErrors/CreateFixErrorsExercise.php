@@ -35,7 +35,7 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
 
 
 
-    public function getContentNode(string $name,XMLNodeBase $parent): XMLNodeBase
+    public function getContentNode(string $name,XMLNodeBase $parent): XMLDynamicNodeBase
     {
         $content = FixErrorsContent::create();
         $this->contents[]=$content;

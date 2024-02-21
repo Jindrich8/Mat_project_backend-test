@@ -34,6 +34,8 @@ namespace Dev\DtoGen {
         if ($str === "") {
             return $str;
         }
+        /** @noinspection PhpRegExpInvalidDelimiterInspection */
+        /** @noinspection PhpRegExpRedundantModifierInspection */
         $regex = <<<'EOF'
         /^\s+/u
         EOF;

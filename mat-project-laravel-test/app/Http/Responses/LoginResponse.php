@@ -12,6 +12,7 @@ class LoginResponse implements LoginResponseContract
     /**
      * @param  $request
      * @return mixed
+     * @throws Exception
      */
     public function toResponse($request)
     {

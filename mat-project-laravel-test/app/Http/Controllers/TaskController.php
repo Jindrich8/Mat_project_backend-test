@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Defs\Endpoints\Task\Review\Get\GetResponseTask;
 use App\Dtos\Defs\Types\Errors\EnumArrayError as ErrorsEnumArrayError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Defs\Types\MyTask\MyTaskDetailInfo;
@@ -15,7 +16,7 @@ use App\Dtos\Defs\Types\Review\ReviewExerciseInstructions;
 use App\Dtos\Defs\Types\Task\AuthorInfo;
 use App\Dtos\Defs\Types\Task\TaskDetailInfo;
 use App\Dtos\Defs\Types\Task\TaskPreviewInfo;
-use App\Dtos\Errors\ErrorResponse;
+use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
 use App\Dtos\Defs\Endpoints\Task as TaskDto;
 use App\Dtos\Defs\Endpoints\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
@@ -237,11 +238,13 @@ class TaskController extends Controller
         $responseTask = Review\Get\GetResponseTask::create();
         /**
          * @param ExerciseReview[]|null $evaluatedExercises
-         * @param \App\Dtos\Defs\Endpoints\Task\Review\Get\GetResponseTask &$responseTask
+         * @param GetResponseTask &$responseTask
          * @return BareTaskWAuthorName
          * Fetches the task and locks it if userId is not null
          * Evaluates task and sets response to responseTask
          * Adds evaluated exercises to evalutedExercises if evalutedExercises are not null
+         * @throws AppModelNotFoundException
+         * @throws ApplicationException
          */
         $do = function (array|null &$evaluatedExercises, &$responseTask) use ($id, $userId, $requestData) {
             $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true, sharedLock: $userId !== null)
@@ -249,7 +252,7 @@ class TaskController extends Controller
             if ($task->version !== $requestData->version) {
                 throw new ApplicationException(
                     userStatus: Response::HTTP_CONFLICT,
-                    userResponse: ErrorResponse::create()
+                    userResponse: ApplicationErrorInformation::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
                                 ->setMessage("Task changed.")
@@ -425,7 +428,7 @@ class TaskController extends Controller
             if ($filterErrorData) {
                 throw new ApplicationException(
                     Response::HTTP_BAD_REQUEST,
-                    ErrorResponse::create()
+                    ApplicationErrorInformation::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
                                 ->setMessage("Bad request.")
@@ -713,7 +716,7 @@ class TaskController extends Controller
             if ($filterErrorData) {
                 throw new ApplicationException(
                     Response::HTTP_BAD_REQUEST,
-                    ErrorResponse::create()
+                    ApplicationErrorInformation::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
                                 ->setMessage("Bad request.")

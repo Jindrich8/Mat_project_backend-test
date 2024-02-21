@@ -5,7 +5,7 @@ namespace App\Exceptions {
     use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeValueErrorData;
     use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeValue;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
 
     class XMLInvalidAttributeValueException extends XMLParsingException
     {
@@ -28,7 +28,7 @@ namespace App\Exceptions {
             );
 
             parent::__construct(
-                errorResponse: ErrorResponse::create()
+                errorResponse: ApplicationErrorInformation::create()
                 ->setUserInfo(
                     UserSpecificPartOfAnError::create()
                     ->setMessage($message)

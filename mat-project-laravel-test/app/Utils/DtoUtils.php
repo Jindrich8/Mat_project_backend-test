@@ -55,7 +55,6 @@ namespace App\Utils {
         }
 
         /**
-         * @throws InvalidValue
          * @throws Exception
          */
         public static function exportDto(ClassStructure $dto):mixed{

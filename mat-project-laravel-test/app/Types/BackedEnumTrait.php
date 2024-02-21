@@ -18,7 +18,7 @@ namespace App\Types {
          */
         public static function getValues():array{
             /**
-             * @var T[]
+             * @var T[] $vals
              */
             $vals = EnumHelper::getValues(static::class);
             return $vals;
@@ -29,9 +29,9 @@ namespace App\Types {
          * @return static
          * @throws EnumConversionException
          */
-        public static function fromThrow(mixed $value):static{
+        public static function fromThrow(mixed $value):\BackedEnum{
             /**
-             * @var static
+             * @var static $value
              */
             $case = EnumHelper::fromThrow(static::class,$value);
             return $case;

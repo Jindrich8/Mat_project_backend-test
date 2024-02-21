@@ -3,7 +3,7 @@
 namespace App\Helpers {
 
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse as ErrorsErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Dtos\Request as DtosRequest;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
@@ -11,9 +11,7 @@ namespace App\Helpers {
     use App\Exceptions\InternalException;
     use App\Utils\Utils;
     use Illuminate\Http\Request;
-    use App\Types\BackedEnumTrait;
     use App\Utils\ValidateUtils;
-    use Illuminate\Http\Response;
     use Illuminate\Validation\ValidationException;
     use Swaggest\JsonSchema\Exception;
     use Swaggest\JsonSchema\InvalidValue;
@@ -78,6 +76,7 @@ namespace App\Helpers {
          * @param mixed $data
          * @return T
          * @throws ApplicationException
+         * @noinspection PhpRegExpRedundantModifierInspection
          */
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
@@ -90,6 +89,7 @@ namespace App\Helpers {
                 if ($e instanceof InvalidValue) {
                     $message = $e->error;
                     $matches = [];
+                    /** @noinspection PhpRegExpInvalidDelimiterInspection */
                     if (preg_match_all(<<<'EOF'
              /->properties:(.*?)(?:->|$)/u
              EOF, $e->path, $matches)) {
@@ -112,7 +112,7 @@ namespace App\Helpers {
                 $message = rtrim($message, ', ') . $messagePosfix . '.';
                 throw new ApplicationException(
                     ResponseAlias::HTTP_BAD_REQUEST,
-                    ErrorsErrorResponse::create()
+                    ApplicationErrorInformation::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
                                 ->setMessage("Bad request")
@@ -126,8 +126,9 @@ namespace App\Helpers {
          * @template T of ClassStructure
          * @param class-string<T> $dtoClass
          * @param Request $request
-         * @return T
+         * @return ClassStructure
          * @throws ApplicationException
+         * @throws ValidationException
          */
         public static function getDtoFromRequest(string $dtoClass, Request $request): ClassStructure
         {

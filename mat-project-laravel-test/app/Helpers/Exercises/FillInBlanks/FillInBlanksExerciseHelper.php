@@ -57,7 +57,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         }
     }
 
-    public function fetchTake(array &$savedValues): array
+    public function fetchTake(array $savedValues): array
     {
         $ids = array_keys($savedValues);
         $exercises = self::fetchContents($ids);
@@ -128,7 +128,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         return $reviewExercises;
     }
 
-    public function fetchSave(array &$ids): array
+    public function fetchSave(array $ids): array
     {
         return [];
     }

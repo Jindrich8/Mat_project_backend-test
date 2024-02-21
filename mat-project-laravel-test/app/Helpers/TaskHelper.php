@@ -9,7 +9,7 @@ namespace App\Helpers {
     use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
     use App\Dtos\Defs\Types\Task\AuthorInfo;
     use App\Dtos\Defs\Types\Task\TaskDetailInfo;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Dtos\InternalTypes\TaskSaveContent;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\InternalException;
@@ -193,6 +193,7 @@ namespace App\Helpers {
          * @param iterable<string,'ASC'|'DESC'> $filterToDirection
          * @param callable(string $filterName, 'ASC'|'DESC' $direction):bool $action
          * return false if order by is invalid
+         * @throws ApplicationException
          */
         public static function distinctOrderBy(iterable $filterToDirection, callable $action)
         {
@@ -235,7 +236,7 @@ namespace App\Helpers {
             if ($duplicateOrderByFilters) {
                 throw new ApplicationException(
                     Response::HTTP_BAD_REQUEST,
-                    ErrorResponse::create()
+                    ApplicationErrorInformation::create()
                         ->setUserInfo(
                             UserSpecificPartOfAnError::create()
                                 ->setMessage("Bad request.")
@@ -296,7 +297,7 @@ namespace App\Helpers {
                 $tagsByTaskId[$taskInfoId] ??= [];
 
                 /**
-                 * @var array{int,string}
+                 * @var array{int,string} $tagData
                  */
                 $tagData = [$tag[TagTaskInfoConstants::COL_TAG_ID] + 0, $tag['name'] . ''];
                 $tagsByTaskId[$taskInfoId][] = $tagData;
@@ -354,6 +355,7 @@ namespace App\Helpers {
         /**
          * @param string[] &$tags tags ids from user (not translated)
          * @param Builder $builder
+         * @param string $taskInfoIdColName
          * @return string[]
          * Returns all invalid tags
          */

@@ -154,6 +154,7 @@ function processFile(
                         separator: '/'
                     );
                 }
+                /** @noinspection PhpRegExpInvalidDelimiterInspection */
                 $regex = <<<'EOF'
                 /(\\\\)*[\?\*\[]/u
                 EOF;

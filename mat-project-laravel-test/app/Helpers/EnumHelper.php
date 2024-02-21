@@ -35,11 +35,8 @@ namespace App\Helpers {
          * @throws EnumConversionException
          */
         public static function fromThrow(string $enum,mixed $value):BackedEnum{
-            /**
-             * @var \BackedEnum $enum
-             */
-            $enum = $enum::tryFrom($value);
-            if($enum !== false) return $enum;
+            $case = $enum::tryFrom($value);
+            if($case) return $case;
             throw new EnumConversionException(static::class,$value);
         }
 

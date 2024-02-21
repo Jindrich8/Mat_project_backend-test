@@ -11,7 +11,7 @@ use App\Dtos\Defs\Types\Review\ExercisePoints;
 use App\Dtos\Defs\Types\Review\ExerciseReview;
 use App\Dtos\Defs\Types\Review\ReviewTaskDetailInfo;
 use App\Dtos\Defs\Types\Review\ReviewTaskPreviewInfo;
-use App\Dtos\Errors\ErrorResponse;
+use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
 use App\Models\TaskReview;
 use Illuminate\Auth\AuthenticationException;
@@ -396,7 +396,7 @@ class TaskReviewController extends Controller
                 ->setErrorData($filterErrorData);
             throw new ApplicationException(
                 ResponseAlias::HTTP_BAD_REQUEST,
-                ErrorResponse::create()
+                ApplicationErrorInformation::create()
                     ->setUserInfo(
                         UserSpecificPartOfAnError::create()
                             ->setMessage("Bad request.")

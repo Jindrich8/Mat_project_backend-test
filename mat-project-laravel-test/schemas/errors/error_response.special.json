@@ -3,21 +3,30 @@
     "title": "Application error response",
     "type": "object",
     "properties": {
-        "user_info": {
-            "$ref": "@/defs/types/errors/user_part_of_error.json"
-        },
-        "details": {
-            "anyOf": [
-                {
-                    "$ref": "@/defs/errors/**/*.json"
+        "error": {
+            "title":"Application error information",
+            "description": "Provides information about the application error.",
+            "type": "object",
+            "properties": {
+                "user_info": {
+                    "$ref": "@/defs/types/errors/user_part_of_error.json"
                 },
-                {
-                    "$ref": "@/defs/endpoints/**/error.json"
+                "details": {
+                    "anyOf": [
+                        {
+                            "$ref": "@/defs/errors/**/*.json"
+                        },
+                        {
+                            "$ref": "@/defs/endpoints/**/error.json"
+                        }
+                    ]
                 }
+            },
+            "required": [
+                "user_info",
+                "details"
             ]
         }
     },
-    "required": [
-        "user_info"
-    ]
+   "required": ["error"]
 }

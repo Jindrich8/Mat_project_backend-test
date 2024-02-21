@@ -212,10 +212,13 @@ namespace Dev\DtoGen {
             }
 
             $functionNameReflect = new \ReflectionProperty(PhpFunction::class, 'name');
+            /** @noinspection PhpExpressionResultUnusedInspection */
             $functionNameReflect->setAccessible(true);
             $functionArgumentsReflect = new \ReflectionProperty(PhpFunction::class, 'arguments');
+            /** @noinspection PhpExpressionResultUnusedInspection */
             $functionArgumentsReflect->setAccessible(true);
             $classMethodsReflect = new \ReflectionProperty(PhpClass::class, 'methods');
+            /** @noinspection PhpExpressionResultUnusedInspection */
             $classMethodsReflect->setAccessible(true);
 
             $builder->classPreparedHook = new ClassHookCallback(
@@ -286,13 +289,12 @@ namespace Dev\DtoGen {
 
                         $class->addMethod($createFunc);
 
-                        /** @var PhpFunction[] */
                         $methods =  $classMethodsReflect->getValue($class);
                         echo "methods: ";
                         dump(count($methods));
                         for($i = count($methods)-1;$i>=0;--$i){
                             $method = $methods[$i];
-                            
+
                             $name = $functionNameReflect->getValue($method);
                             echo "name: " . $name."\n";
                             if (Str::startsWith($name, 'set')) {

@@ -14,7 +14,7 @@ class Utils{
      * @template TKey
      * @template R
      * @template RKey
-     * @param callable(TKey $key,T $value):array{0:RKey,1:R}
+     * @param callable(TKey $key,T $value):array{0:RKey,1:R} $map
      * @param array<TKey,T> $array
      * @return array<RKey,R>
      */
@@ -93,7 +93,7 @@ class Utils{
         $newObj = new stdClass();
         $obj->{$arrKey} = $newObj;
          $stack[]=[$obj,&$myArr];
-        
+
          $myArr = &$value;
          $obj = $newObj;
        }
@@ -103,16 +103,19 @@ class Utils{
        }
        return $obj;
     }
-      /**
+
+    /**
      * @param mixed &$arr
+     * @return bool
      * @phpstan-assert-if-true array $arr
      */
     public static function isList(mixed &$arr):bool{
         return Utils::isArray($arr) && Utils::arrayIsList($arr);
     }
 
-     /**
+    /**
      * @param mixed &$arr
+     * @return bool
      * @phpstan-assert-if-true array &$arr
      */
     public static function isArray(mixed &$arr):bool{
@@ -144,7 +147,7 @@ class Utils{
     public static function arrayLastKey(array &$arr):string|int|null{
         return array_key_last($arr);
     }
-  
+
     /**
      * @template T
      * @param array<T,mixed> &$arr
@@ -178,13 +181,15 @@ class Utils{
 
     /**
      * @param string|Closure $funcName
+     * @return array|string[]
+     * @throws \ReflectionException
      */
     public static function getArgumentNamesViaReflection(string|Closure $funcName) {
         return array_map( fn( $parameter ) => $parameter->name,
             (new ReflectionFunction($funcName))->getParameters() );
     }
 
-    
+
 
     public static function ifTrueAppendElseSet(string &$prop,string $value){
         if($prop){
@@ -196,8 +201,8 @@ class Utils{
     }
 
     public static function getAccessor(array|object &$value):callable{
-        return is_object($value) ? 
-        static fn(object $value,string $prop) => $value->{$prop} 
+        return is_object($value) ?
+        static fn(object $value,string $prop) => $value->{$prop}
         : static fn(array &$value,string $prop) => $value[$prop];
     }
 }

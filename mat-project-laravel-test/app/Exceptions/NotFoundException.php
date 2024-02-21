@@ -3,7 +3,7 @@
 namespace App\Exceptions {
 
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
     use Illuminate\Http\Response;
     use Illuminate\Support\Str;
 
@@ -11,7 +11,7 @@ namespace App\Exceptions {
     {
         public function __construct(string $what,string $in = "",string $description = ""){
             parent::__construct(Response::HTTP_NOT_FOUND,
-            ErrorResponse::create()
+            ApplicationErrorInformation::create()
             ->setUserInfo(
                 UserSpecificPartOfAnError::create()
                 ->setMessage(Str::ucfirst($what)." was not found".($in ? " in $in":"").".")

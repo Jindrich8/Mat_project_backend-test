@@ -120,8 +120,11 @@ namespace App\Types {
         /**
          * @param iterable<string,string> $attributes
          * @param XMLContextBase $context
-         * @param string $name
+         * @param string|null $name
          * @return void
+         * @throws XMLInvalidAttributeException
+         * @throws XMLInvalidElementException
+         * @throws XMLMissingRequiredAttributesException
          */
         public function validateStart(
             iterable $attributes,
@@ -144,6 +147,7 @@ namespace App\Types {
         /**
          * @param XMLContextBase $context
          * @return void
+         * @throws XMLMissingRequiredElementsException
          */
         protected function validate(XMLContextBase $context): void{
             if($this->children){
@@ -186,6 +190,8 @@ namespace App\Types {
         /**
          * @param iterable<string,string> $attributes
          * @param XMLContextBase $context
+         * @throws XMLInvalidAttributeException
+         * @throws XMLMissingRequiredAttributesException
          */
         private function handleAttributes(iterable $attributes, XMLContextBase $context)
         {
@@ -331,6 +337,7 @@ namespace App\Types {
          * @param string $attribute
          * @param string[] $allowedValues
          * @param GetXMLParserPosition $getPosCallback
+         * @throws XMLInvalidAttributeValueException
          */
         protected function invalidEnumAttributeValue(string $attribute, array $allowedValues, GetXMLParserPosition $getPosCallback)
         {
@@ -434,6 +441,7 @@ namespace App\Types {
          * @param string[] &$missingAttributes
          * @param GetXMLParserPosition $getPosCallback
          * @return void
+         * @throws XMLMissingRequiredAttributesException
          */
         protected function missingRequiredAttributes(array $missingAttributes, GetXMLParserPosition $getPosCallback)
         {
@@ -454,9 +462,9 @@ namespace App\Types {
         }
 
         /**
-         * @param array<string|array<string>> $missingRequiredElements
-     * if array element is array, then it means, that it should be one of element array elements
-     * @param GetXMLParserPosition $getPosCallback
+         * @param array $missingElements
+         * @param GetXMLParserPosition $getPosCallback
+         * @throws XMLMissingRequiredElementsException
          */
         protected function missingRequiredElements(array $missingElements, GetXMLParserPosition $getPosCallback){
             $getPosCallback->getPos(

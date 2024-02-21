@@ -11,7 +11,7 @@ use App\Types\Transformable;
 interface CCreateExerciseHelper
 {
 
-    public function getContentNode(string $name,XMLNodeBase $parent):XMLNodeBase;
+    public function getContentNode(string $name,XMLNodeBase $parent):XMLDynamicNodeBase;
 
     public function getState():CCreateExerciseHelperState;
 

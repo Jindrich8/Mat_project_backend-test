@@ -23,7 +23,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         $this->createHelper = null;
     }
 
-    public function fetchTake(array &$savedValues): array
+    public function fetchTake(array $savedValues): array
     {
         $ids = array_keys($savedValues);
         $table = FixErrorsConstants::TABLE_NAME;
@@ -51,7 +51,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         return $takeExercises;
     }
 
-    public function fetchEvaluate(array &$ids): array
+    public function fetchEvaluate(array $ids): array
     {
         $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
@@ -72,7 +72,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         return $evaluateExercises;
     }
 
-    public function fetchSave(array &$ids): array
+    public function fetchSave(array $ids): array
     {
         return [];
     }
@@ -82,7 +82,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         return $this->createHelper ??= new CreateFixErrorsExercise();
     }
 
-    public function delete(array &$ids): void
+    public function delete(array $ids): void
     {
         DB::table(FixErrorsConstants::TABLE_NAME)
         ->whereIn(FixErrorsConstants::COL_EXERCISEABLE_ID,$ids)

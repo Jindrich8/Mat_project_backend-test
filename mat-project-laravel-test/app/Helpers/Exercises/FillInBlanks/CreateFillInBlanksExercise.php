@@ -33,7 +33,7 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
         $this->createNode = null;
     }
 
-    public function getContentNode(string $name,XMLNodeBase $parent): XMLNodeBase
+    public function getContentNode(string $name,XMLNodeBase $parent): XMLDynamicNodeBase
     {
         $content = FillInBlanksContent::create();
         $this->contents[]=$content;

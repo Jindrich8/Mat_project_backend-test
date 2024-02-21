@@ -31,10 +31,11 @@ namespace App\Types {
 
         /**
          * @param string &$value
-         * @param ?int &$length 
+         * @param ?int &$length
          * * If length is **null**, then it is set to calculated length, if length was calculated,
          * * if it is **negative**, exception is thrown,
          * * otherwise it is used as value length.
+         * @return string|null
          */
         public function validateWLength(string &$value,?int &$length):string|null{
             $error = null;

@@ -35,6 +35,7 @@ namespace Dev\Utils {
          * @param string $name
          * @param false &$var
          * @param bool $shortOption
+         * @return ScriptArgsBuilder
          */
         public function flag(string $name,bool &$var,bool $shortOption = false){
             self::checkOptionName($name,$shortOption);
@@ -51,9 +52,10 @@ namespace Dev\Utils {
 
         /**
          * @param string $name
-         * @param false &$var
+         * @param string $var
          * @param bool $shortOption
-         * @param callable(string):void $transformValue
+         * @param callable|null $transformValue
+         * @return ScriptArgsBuilder
          */
         public function option(string $name,string &$var,bool $shortOption = false,callable $transformValue=null){
             self::checkOptionName($name,$shortOption);
@@ -68,10 +70,11 @@ namespace Dev\Utils {
             return $this;
          }
 
-          /**
+        /**
          * @param string $name
          * @param callable(string):void $set
          * @param bool $shortOption
+         * @return ScriptArgsBuilder
          */
         public function optionSet(string $name,callable $set,bool $shortOption = false){
             self::checkOptionName($name,$shortOption);
@@ -87,7 +90,7 @@ namespace Dev\Utils {
             return $this;
          }
 
-         public function requiresValueOption(string $name,null &$var,bool $shortOption = false){
+         public function requiresValueOption(string $name,mixed &$var,bool $shortOption = false){
             self::checkOptionName($name,$shortOption);
 
             $argName = ScriptOption::transformToSpecialName($name,ScriptOptionType::VALUE_REQUIRED);
@@ -125,8 +128,9 @@ namespace Dev\Utils {
                 return $this;
          }
 
-         public function showPassedOptions(){
-            "This: ";
+         public function showPassedOptions(): static
+         {
+            echo "This: ";
             var_dump($this);
             echo "\nValid passed options: ";
             var_dump($this->passedValidOptions);
@@ -136,6 +140,7 @@ namespace Dev\Utils {
 
         /**
          * @return ScriptOption[]
+         * @throws Exception
          */
          private function decodeOptions():array{
            $soptions = $this->shortOptions;
@@ -159,10 +164,13 @@ namespace Dev\Utils {
     return $decodedOptions;
          }
 
-         /**
-          * @param ScriptOptionType $type
-          * @param int[] $nums
-          */
+        /**
+         * @param ScriptOptionType $type
+         * @param int $valueRequired
+         * @param int $valueOptional
+         * @param int $flag
+         * @return int
+         */
          private static function scriptOptionTypeToNum(ScriptOptionType $type,int $valueRequired=0,int $valueOptional=1,int $flag=2):int{
 
             return match($type){

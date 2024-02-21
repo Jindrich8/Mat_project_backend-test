@@ -4,7 +4,7 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLInvalidElementValue;
     use App\Dtos\Defs\Errors\XML\XMLInvalidElementValueErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
-    use App\Dtos\Errors\ErrorResponse;
+    use App\Dtos\Errors\ApplicationErrorInformation;
 
 class XMLInvalidElementValueException extends XMLParsingException{
 
@@ -27,7 +27,7 @@ class XMLInvalidElementValueException extends XMLParsingException{
         );
 
         parent::__construct(
-            ErrorResponse::create()
+            ApplicationErrorInformation::create()
             ->setUserInfo(
                 UserSpecificPartOfAnError::create()
                 ->setMessage($message)
