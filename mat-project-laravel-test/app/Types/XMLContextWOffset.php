@@ -15,6 +15,10 @@ namespace App\Types {
 
         public function __construct(XMLContextBase $context, int $columnOffset, int $lineOffset, int $byteOffset)
         {
+           $this->update($context,$columnOffset,$lineOffset,$byteOffset);
+        }
+
+        public function update(XMLContextBase $context, int $columnOffset, int $lineOffset, int $byteOffset):self{
             if ($columnOffset < 0 || $lineOffset < 0 || $byteOffset < 0) {
                 throw new InternalException(
                     "Column offset, line offset and byte offset should not be negative!",
@@ -30,6 +34,7 @@ namespace App\Types {
             $this->columnOffset = $columnOffset;
             $this->lineOffset = $lineOffset;
             $this->byteOffset = $byteOffset;
+            return $this;
         }
 
         public function getTaskRes(): TaskRes

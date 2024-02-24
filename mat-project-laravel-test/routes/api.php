@@ -74,6 +74,11 @@ RouteUtils::get('/review/{id}/detail',fn(Request $request,string $id) =>
     ->detail($request,RequestHelper::translateId($id))
 );
 
+RouteUtils::get('/review/{id}/get',fn(Request $request,string $id) =>
+    TaskReviewController::construct()
+    ->get($request,RequestHelper::translateId($id))
+);
+
 RouteUtils::get('/review/{id}/delete',fn(Request $request,string $id) =>
     TaskReviewController::construct()
     ->delete($request,RequestHelper::translateId($id))

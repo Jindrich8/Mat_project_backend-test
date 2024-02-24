@@ -82,21 +82,7 @@ class Handler extends ExceptionHandler
             if($prevE instanceof ModelNotFoundException){
                 return $renderModelNotFoundException($prevE,$request);
             }
-            
-            
-            if($e instanceof HttpExceptionInterface){
-               $status = $e->getStatusCode();
-                if($status !== HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR){
-               return (new ApplicationException(
-                userStatus:$status,
-                userResponse:ApplicationErrorInformation::create()
-               ->setUserInfo(
-                UserSpecificPartOfAnError::create()
-               ->setMessage($e->getMessage())
-               )
-               ))->render($request);
-                }
-            }
+           
             if($e instanceof ItemNotFoundException){
                 return (new ApplicationException(
                     userStatus:HttpFoundationResponse::HTTP_NOT_FOUND,
@@ -107,6 +93,21 @@ class Handler extends ExceptionHandler
                    )
                    ))->render($request);
             }
+
+            if($e instanceof HttpExceptionInterface){
+                $status = $e->getStatusCode();
+                 if($status !== HttpFoundationResponse::HTTP_INTERNAL_SERVER_ERROR){
+                return (new ApplicationException(
+                 userStatus:$status,
+                 userResponse:ApplicationErrorInformation::create()
+                ->setUserInfo(
+                 UserSpecificPartOfAnError::create()
+                ->setMessage($e->getMessage())
+                )
+                ))->render($request);
+                 }
+             }
+             
                return (new InternalException(
                 message:$e->getMessage(),
                 previous:$e

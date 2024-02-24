@@ -10,13 +10,11 @@ namespace App\Helpers\CreateTask {
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeValueType;
 
     class GroupMembersNode extends XMLNodeBaseWParentNode
     {
-        use XMLNoValueNodeTrait;
 
         private ?ExerciseNode $exerciseNode;
 
@@ -48,7 +46,8 @@ namespace App\Helpers\CreateTask {
             $config = TaskSrcConfig::get();
             parent::__construct(
                 name: $config->groupMembersName,
-                parent: $group
+                parent: $group,
+                isValueNode:false
             );
             $this->exerciseNode = null;
         }

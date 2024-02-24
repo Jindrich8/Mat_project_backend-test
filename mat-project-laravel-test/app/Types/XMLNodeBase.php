@@ -39,6 +39,11 @@ namespace App\Types {
         private readonly bool $shouldHaveAtLeastOneChild;
         private ?XMLValidParserPosition $elementStartPos;
         private bool $hasStartPos;
+        
+        private bool $isValueNode;
+        private ?XMLContextWOffset $tempContext;
+        private bool $isFirstAppendValue;
+        private bool $isTrimming;
 
         /**
          * This method may drop all informations about it's self
@@ -68,7 +73,13 @@ namespace App\Types {
          * @param bool $shouldHaveAtLeastOneChild
          * @param int $maxCount
          */
-        protected function __construct(string $name,?XMLAttributes $attributes = null,bool $shouldHaveAtLeastOneChild = false,int $maxCount = PHP_INT_MAX)
+        protected function __construct(
+            string $name,
+        ?XMLAttributes $attributes = null,
+        bool $shouldHaveAtLeastOneChild = false,
+        int $maxCount = PHP_INT_MAX,
+        bool $isValueNode = true
+        )
         {
             if (!$name) throw new InternalException("XMLNode must have a name");
             $this->name = $name;
@@ -77,6 +88,11 @@ namespace App\Types {
             $this->maxCount = $maxCount;
             $this->shouldHaveAtLeastOneChild = $shouldHaveAtLeastOneChild;
             $this->elementStartPos = null;
+            $this->isValueNode = $isValueNode;
+            $this->count = 0;
+            $this->tempContext = null;
+            $this->isTrimming = false;
+            $this->isFirstAppendValue = false;
             $this->reset();
         }
 
@@ -87,14 +103,92 @@ namespace App\Types {
         public function reset(){
             $this->count = 0;
             $this->hasStartPos = false;
+            $this->tempContext = null;
+            $this->isTrimming = false;
+            $this->isFirstAppendValue = false;
         }
+
+        
 
         /**
          * @param string $value
          * @param XMLContextBase $context
          * @return void
          */
-        public abstract function appendValue(string $value, XMLContextBase $context): void;
+        public function appendValuePart(string $value, XMLContextBase $context): void{
+            if(!$this->isValueNode){
+                if(StrUtils::trimWhites($value,TrimType::TRIM_BOTH)){
+                    $this->valueNotSupported();
+                 }
+                 return;
+            }
+            $columnOffset = 0;
+            $lineOffset = 0;
+            $byteOffset = 0;
+            $trimmedCount = 0;
+           $lines = explode("\n", $value);
+           if(!$lines){
+            $lines = [$value];
+           }
+           $newValue = "";
+           $first = array_shift($lines);
+           if($this->isFirstAppendValue){
+               $trimmed = StrUtils::trimWhites($first,TrimType::TRIM_START);
+               if($trimmed === ''){
+                $first = array_shift($lines) ?? $first;
+               }
+               $this->isFirstAppendValue = false;
+           }
+            if($this->isTrimming){
+                $trimmedCount = 0;
+                $trimmed = StrUtils::utf8LtrimWhites(
+                    str: $first,
+                    trimmedCount: $trimmedCount
+                );
+                $columnOffset += $trimmedCount;
+                $byteOffset += strlen($first) - strlen($trimmed);
+                $first = $trimmed;
+            }
+            $newValue = $first;
+            $lastLine = $first;
+            while(($line = array_shift($lines)) !== null){
+                $line = StrUtils::utf8LtrimWhites(
+                    str: $line,
+                    trimmedCount: $trimmedCount
+                );
+                $newValue.= "\n".$line;
+                $lastLine = $line;
+            }
+            $this->isTrimming = $lastLine === '';
+
+            $newContext = ($this->tempContext ??= new XMLContextWOffset($context, 0, 0, 0))
+            ->update(
+                $context,
+                columnOffset: $columnOffset,
+                lineOffset: $lineOffset,
+                byteOffset: $byteOffset
+            );
+
+            DebugUtils::log("appendValuePart",[
+                'value' => $value,
+                'newValue' => $newValue
+            ]);
+            $this->appendValue($newValue,$newContext);
+        }
+
+         /**
+         * @param string $value
+         * @param XMLContextBase $context
+         * @return void
+         */
+        protected function appendValue(string $value, XMLContextBase $context):void{
+            if(!$this->isValueNode){
+                if(StrUtils::trimWhites($value,TrimType::TRIM_BOTH)){
+                    $this->valueNotSupported();
+                 }
+                 return;
+            }
+        }
 
         /**
          * @return string[]
@@ -141,7 +235,10 @@ namespace App\Types {
             // dump("validateStart - {$this->name}");
             $this->elementStartPos ??= new XMLValidParserPosition();
             $this->elementStartPos->setPosFromProvider($context);
+            $this->elementStartPos->getPos($column,$line,$byteIndex);
+            $this->isFirstAppendValue = true;
             $this->hasStartPos = true;
+            $this->isTrimming = true;
         }
 
         /**

@@ -5,12 +5,10 @@ namespace App\Helpers\CreateTask\Document {
     use App\Helpers\CreateTask\ExerciseNode;
     use App\Helpers\CreateTask\GroupNode;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLChildren;
 
     class DocumentContent extends XMLNodeBaseWParentNode{
-        use XMLNoValueNodeTrait;
 
         public static function create(Document $document){
             $content = new self($document);
@@ -26,7 +24,8 @@ namespace App\Helpers\CreateTask\Document {
             parent::__construct(parent:$document,
             name:TaskSrcConfig::get()->taskContentName,
             maxCount:1,
-            shouldHaveAtLeastOneChild:true
+            shouldHaveAtLeastOneChild:true,
+            isValueNode:false
         );
         }
 }

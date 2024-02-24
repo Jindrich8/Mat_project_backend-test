@@ -141,10 +141,10 @@ class Utils{
 
       /**
      * @template T
-     * @param array<T,mixed> &$arr
+     * @param array<T,mixed> $arr
      * @return T|null
      */
-    public static function arrayLastKey(array &$arr):string|int|null{
+    public static function arrayLastKey(array $arr):string|int|null{
         return array_key_last($arr);
     }
 

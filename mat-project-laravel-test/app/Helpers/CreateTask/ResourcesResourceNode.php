@@ -8,7 +8,6 @@ namespace App\Helpers\CreateTask {
     use App\Types\XMLContextBase;
     use App\Utils\Utils;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeValueType;
     use ValueError;

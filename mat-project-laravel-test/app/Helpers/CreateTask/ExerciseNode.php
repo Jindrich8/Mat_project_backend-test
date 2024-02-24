@@ -8,12 +8,10 @@ namespace App\Helpers\CreateTask {
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\XMLNodeBase;
 
     class ExerciseNode extends XMLNodeBaseWParentNode
     {
-        use XMLNoValueNodeTrait;
 
         public static function create(DocumentContent|GroupMembersNode $parent): self
         {
@@ -30,6 +28,7 @@ namespace App\Helpers\CreateTask {
             $config = TaskSrcConfig::get();
             parent::__construct(
                 name: $config->exerciseName,
+                isValueNode:false,
                 attributes: XMLAttributes::construct()
                 ->addAttribute(
                     name: $config->exerciseTypeAttr->name,

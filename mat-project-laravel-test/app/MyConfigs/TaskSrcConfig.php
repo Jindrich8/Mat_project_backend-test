@@ -69,8 +69,10 @@ namespace App\MyConfigs {
             
             $this->taskName = 'document';
             $this->taskNameAttr = new ValidableString('name',50,5);
-            $this->taskOrientationAttr = new ValidableEnum('orientation',[],TaskDisplay::HORIZONTAL,
-            flags:ValidableEnumFlags::ALLOW_ENUM_VALUES);
+            $this->taskOrientationAttr = new ValidableEnum('orientation',[
+                'horizontal' => TaskDisplay::HORIZONTAL,
+                'vertical' => TaskDisplay::VERTICAL
+            ],TaskDisplay::HORIZONTAL);
     
             $this->taskDescription = new ValidableString('description',255,1);
             $this->taskContentName = 'content';

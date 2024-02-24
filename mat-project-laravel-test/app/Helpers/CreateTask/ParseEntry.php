@@ -83,7 +83,7 @@ namespace App\Helpers\CreateTask {
                 // dump(":$line, $column, $byteIndex");
             }
             else{
-            $this->node->appendValue(value: $data, context: $this->context);
+            $this->node->appendValuePart(value: $data, context: $this->context);
             }
         }
 

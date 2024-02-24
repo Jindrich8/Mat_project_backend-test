@@ -39,10 +39,16 @@ namespace App\Types {
          * @param bool $shouldHaveAtLeastOneChild
          * @param int $maxCount
          */
-        protected function __construct(string $name,?XMLAttributes $attributes = null,?XMLNodeBase $parent = null,bool $shouldHaveAtLeastOneChild = false,int $maxCount = PHP_INT_MAX)
+        protected function __construct(string $name,?XMLAttributes $attributes = null,?XMLNodeBase $parent = null,bool $shouldHaveAtLeastOneChild = false,int $maxCount = PHP_INT_MAX,bool $isValueNode = true)
         {
             $this->parent = $parent;
-            parent::__construct($name,$attributes,$shouldHaveAtLeastOneChild,$maxCount);
+            parent::__construct(
+                name:$name,
+                attributes:$attributes,
+                shouldHaveAtLeastOneChild:$shouldHaveAtLeastOneChild,
+                maxCount:$maxCount,
+                isValueNode:$isValueNode
+            );
         }
     }
 }

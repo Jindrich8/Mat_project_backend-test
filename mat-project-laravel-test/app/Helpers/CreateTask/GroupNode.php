@@ -7,14 +7,12 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Helpers\CreateTask\Document\DocumentContent;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\XMLNodeBase;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
     use App\Utils\Utils;
 
     class GroupNode extends XMLNodeBase{
-        use XMLNoValueNodeTrait;
 
         private XMLNodeBase $parent;
         private ?GroupMembersNode $members;
@@ -53,6 +51,7 @@ namespace App\Helpers\CreateTask {
             $config = TaskSrcConfig::get();
             parent::__construct(
                 name:$config->groupName,
+                isValueNode:false
             );
             $this->parent = $parent;
                 $this->indexes = [];

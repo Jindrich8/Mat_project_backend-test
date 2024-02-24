@@ -4,16 +4,14 @@ namespace App\Helpers\CreateTask\Document {
 
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Type\TaskResTask;
+    use App\Types\TaskResTask;
     use App\Types\XMLAttributes;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
 
     class Document extends XMLNodeBaseWParentNode
     {
-        use XMLNoValueNodeTrait;
 
         public static function create():Document{
             //report(new InternalException('Document create function'));
@@ -41,6 +39,7 @@ namespace App\Helpers\CreateTask\Document {
             parent:null,
             name:$config->taskName,
             maxCount:1,
+            isValueNode:false,
             attributes:XMLAttributes::construct()->addAttribute(
                 name:$config->taskNameAttr->name,
                 required:true,

@@ -9,12 +9,10 @@ namespace App\Helpers\Exercises\FixErrors {
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeValueType;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\CCreateExerciseHelperState as ParsingState;
 
     final class FixErrorsXMLCreateNode extends XMLDynamicNodeBase
     {
-        use XMLNoValueNodeTrait;
         private ?FixErrorsContent $content;
         private ?XMLNodeBase $parent;
         private ParsingState $state;
@@ -57,8 +55,11 @@ namespace App\Helpers\Exercises\FixErrors {
         }
 
         protected function __construct(){
-            parent::__construct("FixErrorsCreateNode",
-        maxCount:1);
+            parent::__construct(
+                name:"FixErrorsCreateNode",
+        maxCount:1,
+        isValueNode:false
+    );
         $this->parent = null;
         $this->content = null;
         $this->state = ParsingState::EXERCISE_ENDED;

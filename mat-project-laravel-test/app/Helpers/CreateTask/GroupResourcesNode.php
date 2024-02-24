@@ -5,7 +5,6 @@ namespace App\Helpers\CreateTask {
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNoValueNodeTrait;
     use App\Types\CreatableNodeTrait;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
@@ -13,7 +12,6 @@ namespace App\Helpers\CreateTask {
 
     class GroupResourcesNode extends XMLNodeBaseWParentNode
     {
-        use XMLNoValueNodeTrait;
 
         public static function create(GroupNode $parent): GroupResourcesNode
         {
@@ -28,7 +26,8 @@ namespace App\Helpers\CreateTask {
         private function __construct(GroupNode $group){
             parent::__construct(
                 name: TaskSrcConfig::get()->groupResourcesName,
-                parent: $group
+                parent: $group,
+                isValueNode:false
             );
         }
 

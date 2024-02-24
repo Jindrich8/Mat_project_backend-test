@@ -27,7 +27,7 @@ namespace App\Helpers\CreateTask {
     use App\Models\Tag;
     use App\Models\TaskInfo;
     use App\Models\User;
-    use App\Type\TaskResTask;
+    use App\Types\TaskResTask;
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
     use App\Utils\DebugUtils;

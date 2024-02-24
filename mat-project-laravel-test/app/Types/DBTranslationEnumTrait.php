@@ -22,11 +22,8 @@ namespace App\Types {
          return EnumHelper::translateFrom(static::class,$value);
         }
 
-        /**
-         * @param \BackedEnum $case
-         */
-        public static function translate(self $case){
-            return EnumHelper::translate($case);
+        public function translate(){
+            return EnumHelper::translate($this);
         }
     }
 }

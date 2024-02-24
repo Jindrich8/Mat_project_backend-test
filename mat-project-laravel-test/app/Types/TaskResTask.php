@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Type {
+namespace App\Types {
 
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
