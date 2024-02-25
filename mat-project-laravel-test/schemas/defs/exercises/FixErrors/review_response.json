@@ -7,18 +7,39 @@
             "const": "FixErrors"
         },
         "content": {
-            "type": "object",
-            "properties": {
-                "userText": {
-                    "type": "string"
-                },
-                "correctText": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "userText"
-            ]
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "anyOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "object",
+                        "title": "Insert action",
+                        "properties": {
+                            "INS": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "INS"
+                        ]
+                    },
+                    {
+                        "type": "object",
+                        "title": "Delete action",
+                        "properties": {
+                            "DEL": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "DEL"
+                        ]
+                    }
+                ]
+            }
         }
     },
     "required": [

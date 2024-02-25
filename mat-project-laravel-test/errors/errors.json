@@ -22,6 +22,16 @@
                 }
             },
             "endpoints": {
+                "login":{
+                    "errors":{
+                        "1":"form.json"
+                    }
+                },
+                "register":{
+                    "errors":{
+                        "1":"form.json"
+                    }
+                },
                 "task": {
                     "list/errors": {
                         "1": "form.json"

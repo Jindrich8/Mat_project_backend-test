@@ -1,0 +1,27 @@
+{
+    "type": "object",
+    "title": "Login error details",
+    "description": "Represents details about the login error",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Login error details error data",
+            "properties": {
+                "email": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "password": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                }
+            }
+        }
+    },
+    "required": [
+        "code",
+        "errorData"
+    ]
+}

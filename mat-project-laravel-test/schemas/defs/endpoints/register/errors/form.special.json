@@ -1,0 +1,30 @@
+{
+    "type": "object",
+    "title": "Register error details",
+    "description": "Represents details about the regsiter error",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Register error details error data",
+            "properties": {
+                "name": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "email": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "password": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                }
+            }
+        }
+    },
+    "required": [
+        "code",
+        "errorData"
+    ]
+}

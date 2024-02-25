@@ -23,8 +23,7 @@
                 }
             },
             "required": [
-                "user_info",
-                "details"
+                "user_info"
             ]
         }
     },

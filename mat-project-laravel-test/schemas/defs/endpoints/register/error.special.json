@@ -1,0 +1,12 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Register error response details",
+    "description": "Represents every possible error details, except for general error details, that can be thrown by the register endpoint",
+    "type": "object",
+    "anyOf": [
+        {
+            "$ref":"./errors/form.json"
+        }
+    ],
+    "required": ["code","errorData"]
+}
