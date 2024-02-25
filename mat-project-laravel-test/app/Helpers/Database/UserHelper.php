@@ -14,7 +14,7 @@ namespace App\Helpers\Database {
         }
 
         public static function tryGetUserId():?int{
-            $user = Auth::getUser();
+            $user = Auth::user();
             return $user?->id;
         }
     }

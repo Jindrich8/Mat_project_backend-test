@@ -61,7 +61,11 @@ namespace App\Helpers\BareModels {
 
         public static function tryFetchById(int $id):self|null{
             return self::tryFetch(function(Builder $builder)use($id){
-                $builder->where(TaskConstants::COL_ID,'=',$id);
+                $builder->where(
+                    DBHelper::tableCol(TaskConstants::TABLE_NAME,TaskConstants::COL_ID),
+                    '=',
+                    $id
+                );
             })->first(default:null);
         }
 

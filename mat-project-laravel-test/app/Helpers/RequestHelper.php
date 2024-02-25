@@ -67,7 +67,7 @@ namespace App\Helpers {
                 : $data->validate([
                     DtosRequest::DATA => 'array'
                 ]);
-            return $validatedData[DtosRequest::DATA];
+            return $validatedData[DtosRequest::DATA] ?? [];
         }
 
         /**

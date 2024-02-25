@@ -39,6 +39,13 @@ namespace App\Utils {
             return $includeLineBreak ? self::TRIM_WHITES : self::TRIM_WHITES_NO_LINE_BREAK;
         }
 
+        /**
+         * @return string[]
+         */
+        public static function getChars(string $str):array{
+            return mb_str_split($str,1,'UTF-8');
+        }
+
         public static function skipAsciiWs(string $value, int $offset, ?int $len = null, bool $includeLineBreak = true): int
         {
             $newValue = substr($value, $offset, $len);

@@ -6,17 +6,21 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\LoginResponse;
 use App\Models\User;
+use App\Utils\DebugUtils;
 use Exception;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\LoginViewResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -25,49 +29,89 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-      
+        $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
+        {
+            public function toResponse($request)
+            {
+                DebugUtils::log("LogoutResponse::toResponse");
+                Log::info("LogoutResponse::toResponse");
+               return response(status:204);
+            }
+        });
+
+        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
+        {
+            public function toResponse($request)
+            {
+                return (new LoginResponse())->toResponse($request);
+            }
+        });
+        $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
+        {
+            public function toResponse($request)
+            {
+                return (new LoginResponse())->toResponse($request);
+            }
+        });
+
+        $this->app->singleton(
+            \Laravel\Fortify\Http\Responses\LoginResponse::class,
+            \App\Http\Responses\LoginResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LogoutResponse::class,
+            \App\Http\Responses\LogoutResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\RegisterResponse::class,
+            \App\Http\Responses\RegisterResponse::class
+        );
     }
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
-    {    
-        $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract {
+    {
+        $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
+        {
             public function toResponse($request)
             {
-                throw new Exception('Logout');
-                return redirect('/customized');
+                DebugUtils::log("LogoutResponse::toResponse");
+                Log::info("LogoutResponse::toResponse");
+               return response(status:204);
             }
         });
 
-        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract {
+        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
+        {
             public function toResponse($request)
             {
-                throw new Exception('Login');
-                return redirect('/customized');
+                return (new LoginResponse())->toResponse($request);
             }
-         });
-        //  $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse {
-        //     public function toResponse($request)
-        //     {
-        //         throw new Exception('Login');
-        //         return redirect('/customized');
-        //     }
-        //  });
+        });
+        $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
+        {
+            public function toResponse($request)
+            {
+                return (new LoginResponse())->toResponse($request);
+            }
+        });
 
-//         $this->app->singleton(
-//         \Laravel\Fortify\Http\Responses\LoginResponse::class,
-//    \App\Http\Responses\LoginResponse::class
-// );
-// $this->app->singleton(
-//     \Laravel\Fortify\Contracts\LogoutResponse::class,
-// \App\Http\Responses\LogoutResponse::class
-// );
-// $this->app->singleton(
-// \Laravel\Fortify\Contracts\RegisterResponse::class,
-// \App\Http\Responses\RegisterResponse::class
-// );
+        $this->app->singleton(
+            \Laravel\Fortify\Http\Responses\LoginResponse::class,
+            \App\Http\Responses\LoginResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LogoutResponse::class,
+            \App\Http\Responses\LogoutResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\RegisterResponse::class,
+            \App\Http\Responses\RegisterResponse::class
+        );
+
+
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
@@ -75,15 +119,17 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
-     
-            if ($user &&
-                Hash::check($request->password, $user->password)) {
+
+            if (
+                $user &&
+                Hash::check($request->password, $user->password)
+            ) {
                 return $user;
             }
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });
@@ -91,7 +137,5 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
-
-    
     }
 }

@@ -55,7 +55,7 @@ class InternalException extends LogicException
      */
     public function context(): array
     {
-        return array_map(fn($value)=>var_export($value,return:true),$this->context);
+        return array_map(fn($value)=>$value,$this->context);
     }
 
     

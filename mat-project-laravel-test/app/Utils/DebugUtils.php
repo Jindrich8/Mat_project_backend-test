@@ -5,6 +5,7 @@ namespace App\Utils {
     use App\Exceptions\InternalException;
     use BackedEnum;
     use Exception;
+    use Illuminate\Support\Facades\Log;
     use UnitEnum;
 
     class DebugUtils
@@ -18,7 +19,7 @@ namespace App\Utils {
                 dump($value);
             }
             else{
-                report(new InternalException("LOG: " . $message,context:['value' => $value]));
+                Log::info($message,context:['value' => $value]);
             }
         }
 

@@ -9,14 +9,14 @@ namespace App\Utils {
 
     class EndpointUtils
     {
-        // private static mixed $allowedOrigins = null;
+        private static mixed $allowedOrigins = null;
 
-        // public static function getAllowOriginsHeader():array{
-        //     return [
-        //         'Access-Control-Allow-Origin' =>
-        //         (self::$allowedOrigins ??= config('cors.allowed_origins'))
-        //     ];
-        // }
+        public static function getAllowOriginsHeader():array{
+            return [
+                'Access-Control-Allow-Origin' =>
+                (self::$allowedOrigins ??= config('cors.allowed_origins'))
+            ];
+        }
 
         /**
          * @param int $status
@@ -25,7 +25,7 @@ namespace App\Utils {
          * @throws InvalidValue
          */
         public static function stdErrorJsonResponse(int $status,array $errors){
-            DebugUtils::log("Middlewares",fn()=>Route::getCurrentRoute()->gatherMiddleware());
+            DebugUtils::log("Middlewares",fn()=>Route::getCurrentRoute()?->gatherMiddleware() ?? [null]);
             return self::stdJsonResponse(
                 status:$status,
                 data:[

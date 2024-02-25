@@ -65,9 +65,17 @@ namespace App\Helpers\BareModels {
         public static function tryFetchById(int $id, bool $publicOnly = true,bool $sharedLock = false): self|null
         {
             return self::tryFetch(function (Builder $builder) use ($id, $publicOnly,$sharedLock) {
-                $builder->where(TaskConstants::COL_ID, '=', $id);
+                $builder->where(
+                    DBHelper::tableCol(TaskConstants::TABLE_NAME,TaskConstants::COL_ID),
+                     '=',
+                      $id
+                    );
                 if ($publicOnly) {
-                    $builder->where(TaskConstants::COL_IS_PUBLIC, '=', true);
+                    $builder->where(
+                        DBHelper::tableCol(TaskConstants::TABLE_NAME,TaskConstants::COL_IS_PUBLIC),
+                         '=',
+                          true
+                        );
                 }
                 if($sharedLock){
                 $builder->sharedLock();
@@ -84,6 +92,9 @@ namespace App\Helpers\BareModels {
             $taskTable = TaskConstants::TABLE_NAME;
             $taskInfoTable = TaskInfoConstants::TABLE_NAME;
             $userTable = UserConstants::TABLE_NAME;
+            $taskReviewTable = TaskReviewConstants::TABLE_NAME;
+            $taskReviewTemplateTable = TaskReviewTemplateConstants::TABLE_NAME;
+
             $taskAuthorColName = 'authorName';
             $taskReviewIdColName = 'taskReviewId';
             $builder = DB::table($taskTable)->select(
@@ -94,6 +105,8 @@ namespace App\Helpers\BareModels {
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
+                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
+                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_IS_PUBLIC),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_VERSION),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_USER_ID),
@@ -117,28 +130,28 @@ namespace App\Helpers\BareModels {
                 )
                 ->join(
                     $userTable,
-                    UserConstants::COL_ID,
+                    DBHelper::tableCol($userTable,UserConstants::COL_ID),
                     '=',
                     DBHelper::tableCol($taskTable, TaskConstants::COL_USER_ID)
                 )
-                ->join(
-                    TaskReviewTemplateConstants::TABLE_NAME,
-                    TaskReviewTemplateConstants::COL_TASK_INFO_ID,
+                ->leftJoin(
+                    $taskReviewTemplateTable,
+                    DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
                     '=',
                     DBHelper::tableCol($taskTable, TaskConstants::COL_TASK_INFO_ID)
                 )
                 ->leftJoin(
-                    TaskReviewConstants::TABLE_NAME,
-                    function (JoinClause $join) {
+                    $taskReviewTable,
+                    function (JoinClause $join)use($taskReviewTable,$taskReviewTemplateTable) {
                         $join->on(
-                            TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID,
+                            DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID),
                             '=',
-                            DBHelper::tableCol(TaskReviewTemplateConstants::TABLE_NAME, TaskReviewTemplateConstants::COL_ID)
+                            DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_ID)
                         )
                             ->on(
-                                TaskReviewConstants::COL_USER_ID,
+                                DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_USER_ID),
                                 '=',
-                                UserHelper::getUserId()
+                                DB::raw(UserHelper::getUserId())
                             );
                     }
                 );

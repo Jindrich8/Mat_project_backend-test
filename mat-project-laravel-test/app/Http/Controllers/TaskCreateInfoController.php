@@ -12,6 +12,8 @@ use App\ModelConstants\TagConstants;
 use App\TableSpecificData\TaskDifficulty;
 use App\Types\ConstructableTrait;
 use App\TableSpecificData\TaskClass;
+use App\Utils\DtoUtils;
+use Illuminate\Support\Facades\Log;
 
 class TaskCreateInfoController extends Controller
 {
@@ -19,37 +21,30 @@ class TaskCreateInfoController extends Controller
 
     public function getCreateInfo(Request $request): CreateInfo\CreateInfoResponse
     {
-        $difficulties = TaskDifficulty::getValues();
-        $classes = TaskClass::getValues();
-
         $response = CreateInfo\CreateInfoResponse::create()
             ->setTags(
-                DB::table(TagConstants::TABLE_NAME)
+                array_values(DB::table(TagConstants::TABLE_NAME)
                     ->pluck(TagConstants::COL_NAME, TagConstants::COL_ID)
                     ->map(
                         fn ($name, $id) =>
                         ResponseEnumElement::create()
                             ->setName($name)
                             ->setId($id)
-                    )
+                    )->all())
             )
             ->setDifficulties(
-                Utils::arrayMapWKey(fn ($index, $name) => [
-                    $index,
-                    ResponseOrderedEnumElement::create()
-                        ->setName($name)
-                        ->setOrderedId($index)
-                ], $difficulties)
+                array_map(
+                    fn (TaskDifficulty $case) => DtoUtils::createOrderedEnumDto($case),
+                    TaskDifficulty::cases()
+                )
             )
             ->setClasses(
-                Utils::arrayMapWKey(fn ($index, $name) => [
-                    $index,
-                    ResponseOrderedEnumElement::create()
-                        ->setName($name)
-                        ->setOrderedId($index)
-                ], $classes)
+                array_map(
+                    fn (TaskClass $case) => DtoUtils::createOrderedEnumDto($case),
+                    TaskClass::cases()
+                )
             );
-
+        Log::info("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
         return $response;
     }
 }

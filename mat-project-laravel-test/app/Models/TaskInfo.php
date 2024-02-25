@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\ModelConstants\TagTaskConstants;
+use App\ModelConstants\TagTaskInfoConstants;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
@@ -29,6 +31,6 @@ class TaskInfo extends BaseModel
     }
 
     public function tags(){
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Tag::class,table:TagTaskInfoConstants::TABLE_NAME);
     }
 }

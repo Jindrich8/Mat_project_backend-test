@@ -5,6 +5,7 @@ namespace App\Helpers {
     use App\Dtos\SuccessResponse;
     use App\Utils\DtoUtils;
     use Illuminate\Http\Response;
+    use Illuminate\Support\Facades\Log;
     use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
@@ -24,6 +25,7 @@ namespace App\Helpers {
                     content: DtoUtils::dtoToJson($data)
                 );
             }
+            Log::info("ResponseHelper::success: ",['data' => $data->content()]);
            return $data;
         }
 
