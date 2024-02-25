@@ -55,19 +55,16 @@ class FixErrorsExerciseHelper implements CExerciseHelper
     {
         $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
-        $exercises = DB::table($table)
-            ->select([$idName, FixErrorsConstants::COL_WRONG_TEXT])
+        $correctTextByIds = DB::table($table)
+            ->select([$idName, FixErrorsConstants::COL_CORRECT_TEXT])
             ->whereIn($idName, $ids)
-            ->get();
+            ->pluck(FixErrorsConstants::COL_CORRECT_TEXT,key:$idName)
+            ->all();
+            unset($ids);
         $evaluateExercises = [];
-        while (($exercise = $exercises->pop())) {
-            $exerciseId = DBHelper::access($exercise, $idName);
-
-            $evaluateExercises[$exerciseId] = new  EvaluateFixErrorsExercise(
-                FixErrorsReviewResponse::create()
-                    ->setContent(FixErrorsReviewResponseContent::create()
-                        ->setUserText(DBHelper::access($exercise, FixErrorsConstants::COL_WRONG_TEXT)))
-            );
+        while (($exerciseId = Utils::arrayFirstKey($correctTextByIds)) !== null) {
+            $correctText = Utils::arrayShift($correctTextByIds);
+            $evaluateExercises[$exerciseId] = new EvaluateFixErrorsExercise($correctText);
         }
         return $evaluateExercises;
     }
