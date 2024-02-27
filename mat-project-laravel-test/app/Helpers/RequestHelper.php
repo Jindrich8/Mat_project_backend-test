@@ -12,7 +12,9 @@ namespace App\Helpers {
     use App\Utils\Utils;
     use Illuminate\Http\Request;
     use App\Utils\ValidateUtils;
+    use Illuminate\Support\Facades\Log;
     use Illuminate\Validation\ValidationException;
+    use stdClass;
     use Swaggest\JsonSchema\Exception;
     use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
@@ -81,9 +83,11 @@ namespace App\Helpers {
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
             try {
+                Log::debug("requestToDto: '$dtoClass'",["data" => var_export($data,true)]);
                 $dto = $dtoClass::import($data);
                 return $dto;
             } catch (Exception | InvalidValue $e) {
+                report($e);
                 $message = "";
                 $messagePosfix = "";
                 if ($e instanceof InvalidValue) {
@@ -126,7 +130,7 @@ namespace App\Helpers {
          * @template T of ClassStructure
          * @param class-string<T> $dtoClass
          * @param Request $request
-         * @return ClassStructure
+         * @return T
          * @throws ApplicationException
          * @throws ValidationException
          */
@@ -146,7 +150,10 @@ namespace App\Helpers {
         public static function getData(Request $request): mixed
         {
             $validated = self::validateAndExtractRequestData($request);
-            return Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
+            Log::debug("getData: ",["validated" => var_export($validated,true)]);
+            $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
+            Log::debug("getData: (assoc => stdClass): ",["res" => var_export($res,true)]);
+            return $res ?: new stdClass;
         }
 
         public static function getQuery(Request $request): mixed
@@ -168,7 +175,10 @@ namespace App\Helpers {
             ));
             unset($query);
             report(new InternalException("LOG: query VALIDATION SUCCEEDED"));
-            return Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
+            Log::debug("getQuery: ",["validated" => var_export($validated,true)]);
+            $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
+            Log::debug("getQuery: (assoc => stdClass): ",["res" => var_export($res,true)]);
+            return $res ?: new stdClass;
         }
     }
 }
