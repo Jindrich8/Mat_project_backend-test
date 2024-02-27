@@ -5,8 +5,8 @@
     "type": "object",
     "anyOf": [
         {
-            "$ref":"./errors/task_changed.json"
+            "$ref":"./errors/**/*.json"
         }
     ],
-    "required": ["code","errorData"]
+    "required": ["code"]
 }

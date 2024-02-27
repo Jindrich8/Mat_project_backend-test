@@ -5,7 +5,7 @@
     "type": "object",
     "anyOf": [
         {
-            "$ref":"./errors/form.json"
+            "$ref":"./errors/**/*.json"
         }
     ],
     "required": ["code","errorData"]
