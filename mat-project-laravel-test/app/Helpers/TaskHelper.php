@@ -43,7 +43,7 @@ namespace App\Helpers {
          * @template TExerciseDto of ClassStructure
          * @template TGroupDto of ClassStructure
          * @param T[] $exercises
-         * @param callable(T $exercise):TExerciseDto $exerciseToDto
+         * @param callable(T $exercise,int $index):TExerciseDto $exerciseToDto
          * @param callable(string[] $resources):TGroupDto $groupToDto
          * @param array<TGroupDto|TExerciseDto> &$entries
          */
@@ -62,7 +62,8 @@ namespace App\Helpers {
                 ->where(GroupConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
                 ->orderBy(GroupConstants::COL_START, direction: 'asc')
                 ->orderBy(GroupConstants::COL_LENGTH, direction: 'desc')
-                ->get();
+                ->get()
+                ->keyBy(fn($value,$key)=>DBHelper::access($value,$groupIdName));
 
             $resources = DB::table(ResourceConstants::TABLE_NAME)
                 ->select([
@@ -126,7 +127,7 @@ namespace App\Helpers {
                     $dest = &$groupDto->{$groupDtoEntriesKey};
                     $exerciseEnd = $exI + DBHelper::access($nextGroup, GroupConstants::COL_LENGTH);
                 }
-                $exerciseDto = $exerciseToDto($exercise);
+                $exerciseDto = $exerciseToDto($exercise,$exI);
                 $dest[] = $exerciseDto;
             }
         }
