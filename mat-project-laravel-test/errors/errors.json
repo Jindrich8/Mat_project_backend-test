@@ -37,7 +37,8 @@
                         "1": "form.json"
                     },
                     "evaluate/errors": {
-                        "1": "task_changed.json"
+                        "1": "task_changed.json",
+                        "2":"mismatched_exercise_value.json"
                     },
                     "review": {
                         "list/errors": {
