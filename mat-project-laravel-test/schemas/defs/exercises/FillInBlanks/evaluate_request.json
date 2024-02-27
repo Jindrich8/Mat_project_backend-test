@@ -7,17 +7,17 @@
         "content": {
             "type": "array",
             "items": {
-                "oneOf": [
-                    {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    {
-                        "type": "string"
-                    }
-                ]
+                "type": [
+                    "integer",
+                    "string",
+                    "null"
+                ],
+                "minimum": 0
             },
             "minItems": 1
         }
-    }
+    },
+    "required": [
+        "content"
+    ]
 }

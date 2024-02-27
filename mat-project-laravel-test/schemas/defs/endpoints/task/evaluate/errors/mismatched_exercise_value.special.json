@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "title": "Task changed evaluate error",
-    "description": "Represents error thrown if current task version is different than filled version.",
+    "title": "Mismatched exercise value evaluate error",
+    "description": "Represents error thrown if exercise value sent for evaluation is not valid for given exercise.",
     "properties": {
         "code": {
             "const": null,
@@ -10,7 +10,7 @@
         },
         "errorData": {
             "type": "object",
-            "title": "Task changed evaluate error data"
+            "title": "Mismatched exercise value evaluate error data"
         }
     },
     "required": [
