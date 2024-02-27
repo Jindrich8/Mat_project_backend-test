@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Utils;
 
 use BackedEnum;
@@ -7,7 +8,8 @@ use ReflectionFunction;
 use stdClass;
 use UnitEnum;
 
-class Utils{
+class Utils
+{
 
     /**
      * @template T
@@ -18,18 +20,19 @@ class Utils{
      * @param array<TKey,T> $array
      * @return array<RKey,R>
      */
-    public static function arrayMapWKey(callable $map,array &$array){
+    public static function arrayMapWKey(callable $map, array &$array)
+    {
         /**
          * @var array<RKey,R> $mapped
          */
         $mapped = [];
-        foreach($array as $key => $value){
+        foreach ($array as $key => $value) {
             /**
              * @var RKey $rKey
              * @var R $rValue
              */
-            [$rKey,$rValue]=$map($value,$key);
-            $mapped[$rKey]=$rValue;
+            [$rKey, $rValue] = $map($value, $key);
+            $mapped[$rKey] = $rValue;
         }
         return $mapped;
     }
@@ -38,11 +41,13 @@ class Utils{
      * @param T[] $arr
      * @return T|null
      */
-    public static function tryGetFirstArrayValue(array $arr):mixed{
+    public static function tryGetFirstArrayValue(array $arr): mixed
+    {
         return $arr ? $arr[Utils::arrayFirstKey($arr)] : null;
     }
 
-    public static function isEmptyArray(mixed $value):bool{
+    public static function isEmptyArray(mixed $value): bool
+    {
         return self::isArray($value) && count($value) === 0;
     }
 
@@ -50,58 +55,41 @@ class Utils{
      * @template T
      * @return mixed|T
      */
-     public static function tryToAccess(array|object $data,string $key,mixed $default = null):mixed{
+    public static function tryToAccess(array|object $data, string $key, mixed $default = null): mixed
+    {
         return is_object($data) ? $data->{$key} ?? $default : $data[$key] ?? $default;
     }
 
-    public static function access(array|object $data,string $key):mixed{
+    public static function access(array|object $data, string $key): mixed
+    {
         return is_object($data) ? $data->{$key} : $data[$key];
     }
 
-    public static function set(array|object $data,string $key,mixed $value):void{
-        if(is_object($data)){
+    public static function set(array|object $data, string $key, mixed $value): void
+    {
+        if (is_object($data)) {
             $data->{$key} = $value;
-        }
-        else{
+        } else {
             $data[$key] = $value;
         }
     }
 
-    public static function recursiveAssocArrayToStdClass(array &$arr,bool $canChange=false){
-        $rootObj = new stdClass;
-        $stack = [];
-        $obj = $rootObj;
-        $myArr = &$arr;
-        if(!$canChange){
-            $temp = $arr;
-            $myArr = &$temp;
+    public static function recursiveAssocArrayToStdClass(array $arr, bool $canChange = false)
+    {
+        $res = array_is_list($arr) ? [] : new stdClass;
+        
+        foreach($arr as $key => $value){
+            if(is_array($value)){
+                $value = self::recursiveAssocArrayToStdClass($value);
+            }
+            if(is_array($res)){
+                $res[]=$value;
+            }
+            else{
+                $res->{$key} = $value;
+            }
         }
-       while(true){
-       $arrKey = Utils::arrayFirstKey($myArr);
-       if($arrKey === null){
-        $stackKey = Utils::arrayLastKey($stack);
-        if($stackKey === null){
-           break;
-        }
-        [$obj,&$myArr] = $stack[$stackKey];
-        unset($stack[$stackKey]);
-        continue;
-       }
-       $value = &$myArr[$arrKey];
-       unset($myArr[$arrKey]);
-       if(Utils::isArray($value) && !Utils::isList($value)){
-        $newObj = new stdClass();
-        $obj->{$arrKey} = $newObj;
-         $stack[]=[$obj,&$myArr];
-
-         $myArr = &$value;
-         $obj = $newObj;
-       }
-       else{
-        $obj->{$arrKey} = $value;
-       }
-       }
-       return $obj;
+        return $res;
     }
 
     /**
@@ -109,7 +97,8 @@ class Utils{
      * @return bool
      * @phpstan-assert-if-true array $arr
      */
-    public static function isList(mixed &$arr):bool{
+    public static function isList(mixed &$arr): bool
+    {
         return Utils::isArray($arr) && Utils::arrayIsList($arr);
     }
 
@@ -118,7 +107,8 @@ class Utils{
      * @return bool
      * @phpstan-assert-if-true array &$arr
      */
-    public static function isArray(mixed &$arr):bool{
+    public static function isArray(mixed &$arr): bool
+    {
         return is_array($arr);
     }
 
@@ -127,7 +117,8 @@ class Utils{
      * @param array<array-key,T> &$arr
      * @phpstan-assert-if-true T[] &$arr
      */
-    public static function arrayIsList(array &$arr):bool{
+    public static function arrayIsList(array &$arr): bool
+    {
         return array_is_list($arr);
     }
     /**
@@ -135,16 +126,18 @@ class Utils{
      * @param array<array-key,T> &$arr
      * @return T|null
      */
-    public static function arrayShift(array &$arr):mixed{
+    public static function arrayShift(array &$arr): mixed
+    {
         return array_shift($arr);
     }
 
-      /**
+    /**
      * @template T
      * @param array<T,mixed> $arr
      * @return T|null
      */
-    public static function arrayLastKey(array $arr):string|int|null{
+    public static function arrayLastKey(array $arr): string|int|null
+    {
         return array_key_last($arr);
     }
 
@@ -153,12 +146,14 @@ class Utils{
      * @param array<T,mixed> &$arr
      * @return T|null
      */
-    public static function arrayFirstKey(array &$arr):string|int|null{
+    public static function arrayFirstKey(array &$arr): string|int|null
+    {
         return array_key_first($arr);
     }
 
-    public static function arrayHasKey(array &$arr,string|int $key){
-        return array_key_exists($key,$arr);
+    public static function arrayHasKey(array &$arr, string|int $key)
+    {
+        return array_key_exists($key, $arr);
     }
 
     /**
@@ -166,17 +161,20 @@ class Utils{
      * @param T[] $array
      * @return T|null
      */
-    public static function lastArrayValue(array &$array):mixed{
+    public static function lastArrayValue(array &$array): mixed
+    {
         return $array ? $array[array_key_last($array)] : null;
     }
 
-    public static function wrapAndImplode(string $wrapStr,string $separator,array &$array):string{
-        if(!$array) return "";
-        return $wrapStr.implode($wrapStr.$separator.$wrapStr,$array).$wrapStr;
+    public static function wrapAndImplode(string $wrapStr, string $separator, array &$array): string
+    {
+        if (!$array) return "";
+        return $wrapStr . implode($wrapStr . $separator . $wrapStr, $array) . $wrapStr;
     }
 
-    public static function arrayToStr(array &$array):string{
-        return self::wrapAndImplode("'",", ",$array);
+    public static function arrayToStr(array &$array): string
+    {
+        return self::wrapAndImplode("'", ", ", $array);
     }
 
     /**
@@ -184,25 +182,29 @@ class Utils{
      * @return array|string[]
      * @throws \ReflectionException
      */
-    public static function getArgumentNamesViaReflection(string|Closure $funcName) {
-        return array_map( fn( $parameter ) => $parameter->name,
-            (new ReflectionFunction($funcName))->getParameters() );
+    public static function getArgumentNamesViaReflection(string|Closure $funcName)
+    {
+        return array_map(
+            fn ($parameter) => $parameter->name,
+            (new ReflectionFunction($funcName))->getParameters()
+        );
     }
 
 
 
-    public static function ifTrueAppendElseSet(string &$prop,string $value){
-        if($prop){
-            $prop.=$value;
-        }
-        else{
+    public static function ifTrueAppendElseSet(string &$prop, string $value)
+    {
+        if ($prop) {
+            $prop .= $value;
+        } else {
             $prop = $value;
         }
     }
 
-    public static function getAccessor(array|object &$value):callable{
+    public static function getAccessor(array|object &$value): callable
+    {
         return is_object($value) ?
-        static fn(object $value,string $prop) => $value->{$prop}
-        : static fn(array &$value,string $prop) => $value[$prop];
+            static fn (object $value, string $prop) => $value->{$prop}
+            : static fn (array &$value, string $prop) => $value[$prop];
     }
 }
