@@ -111,11 +111,6 @@ namespace App\Helpers\BareModels {
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_VERSION),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_USER_ID),
                     DBHelper::colExpression(
-                        table: TaskReviewConstants::TABLE_NAME,
-                        column: TaskReviewConstants::COL_ID,
-                        as: $taskReviewIdColName
-                    ),
-                    DBHelper::colExpression(
                         table: $userTable,
                         column: UserConstants::COL_NAME,
                         as: $taskAuthorColName
@@ -139,22 +134,31 @@ namespace App\Helpers\BareModels {
                     DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
                     '=',
                     DBHelper::tableCol($taskTable, TaskConstants::COL_TASK_INFO_ID)
-                )
-                ->leftJoin(
-                    $taskReviewTable,
-                    function (JoinClause $join)use($taskReviewTable,$taskReviewTemplateTable) {
-                        $join->on(
-                            DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID),
-                            '=',
-                            DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_ID)
-                        )
-                            ->on(
-                                DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_USER_ID),
-                                '=',
-                                DB::raw(UserHelper::getUserId())
-                            );
-                    }
                 );
+                $userId = UserHelper::tryGetUserId();
+                if($userId !== null){
+                    $builder->addSelect(DBHelper::colExpression(
+                        table: TaskReviewConstants::TABLE_NAME,
+                        column: TaskReviewConstants::COL_ID,
+                        as: $taskReviewIdColName
+                    ))
+                    ->leftJoin(
+                        $taskReviewTable,
+                        function (JoinClause $join)use($taskReviewTable,$taskReviewTemplateTable) {
+                            $join->on(
+                                DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID),
+                                '=',
+                                DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_ID)
+                            )
+                                ->on(
+                                    DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_USER_ID),
+                                    '=',
+                                    DB::raw(UserHelper::getUserId())
+                                );
+                        }
+                    );
+                }
+              
             $modifyQuery($builder);
             $tasks = $builder->get();
 
