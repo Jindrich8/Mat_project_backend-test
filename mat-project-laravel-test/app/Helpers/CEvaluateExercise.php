@@ -3,8 +3,8 @@
 namespace App\Helpers;
 
 use App\Dtos\Defs\Types\Review\ExerciseReview;
-use App\Exceptions\BadSaveExerciseException;
-use App\Types\Transformable;
+use App\Exceptions\InvalidEvaluateValueException;
+use Swaggest\JsonSchema\Structure\ClassStructure;
 
 interface CEvaluateExercise
 {
@@ -13,6 +13,7 @@ interface CEvaluateExercise
      * @param mixed $value
      * @param ExerciseReview $exercise
      * @return void
+     * @throws InvalidEvaluateValueException thrown when given value is not a valid value for this exercise
      */
-   public function evaluateAndSetAsContentTo(mixed $value,ExerciseReview $exercise):void;
+   public function evaluateAndSetAsContentTo(ClassStructure $value,ExerciseReview $exercise):void;
 }

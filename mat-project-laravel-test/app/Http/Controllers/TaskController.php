@@ -25,6 +25,7 @@ use App\Dtos\Defs\Endpoints\Task\Save;
 use App\Dtos\Defs\Endpoints\Task\Update;
 use App\Dtos\Defs\Endpoints\Task\Detail;
 use App\Dtos\Defs\Endpoints\Task\Evaluate;
+use App\Dtos\Defs\Endpoints\Task\Evaluate\Errors\MismatchedExerciseValueEvaluateError;
 use App\Dtos\Defs\Endpoints\Task\List;
 use App\Dtos\Defs\Endpoints\Task\MyList;
 use App\Dtos\Defs\Endpoints\Task\Review;
@@ -37,6 +38,7 @@ use App\Dtos\Defs\Endpoints\Task\Take\SavedTaskValues;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
 use App\Exceptions\InternalException;
+use App\Exceptions\InvalidEvaluateValueException;
 use App\Helpers\BareModels\BareTask;
 use App\Helpers\BareModels\BareTaskWAuthorName;
 use App\Helpers\CreateTask\ParseEntry;
@@ -53,6 +55,7 @@ use App\ModelConstants\TaskReviewConstants;
 use App\ModelConstants\TaskReviewTemplateConstants;
 use App\Models\SavedTask;
 use App\Models\Task;
+use App\MyConfigs\TaskSrcConfig;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
@@ -67,6 +70,7 @@ use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Swaggest\JsonSchema\InvalidValue;
 
 class TaskController extends Controller
@@ -249,7 +253,11 @@ class TaskController extends Controller
         $do = function (array|null &$evaluatedExercises, &$responseTask) use ($id, $userId, $requestData) {
             $task = BareTaskWAuthorName::tryFetchById($id, publicOnly: true, sharedLock: $userId !== null)
                 ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
-            if ($task->version !== $requestData->version) {
+            if ($task->version !== RequestHelper::translateId($requestData->version)) {
+                Log::debug("Task version has changed: ", [
+                    'requestVersion' => $requestData->version,
+                    'taskVersion' => $task->version
+                ]);
                 throw new ApplicationException(
                     userStatus: Response::HTTP_CONFLICT,
                     userResponse: ApplicationErrorInformation::create()
@@ -269,19 +277,37 @@ class TaskController extends Controller
             $exercises = ExerciseHelper::evaluateTaskInfo(
                 taskInfoId: $task->taskInfoId
             );
+
             $taskPoints = 0;
             $taskmax = 0;
             $taskEntries = &$responseTask->setEntries([])->entries;
             TaskHelper::getTaskEntries(
                 taskInfoId: $task->taskInfoId,
                 exercises: $exercises,
-                exerciseToDto: function (EvaluateExercise $exercise) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
+                exerciseToDto: function (EvaluateExercise $exercise, int $i) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
                     $exerciseDto = ExerciseReview::create()
-                        ->setInstructions(ReviewExerciseInstructions::create()
-                            ->setContent($exercise->instructions));
+                        ->setInstructions(
+                            ReviewExerciseInstructions::create()
+                            ->setContent($exercise->instructions)
+                        );
 
                     $exerciseValue = array_shift($requestData->exercises);
-                    $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
+                    try {
+                        $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
+                    } catch (InvalidEvaluateValueException $e) {
+                        throw new ApplicationException(
+                            Response::HTTP_BAD_REQUEST,
+                            ApplicationErrorInformation::create()
+                                ->setUserInfo(
+                                    UserSpecificPartOfAnError::create()
+                                        ->setMessage("Mismatched value for $i. exercise.")
+                                        ->setDescription("Expected valid value for '" . $exercise->type->translate() . "'.")
+                                )
+                                ->setDetails(
+                                    MismatchedExerciseValueEvaluateError::create()
+                                )
+                        );
+                    }
 
                     $exerciseDto->points->has = ($exerciseDto->points->has * $exercise->weight) / $exerciseDto->points->max;
                     $exerciseDto->points->max = $exercise->weight;

@@ -206,20 +206,22 @@ class ExerciseHelper
     foreach ($map as $exerciseType => $ids) {
       DebugUtils::log("Ids for {$exerciseType} ", $ids);
       $cExercises +=
-        ExerciseHelper::getHelper(ExerciseType::from($exerciseType))
+        ExerciseHelper::getHelper(ExerciseType::fromThrow($exerciseType))
         ->fetchEvaluate($ids);
     }
-
+    unset($map);
     /**
      * @var array<int,array{id:int,instructions:string,impl:CTakeExercise,type:string}> $result
      */
     $result = [];
     while (($exercise = Utils::arrayShift($exercises))) {
       $exerciseId = DBHelper::access($exercise, $exerciseIDName);
+      $type = DBHelper::access($exercise,ExerciseConstants::COL_EXERCISEABLE_TYPE);
       $result[] = new EvaluateExercise(
         id: $exerciseId,
         weight:DBHelper::access($exercise,ExerciseConstants::COL_WEIGHT),
         instructions: DBHelper::access($exercise, ExerciseConstants::COL_INSTRUCTIONS),
+        type:ExerciseType::fromThrow($type),
         impl: $cExercises[$exerciseId]
       );
     }
