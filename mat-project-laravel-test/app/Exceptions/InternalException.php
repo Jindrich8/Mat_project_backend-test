@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ApplicationErrorInformation;
+use App\Utils\DtoUtils;
 use App\Utils\EndpointUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -60,7 +61,7 @@ class InternalException extends LogicException
 
     
 
-    public function render(Request $request): JsonResponse
+    public function render(Request $request)
     {
         $error = UserSpecificPartOfAnError::create()
         ->setMessage($this->getUserMessage())
@@ -68,6 +69,8 @@ class InternalException extends LogicException
 
         $response =  ApplicationErrorInformation::create()
         ->setUserInfo($error);
-        return EndpointUtils::stdErrorJsonResponse($this->getUserStatus(),[$response]);
+        return response(
+            DtoUtils::dtoToJson($response)
+           , $this->getUserStatus());
     }
 }

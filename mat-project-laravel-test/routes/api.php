@@ -122,16 +122,18 @@ RouteUtils::get(
         ->take($request, RequestHelper::translateId($id))
 );
 
-RouteUtils::post(
-    '/task/{id}/evaluate',
-    fn (Request $request, string $id) =>
-    TaskController::construct()
-        ->evaluate($request, RequestHelper::translateId($id))
-);
+
 
 RouteUtils::get(
     '/task/list',
     fn (Request $request) =>
     TaskController::construct()
         ->list($request)
+);
+
+RouteUtils::post(
+    '/task/{id}/evaluate',
+    fn (Request $request, string $id) =>
+    TaskController::construct()
+        ->evaluate($request, RequestHelper::translateId($id))
 );
