@@ -2,8 +2,15 @@
 
 namespace App\Actions\Fortify;
 
+use App\Dtos\Defs\Endpoints\User\ProfileInformation\Errors\UserProfileInformationErrorDetails;
+use App\Dtos\Defs\Endpoints\User\ProfileInformation\Errors\UserProfileInformationErrorDetailsErrorData;
+use App\Dtos\Defs\Types\Errors\FieldError;
+use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+use App\Dtos\Errors\ApplicationErrorInformation;
+use App\Exceptions\ApplicationException;
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +27,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
+        try{
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
 
@@ -31,6 +39,36 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 Rule::unique('users')->ignore($user->id),
             ],
         ])->validateWithBag('updateProfileInformation');
+        }
+        catch(ValidationException $e){
+            $errorData = UserProfileInformationErrorDetailsErrorData::create();
+            $errors = $e->validator->errors();
+            if (($error = $errors->first('name'))) {
+                $errorData->setName(
+                    FieldError::create()
+                        ->setMessage($error)
+                );
+            }
+            if (($error = $errors->first('email'))) {
+                $errorData->setEmail(
+                    FieldError::create()
+                        ->setMessage($error)
+                );
+            }
+
+            throw new ApplicationException(
+                Response::HTTP_BAD_REQUEST,
+                ApplicationErrorInformation::create()
+                    ->setUserInfo(
+                        UserSpecificPartOfAnError::create()
+                            ->setMessage("Password update failed.")
+                    )
+                    ->setDetails(
+                        UserProfileInformationErrorDetails::create()
+                            ->setErrorData($errorData)
+                    )
+            );
+        }
 
         if ($input['email'] !== $user->email &&
             $user instanceof MustVerifyEmail) {

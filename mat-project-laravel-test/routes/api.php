@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskCreateInfoController;
 use App\Http\Controllers\TaskReviewController;
+use App\Http\Controllers\UserController;
+use App\Http\Middleware\Authorize as MiddlewareAuthorize;
+use App\TableSpecificData\UserRole;
 use App\Utils\RouteUtils;
+use Illuminate\Auth\Middleware\Authorize;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,14 +26,9 @@ use App\Utils\RouteUtils;
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {
-
-    RouteUtils::get('/user', function (Request $request) {
-        return $request->user();
-    });
-
-    #region Teacher
-
+#region Teacher
+Route::middleware(['auth:sanctum', MiddlewareAuthorize::class . ':' . UserRole::TEACHER->value])->group(function () {
+    
     RouteUtils::post(
         '/task/create',
         fn (Request $request) =>
@@ -71,11 +70,17 @@ Route::middleware('auth:sanctum')->group(function () {
         TaskController::construct()
             ->myDetail($request, RequestHelper::translateId($id))
     );
+});
+#endregion Teacher
 
-
-    #endregion Teacher
-
-    #region User
+#region User
+Route::middleware('auth:sanctum')->group(function () {
+    RouteUtils::get(
+        '/user/get_profile',
+        fn (Request $request) =>
+        UserController::construct()
+            ->getProfile($request)
+    );
 
     RouteUtils::get(
         '/review/list',
@@ -104,9 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
         TaskReviewController::construct()
             ->delete($request, RequestHelper::translateId($id))
     );
-
-    #endregion User
 });
+#endregion User
 
 RouteUtils::get(
     '/task/{id}/detail',
