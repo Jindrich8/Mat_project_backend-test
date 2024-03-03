@@ -137,7 +137,7 @@ foreach ($finder as $file) {
     $constantsStr
     }
     EOF;
-    echo "Genarating '$destFileName'\n";
+    echo "Generating '$destFileName'\n";
     $destPath = PathHelper::concatPaths($DestinationDir, $destFileName);
     $generatedFiles[] = $destPath;
     file_put_contents($destPath, $modelClassStr);

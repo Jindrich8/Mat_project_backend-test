@@ -211,7 +211,9 @@ function processFile(
                     throw new Exception("Pattern path does not match any file.\nPattern: '$pattern'.");
                 }
                 if (!$isStarNamePattern && count($jsonObjects) === 1) {
-                    return $jsonObjects[0];
+                    echo "Is single ref\n";
+                    dump($jsonObjects[0][EXPANDED_REF]);
+                    return $jsonObjects[0][EXPANDED_REF];
                 }
                 return $jsonObjects;
             }
@@ -251,7 +253,13 @@ function replaceAllArraysWKey(array &$array, string|int $key, callable $callback
     $arrays = [];
     foreach ($array as $arrKey => $arrValue) {
         if ($arrKey === $key) {
-            $array = $callback($arrValue);
+            $newValue = $callback($arrValue);
+            if(!is_array($newValue)){
+                $array[$arrKey] = $newValue;
+            }
+            else{
+                $array = $newValue;
+            }
         } else if (is_array($arrValue)) {
             $arrays[] = [&$array, $arrKey];
         }
@@ -266,7 +274,10 @@ function replaceAllArraysWKey(array &$array, string|int $key, callable $callback
         foreach ($grandParent[$parentKey] as $arrKey => $arrValue) {
             if ($arrKey === $key) {
                 $newValue  = $callback($arrValue);
-                if (!is_array($newValue) || !array_is_list($newValue) || !$newValue) {
+                if(!is_array($newValue)){
+                    $grandParent[$parentKey][$arrKey] = $newValue;
+                }
+                else if (!is_array($newValue) || !array_is_list($newValue) || !$newValue) {
                     $grandParent[$parentKey] = $newValue;
                 } else {
                     $grandParent[$parentKey] = array_shift($newValue);
