@@ -32,6 +32,7 @@
         }
     },
     "required": [
+        "id",
         "name",
         "difficulty",
         "class_range",

@@ -16,6 +16,10 @@
         },
         "password_confirmation":{
             "type":"string"
+        },
+        "role":{
+            "type":"string",
+            "enum":["teacher"]
         }
     },
     "required": [

@@ -16,26 +16,22 @@
                     },
                     {
                         "type": "object",
-                        "title": "Insert action",
+                        "title": "Action",
                         "properties": {
-                            "INS": {
+                            "action": {
+                                "type": "string",
+                                "enum": [
+                                    "INS",
+                                    "DEL"
+                                ]
+                            },
+                            "value": {
                                 "type": "string"
                             }
                         },
                         "required": [
-                            "INS"
-                        ]
-                    },
-                    {
-                        "type": "object",
-                        "title": "Delete action",
-                        "properties": {
-                            "DEL": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "DEL"
+                            "action",
+                            "value"
                         ]
                     }
                 ]

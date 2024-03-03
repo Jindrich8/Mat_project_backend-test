@@ -7,7 +7,7 @@
             "title": "Response data",
             "type": "object",
             "description": "Specifies endpoint and request specific response data",
-            "anyOf": [
+            "oneOf": [
                 {
                     "$ref": "@/defs/endpoints/**/response.json"
                 }

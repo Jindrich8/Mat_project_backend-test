@@ -5,9 +5,11 @@
             "errors": {
                 "-1": "general.json",
                 "-2": "not_found.json",
+                "-3":"csrf_token_mismatch.json",
                 "access": {
                     "-10": "Unauthenticated.json",
-                    "-11": "Unauthorized.json"
+                    "-11": "Unauthorized.json",
+                    "-12": "AlreadyAuthenticated.json"
                 },
                 "XML": {
                     "-100": "InvalidAttribute.json",
@@ -22,14 +24,14 @@
                 }
             },
             "endpoints": {
-                "login":{
-                    "errors":{
-                        "1":"form.json"
+                "login": {
+                    "errors": {
+                        "1": "form.json"
                     }
                 },
-                "register":{
-                    "errors":{
-                        "1":"form.json"
+                "register": {
+                    "errors": {
+                        "1": "form.json"
                     }
                 },
                 "task": {
@@ -38,12 +40,20 @@
                     },
                     "evaluate/errors": {
                         "1": "task_changed.json",
-                        "2":"mismatched_exercise_value.json"
+                        "2": "mismatched_exercise_value.json"
                     },
                     "review": {
                         "list/errors": {
                             "1": "form.json"
                         }
+                    }
+                },
+                "user": {
+                    "password/errors": {
+                        "1": "form.json"
+                    },
+                    "profileInformation/errors": {
+                        "1": "form.json"
                     }
                 }
             }

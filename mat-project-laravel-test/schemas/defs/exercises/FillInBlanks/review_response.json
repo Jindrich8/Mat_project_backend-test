@@ -7,81 +7,43 @@
         },
         "txtI": {
             "type": "object",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string",
-                            "const": "txtI"
-                        },
-                        "userValue": {
-                            "type": "string"
-                        },
-                        "correctValue": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "userValue"
-                    ]
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "txtI"
                 },
-                {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string",
-                            "const": "txtI"
-                        },
-                        "correctValue": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "correctValue"
-                    ]
+                "userValue": {
+                    "type": "string"
+                },
+                "correctValue": {
+                    "type": "string"
                 }
+            },
+            "required": [
+                "userValue"
             ]
         },
         "cmb": {
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string",
-                            "const": "cmb"
-                        },
-                        "userValue": {
-                            "type": "string"
-                        },
-                        "correctValue": {
-                            "type": [
-                                "string"
-                            ]
-                        }
-                    },
-                    "required": [
-                        "userValue"
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "const": "cmb"
+                },
+                "userValue": {
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 },
-                {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string",
-                            "const": "cmb"
-                        },
-                        "correctValue": {
-                            "type": [
-                                "string"
-                            ]
-                        }
-                    },
-                    "required": [
-                        "correctValue"
+                "correctValue": {
+                    "type": [
+                        "string"
                     ]
                 }
+            },
+            "required": [
+                "userValue"
             ]
         }
     },

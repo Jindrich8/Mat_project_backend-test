@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Unauthenticated error",
-    "description": "Represents an Unauthenticated user error.",
+    "title": "Already authenticated error",
+    "description": "This error indicates that request was thrown away, beacuse user is already authenticated.",
     "type":"object",
     "properties":{
         "code":{

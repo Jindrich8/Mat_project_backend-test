@@ -1,11 +1,14 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Task evalute error response details",
-    "description": "Represents every possible error details, except for general error details, that can be thrown by the task evaluate endpoint",
+    "title": "Task evaluate error response details",
+    "description": "Represents every possible error details, except for general error details and the csrf token mismatch error, that can be thrown by the task evaluate endpoint",
     "type": "object",
     "anyOf": [
         {
             "$ref":"./errors/**/*.json"
+        },
+        {
+            "$ref":"@/defs/errors/not_found.json"
         }
     ],
     "required": ["code"]

@@ -32,7 +32,6 @@
                     "title": "Expected elements",
                     "description": "Expected valid elements at this position",
                     "type": "array",
-                    "minItems": 1,
                     "items": {
                         "type": "string"
                     }

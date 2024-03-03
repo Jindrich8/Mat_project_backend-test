@@ -1,8 +1,7 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
-    "title": "Login error details",
-    "description": "Represents details about the login error",
+    "title": "User profile information error details",
+    "description": "Represents details about the regsiter error",
     "properties": {
         "code": {
             "const": null,
@@ -10,12 +9,12 @@
         },
         "errorData": {
             "type": "object",
-            "title": "Login error details error data",
+            "title": "User profile information error details error data",
             "properties": {
-                "email": {
+                "name": {
                     "$ref": "@/defs/types/errors/field_error.json"
                 },
-                "password": {
+                "email": {
                     "$ref": "@/defs/types/errors/field_error.json"
                 }
             }

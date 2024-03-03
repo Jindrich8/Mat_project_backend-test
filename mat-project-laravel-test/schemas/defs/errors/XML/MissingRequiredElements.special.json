@@ -2,6 +2,42 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "XML: Missing required elements",
     "type": "object",
+    "$defs":{
+        "or": {
+            "type": "object",
+            "properties": {
+                "or": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/$defs/and"
+                            }
+                        ]
+                    }
+                }
+            },
+            "required":["or"]
+        },
+        "and":{
+            "type": "array",
+            "minItems":2,
+            "items":{
+                "anyOf":[
+                    {
+                        "type":"string"
+                    },
+                    {
+                        "$ref": "#/$defs/or"
+                    }
+                ]
+            }
+        }
+    },
     "properties": {
         "code": {
             "title": "Endpoint specific error code",
@@ -34,11 +70,19 @@
                 },
                 "missingElements": {
                     "title": "Missing elements",
-                    "description": "Missing required elements",
+                    "description": "Missing required elements.",
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref":"#/$defs/or"
+                            }
+                        ]
+                        
                     }
                 }
             },
