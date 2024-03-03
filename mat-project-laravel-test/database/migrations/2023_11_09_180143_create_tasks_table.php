@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('task_info_id');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('version')->default(0);
+            $table->text('source');
             $table->boolean('is_public')->default(false);
             $table->autoTimestamps();
         });

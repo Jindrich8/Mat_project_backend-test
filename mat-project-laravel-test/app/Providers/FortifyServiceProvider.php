@@ -7,9 +7,9 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\LoginResponse;
+use App\Http\Responses\LogoutResponse;
 use App\Models\User;
 use App\Utils\DebugUtils;
-use Exception;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -35,7 +35,7 @@ class FortifyServiceProvider extends ServiceProvider
             {
                 DebugUtils::log("LogoutResponse::toResponse");
                 Log::info("LogoutResponse::toResponse");
-               return response(status:204);
+               return (new LogoutResponse)->toResponse($request);
             }
         });
 
@@ -79,7 +79,7 @@ class FortifyServiceProvider extends ServiceProvider
             {
                 DebugUtils::log("LogoutResponse::toResponse");
                 Log::info("LogoutResponse::toResponse");
-               return response(status:204);
+                return (new LogoutResponse)->toResponse($request);
             }
         });
 

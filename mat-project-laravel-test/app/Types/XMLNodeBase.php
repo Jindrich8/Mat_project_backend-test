@@ -26,6 +26,8 @@ namespace App\Types {
     use App\Types\XMLContextWOffset;
     use App\Types\XMLSimpleContext;
     use App\Utils\DebugUtils;
+    use App\Dtos\Defs\Errors\XML\DefsOr;
+    use Illuminate\Support\Facades\Log;
 
     abstract class XMLNodeBase
     {
@@ -34,12 +36,12 @@ namespace App\Types {
         protected ?XMLChildren $children;
         protected ?XMLAttributes $attributes;
 
-        private int $count;
+        protected int $count;
         private readonly int $maxCount;
         private readonly bool $shouldHaveAtLeastOneChild;
         private ?XMLValidParserPosition $elementStartPos;
         private bool $hasStartPos;
-        
+
         private bool $isValueNode;
         private ?XMLContextWOffset $tempContext;
         private bool $isFirstAppendValue;
@@ -50,11 +52,12 @@ namespace App\Types {
          * @return XMLNodeBase
          * Returns parent node
          */
-        protected abstract function moveUp(XMLContextBase $context):?XMLNodeBase;
+        protected abstract function moveUp(XMLContextBase $context): ?XMLNodeBase;
 
-       protected abstract function getParentName():?string;
+        protected abstract function getParentName(): ?string;
 
-        public function getName():string{
+        public function getName(): string
+        {
             return $this->name;
         }
 
@@ -62,7 +65,7 @@ namespace App\Types {
         /**
          * This method exists for determination of nodes with same parent node
          */
-        public abstract function getParentObjectId():?object;
+        public abstract function getParentObjectId(): ?object;
 
 
 
@@ -75,12 +78,11 @@ namespace App\Types {
          */
         protected function __construct(
             string $name,
-        ?XMLAttributes $attributes = null,
-        bool $shouldHaveAtLeastOneChild = false,
-        int $maxCount = PHP_INT_MAX,
-        bool $isValueNode = true
-        )
-        {
+            ?XMLAttributes $attributes = null,
+            bool $shouldHaveAtLeastOneChild = false,
+            int $maxCount = PHP_INT_MAX,
+            bool $isValueNode = true
+        ) {
             if (!$name) throw new InternalException("XMLNode must have a name");
             $this->name = $name;
             $this->children = null;
@@ -96,11 +98,13 @@ namespace App\Types {
             $this->reset();
         }
 
-        protected function setChildren(XMLChildren $children):void{
+        protected function setChildren(XMLChildren $children): void
+        {
             $this->children = $children;
         }
 
-        public function reset(){
+        public function reset()
+        {
             $this->count = 0;
             $this->hasStartPos = false;
             $this->tempContext = null;
@@ -108,38 +112,51 @@ namespace App\Types {
             $this->isFirstAppendValue = false;
         }
 
-        
+
 
         /**
          * @param string $value
          * @param XMLContextBase $context
          * @return void
          */
-        public function appendValuePart(string $value, XMLContextBase $context): void{
-            if(!$this->isValueNode){
-                if(StrUtils::trimWhites($value,TrimType::TRIM_BOTH)){
+        public function appendValuePart(string $value, XMLContextBase $context): void
+        {
+            if (!$this->isValueNode) {
+                if (StrUtils::trimWhites($value, TrimType::TRIM_BOTH)) {
                     $this->valueNotSupported();
-                 }
-                 return;
+                }
+                return;
             }
             $columnOffset = 0;
             $lineOffset = 0;
             $byteOffset = 0;
             $trimmedCount = 0;
-           $lines = explode("\n", $value);
-           if(!$lines){
-            $lines = [$value];
-           }
-           $newValue = "";
-           $first = array_shift($lines);
-           if($this->isFirstAppendValue){
-               $trimmed = StrUtils::trimWhites($first,TrimType::TRIM_START);
-               if($trimmed === ''){
-                $first = array_shift($lines) ?? $first;
-               }
-               $this->isFirstAppendValue = false;
-           }
-            if($this->isTrimming){
+            $newLineChar = "\n";
+            $lines = explode($newLineChar, $value);
+            if (!$lines) {
+                $lines = [$value];
+            }
+            $newValue = "";
+            $first = array_shift($lines);
+            if ($this->isFirstAppendValue) {
+                $trimmedCount = 0;
+                $trimmed = StrUtils::utf8LtrimWhites(
+                    str: $first,
+                    trimmedCount: $trimmedCount
+                );
+                $byteOffset += strlen($first) - strlen($trimmed);
+                if ($trimmed === '') {
+                    $first = array_shift($lines) ?? $first;
+                    $byteOffset += strlen($newLineChar);
+                    ++$lineOffset;
+                    $columnOffset = 0;
+                } else {
+                    $columnOffset += $trimmedCount;
+                }
+
+                $this->isFirstAppendValue = false;
+            }
+            if ($this->isTrimming) {
                 $trimmedCount = 0;
                 $trimmed = StrUtils::utf8LtrimWhites(
                     str: $first,
@@ -151,42 +168,43 @@ namespace App\Types {
             }
             $newValue = $first;
             $lastLine = $first;
-            while(($line = array_shift($lines)) !== null){
+            while (($line = array_shift($lines)) !== null) {
                 $line = StrUtils::utf8LtrimWhites(
                     str: $line,
                     trimmedCount: $trimmedCount
                 );
-                $newValue.= "\n".$line;
+                $newValue .= "\n" . $line;
                 $lastLine = $line;
             }
             $this->isTrimming = $lastLine === '';
 
             $newContext = ($this->tempContext ??= new XMLContextWOffset($context, 0, 0, 0))
-            ->update(
-                $context,
-                columnOffset: $columnOffset,
-                lineOffset: $lineOffset,
-                byteOffset: $byteOffset
-            );
+                ->update(
+                    $context,
+                    columnOffset: $columnOffset,
+                    lineOffset: $lineOffset,
+                    byteOffset: $byteOffset
+                );
 
-            DebugUtils::log("appendValuePart",[
+            DebugUtils::log("appendValuePart", [
                 'value' => $value,
                 'newValue' => $newValue
             ]);
-            $this->appendValue($newValue,$newContext);
+            $this->appendValue($newValue, $newContext);
         }
 
-         /**
+        /**
          * @param string $value
          * @param XMLContextBase $context
          * @return void
          */
-        protected function appendValue(string $value, XMLContextBase $context):void{
-            if(!$this->isValueNode){
-                if(StrUtils::trimWhites($value,TrimType::TRIM_BOTH)){
+        protected function appendValue(string $value, XMLContextBase $context): void
+        {
+            if (!$this->isValueNode) {
+                if (StrUtils::trimWhites($value, TrimType::TRIM_BOTH)) {
                     $this->valueNotSupported();
-                 }
-                 return;
+                }
+                return;
             }
         }
 
@@ -205,8 +223,8 @@ namespace App\Types {
         {
             $child = $this->children->tryGetChild($name);
             if ($child === false) {
-                DebugUtils::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS",$this);
-                $this->invalidElement($getParserPosition,elementName:$name);
+                DebugUtils::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS", $this);
+                $this->invalidElement($getParserPosition, elementName: $name);
             }
             return $child;
         }
@@ -226,16 +244,17 @@ namespace App\Types {
             ?string $name = null
         ): void {
             if ($name !== null && $name !== $this->name) {
-                $this->invalidElement($context);
+                $this->invalidElement($context, elementName: $name,isInvalidSelf:true);
             }
-             if(++$this->count > $this->maxCount){
-                $this->tooManyElements($context,$this->maxCount);
+            if (++$this->count > $this->maxCount) {
+                $this->tooManyElements($context, $this->maxCount);
             }
+            Log::info("Add count - {$this->name}",['count' => $this->count]);
             $this->handleAttributes($attributes, $context);
             // dump("validateStart - {$this->name}");
             $this->elementStartPos ??= new XMLValidParserPosition();
             $this->elementStartPos->setPosFromProvider($context);
-            $this->elementStartPos->getPos($column,$line,$byteIndex);
+            $this->elementStartPos->getPos($column, $line, $byteIndex);
             $this->isFirstAppendValue = true;
             $this->hasStartPos = true;
             $this->isTrimming = true;
@@ -246,41 +265,68 @@ namespace App\Types {
          * @return void
          * @throws XMLMissingRequiredElementsException
          */
-        protected function validate(XMLContextBase $context): void{
-            if($this->children){
+        protected function validate(XMLContextBase $context): void
+        {
+            if ($this->children) {
                 $missing = [];
                 $childrenCount = 0;
-                foreach($this->children->getChildren() as $name => list($child,$required)){
-                    if($child->count !== 0){
+                foreach ($this->children->getChildren() as $name => list($child, $required)) {
+                    if ($child->count !== 0) {
                         ++$childrenCount;
-                    }
-                    else if($required){
-                        $missing[]=$name;
+                    } else if ($required) {
+                        $missing[] = $name;
                     }
                     $child->reset();
                 }
-            if($missing){
-                $this->missingRequiredElements($missing,$context);
+                if ($missing) {
+                    $this->missingRequiredElements($missing, $context);
+                } else if ($this->shouldHaveAtLeastOneChild && $childrenCount === 0) {
+                    $this->missingRequiredElements(
+                        [
+                            DefsOr::create()->setOr($this->getChildrenNames())
+                        ],
+                        $context
+                    );
+                }
             }
-            else if($this->shouldHaveAtLeastOneChild && $childrenCount === 0){
-                    $this->missingRequiredElements([$this->getChildrenNames()],$context);
-            }
-        }
         }
 
-        protected function getStartPos():GetXMLParserPosition{
+        protected function getStartPos(): GetXMLParserPosition
+        {
             $startPos = $this->elementStartPos;
-            if(!$this->hasStartPos || !$startPos){
-                throw new InternalException("Could not get start position, when validateStart was not called!",
-                context:['this' => $this]);
+            if (!$this->hasStartPos || !$startPos) {
+                throw new InternalException(
+                    "Could not get start position, when validateStart was not called!",
+                    context: ['this' => $this]
+                );
             }
             return $startPos;
         }
 
-        public function validateAndMoveUp(XMLContextBase $context):?XMLNodeBase{
+        public function validateAndMoveUp(XMLContextBase $context): ?XMLNodeBase
+        {
             $this->validate($context);
             // dump("'{$this->name}' moving up to '".$this->getParentName()."'.");
             return $this->moveUp($context);
+        }
+
+        private static function getExpectedAttributes(
+            \App\Types\XMLAttributes $nodeAttributes,
+            array $usedRequiredAttributes = [],
+            array $usedNonRequiredAttributes = []
+            ){
+                $expectedAttrs = [];
+                foreach($nodeAttributes->getRequiredAttributes() as $attr => $value){
+                    if(!array_key_exists($attr,$usedRequiredAttributes)){
+                        $expectedAttrs[]=$attr;
+                    }
+                }
+                foreach($nodeAttributes->getNonRequiredAttributes() as $attr => $value){
+                    if(!array_key_exists($attr,$usedNonRequiredAttributes)){
+                        $expectedAttrs[]=$attr;
+                    }
+                }
+                return $expectedAttrs;
         }
 
 
@@ -299,28 +345,45 @@ namespace App\Types {
                 $parseAndRequiredOrFalse = $nodeAttributes?->tryGetAttribute($attribute) ?? false;
 
                 if ($parseAndRequiredOrFalse === false) {
-                    $this->invalidAttribute($attribute, $context);
+                    $this->invalidAttribute(
+                        attribute: $attribute,
+                        expectedAttributes: self::getExpectedAttributes(
+                            nodeAttributes: $nodeAttributes,
+                            usedRequiredAttributes: $usedRequiredAttributes,
+                            usedNonRequiredAttributes: $usedNonRequiredAttributes
+                        ),
+                        getPosCallback: $context
+                    );
                 }
-                if(array_key_exists($attribute,$usedRequiredAttributes)
-                || array_key_exists($attribute,$usedNonRequiredAttributes)){
-                    $this->duplicateAttribute($attribute,$context);
+                if (
+                    array_key_exists($attribute, $usedRequiredAttributes)
+                    || array_key_exists($attribute, $usedNonRequiredAttributes)
+                ) {
+                    $this->duplicateAttribute(
+                        attribute:$attribute,
+                        expectedAttributes: self::getExpectedAttributes(
+                            nodeAttributes: $nodeAttributes,
+                            usedRequiredAttributes: $usedRequiredAttributes,
+                            usedNonRequiredAttributes: $usedNonRequiredAttributes
+                        ),
+                        context: $context
+                    );
                 }
 
-                list($parse,$required) = $parseAndRequiredOrFalse;
-                if($required){
-                $usedRequiredAttributes[$attribute] = true;
-                }
-                else{
+                list($parse, $required) = $parseAndRequiredOrFalse;
+                if ($required) {
+                    $usedRequiredAttributes[$attribute] = true;
+                } else {
                     $usedNonRequiredAttributes[$attribute] = true;
                 }
-                $parse($this,$value,$context);
+                $parse($this, $value, $context);
             }
             unset($usedNonRequiredAttributes);
             if ($nodeAttributes !== null && count($usedRequiredAttributes) < $nodeAttributes->getNumOfRequiredAttributes()) {
                 $missingAttributes = [];
-                foreach($nodeAttributes->getRequiredAttributes() as $name => $value){
-                    if(!array_key_exists($name,$usedRequiredAttributes)){
-                        $missingAttributes[]=$name;
+                foreach ($nodeAttributes->getRequiredAttributes() as $name => $value) {
+                    if (!array_key_exists($name, $usedRequiredAttributes)) {
+                        $missingAttributes[] = $name;
                     }
                 }
                 unset($usedRequiredAttributes);
@@ -332,20 +395,21 @@ namespace App\Types {
         {
             $this->invalidValue(
                 message: "Element '{$this->name}' does not support any value",
-                description:''
+                description: ''
             );
         }
 
-        protected function tooManyElements(GetXMLParserPosition $getPosCallback,?int $maximum = null,?int $specified = null,string $description = ''): void{
-            if($maximum === null && $specified !== null){
+        protected function tooManyElements(GetXMLParserPosition $getPosCallback, ?int $maximum = null, ?int $specified = null, string $description = ''): void
+        {
+            if ($maximum === null && $specified !== null) {
                 $maximum = $specified - 1;
             }
             $this->invalidElement(
-                getPosCallback:$getPosCallback,
-            message:"Too many '{$this->name}' elements",
-            description:"Maximum number of '{$this->name}' elements is $maximum"
-            .($specified !== null ? ", but $specified elements specified":"")
-        );
+                getPosCallback: $getPosCallback,
+                message: "Too many '{$this->name}' elements",
+                description: "Maximum number of '{$this->name}' elements is $maximum"
+                    . ($specified !== null ? ", but $specified elements specified" : "")
+            );
         }
 
         protected function invalidValue(
@@ -377,21 +441,22 @@ namespace App\Types {
             string $description = '',
             string $message = ''
         ) {
-            if(!XMLValidParserPosition::isPosValid(
-                column:$column,
-                line:$line,
-                byteIndex:$byteIndex
-            ) || $byteLength <= 0){
+            if (!XMLValidParserPosition::isPosValid(
+                column: $column,
+                line: $line,
+                byteIndex: $byteIndex
+            ) || $byteLength <= 0) {
                 throw new InternalException(
-                    message:$byteLength<=0?"Length should be positive.":"Invalid position offset!",
-                context:[
-                    'column'=>$column,
-                    'line'=>$line,
-                    'byteIndex'=>$byteIndex,
-                    'description'=>$description,
-                    'message'=>$message,
-                    'node'=>$this
-                ]);
+                    message: $byteLength <= 0 ? "Length should be positive." : "Invalid position offset!",
+                    context: [
+                        'column' => $column,
+                        'line' => $line,
+                        'byteIndex' => $byteIndex,
+                        'description' => $description,
+                        'message' => $message,
+                        'node' => $this
+                    ]
+                );
             }
 
 
@@ -408,12 +473,13 @@ namespace App\Types {
         }
 
         protected function valueShouldNotBeEmpty(
-        string $description,
-        string $message = ''){
+            string $description,
+            string $message = ''
+        ) {
             $this->invalidValue(
-            description: $description,
+                description: $description,
                 message: $message ?: "Element '{$this->name}' value should not be empty"
-    );
+            );
         }
 
         protected function invalidAttributeValue(string $attribute, string $description, GetXMLParserPosition $getPosCallback)
@@ -422,7 +488,7 @@ namespace App\Types {
             throw new XMLInvalidAttributeValueException(
                 element: $this->name,
                 errorData: XMLInvalidAttributeValueErrorData::create()
-                ->setInvalidAttribute($attribute)
+                    ->setInvalidAttribute($attribute)
                     ->setEColumn($column)
                     ->setELine($line)
                     ->setEByteIndex($byteIndex),
@@ -446,61 +512,78 @@ namespace App\Types {
         }
 
 
-        protected function invalidElement(GetXMLParserPosition $getPosCallback,?string $elementName = null,string $message = '', string $description = '')
+        protected function invalidElement(GetXMLParserPosition $getPosCallback, ?string $elementName = null, string $message = '', string $description = '', bool $isInvalidSelf = false)
         {
+            $expectedElements = [];
             $name = $this->name;
-            $parentName = $elementName ? $name : $this->getParentName();
-            if(!$description){
-            $description = "";
-            if ($elementName === null) {
-                $description = "Expected element with name '{$name}'.";
-            } else {
-                $children = $this->children;
-                if ($children) {
-                    $expectedChildrenNames = [];
-                    foreach($this->children->getChildren() as $name => $childAndIsReq){
-                        $child = $childAndIsReq[0];
-                        // dump("Child: {$child->name}, count: {$child->count} maxCount: {$child->maxCount}");
-                        if($child->count < $child->maxCount){
-                            $expectedChildrenNames[]=$child->getName();
-                        }
-                    }
-                    if($expectedChildrenNames){
-                        if(count($expectedChildrenNames) > 1){
-                    $description = "Expected one of these elements: "
-                        . Utils::arrayToStr($expectedChildrenNames)
-                        . ".";
-                        }
-                        else{
-                            $description = "Expected '".$expectedChildrenNames[0]."'.";
-                        }
-                    }
+            $parentName = null;
+            if (!$isInvalidSelf) {
+                $parentName = $elementName ? $name : $this->getParentName();
+            }
+            if (!$description) {
+                $description = "";
+                if ($elementName === null || $isInvalidSelf) {
+                    $expectedElements[] = $name;
                 } else {
-                    $description = "Element '{$name}' does not have any children.";
+                    $children = $this->children;
+                    if ($children) {
+                        $expectedElements = [];
+                        foreach ($this->children->getChildren() as $name => $childAndIsReq) {
+                            $child = $childAndIsReq[0];
+                            if ($child->count < $child->maxCount) {
+                                $expectedElements[] = $child->getName();
+                            }
+                        }
+                    } else {
+                        $description = "Element '{$name}' does not have any children.";
+                    }
                 }
             }
-        }
             $getPosCallback->getPos($column, $line, $byteIndex);
 
             throw new XMLInvalidElementException(
                 element: $elementName ?? $name,
                 parent: $parentName,
-                message:$message,
+                message: $message,
                 description: $description,
                 errorData: XMLInvalidElementErrorData::create()
                     ->setEColumn($column)
                     ->setELine($line)
                     ->setEByteIndex($byteIndex)
+                    ->setExpectedElements($expectedElements)
             );
         }
 
         /**
          * @param string $attribute
+         * @param string[] $expectedAttributes
          * @param GetXMLParserPosition $getPosCallback
          * @return void
          * @throws XMLInvalidAttributeException
          */
-        protected function invalidAttribute(string $attribute, GetXMLParserPosition $getPosCallback)
+        protected function invalidAttribute(string $attribute,array $expectedAttributes, GetXMLParserPosition $getPosCallback)
+        {
+            $getPosCallback->getPos(
+                column: $column,
+                line: $line,
+                byteIndex: $byteIndex
+            );
+
+            throw new XMLInvalidAttributeException(
+                element: $this->name,
+                errorData: XMLInvalidAttributeErrorData::create()
+                    ->setInvalidAttribute($attribute)
+                    ->setEColumn($column)
+                    ->setELine($line)
+                    ->setEByteIndex($byteIndex)
+                    ->setExpectedAttributes($expectedAttributes)
+            );
+        }
+
+        /**
+         * @param string[] $expectedAttributes
+         */
+        protected function duplicateAttribute(string $attribute,array $expectedAttributes, GetXMLParserPosition $getPosCallback)
         {
             $getPosCallback->getPos(
                 column: $column,
@@ -510,27 +593,12 @@ namespace App\Types {
             throw new XMLInvalidAttributeException(
                 element: $this->name,
                 errorData: XMLInvalidAttributeErrorData::create()
-                ->setInvalidAttribute($attribute)
+                    ->setInvalidAttribute($attribute)
                     ->setEColumn($column)
                     ->setELine($line)
                     ->setEByteIndex($byteIndex)
-            );
-        }
-
-        protected function duplicateAttribute(string $attribute, GetXMLParserPosition $getPosCallback){
-            $getPosCallback->getPos(
-                column: $column,
-                line: $line,
-                byteIndex: $byteIndex
-            );
-            throw new XMLInvalidAttributeException(
-                element: $this->name,
-                errorData: XMLInvalidAttributeErrorData::create()
-                ->setInvalidAttribute($attribute)
-                    ->setEColumn($column)
-                    ->setELine($line)
-                    ->setEByteIndex($byteIndex),
-                    message:"Attribute '$attribute' should be specified only once"
+                    ->setExpectedAttributes($expectedAttributes),
+                message: "Attribute '$attribute' should be specified only once"
             );
         }
 
@@ -550,20 +618,21 @@ namespace App\Types {
 
             throw new XMLMissingRequiredAttributesException(
                 element: $this->name,
-                missingRequiredAttributes: $missingAttributes,
                 errorData: XMLMissingRequiredAttributesErrorData::create()
                     ->setELine($line)
                     ->setEColumn($column)
                     ->setEByteIndex($byteIndex)
+                    ->setMissingAttributes($missingAttributes)
             );
         }
 
         /**
-         * @param array $missingElements
+         * @param (string|DefsOr)[] $missingElements
          * @param GetXMLParserPosition $getPosCallback
          * @throws XMLMissingRequiredElementsException
          */
-        protected function missingRequiredElements(array $missingElements, GetXMLParserPosition $getPosCallback){
+        protected function missingRequiredElements(array $missingElements, GetXMLParserPosition $getPosCallback)
+        {
             $getPosCallback->getPos(
                 column: $column,
                 line: $line,
@@ -572,11 +641,11 @@ namespace App\Types {
 
             throw new XMLMissingRequiredElementsException(
                 element: $this->name,
-                missingRequiredElements: $missingElements,
                 errorData: XMLMissingRequiredElementsErrorData::create()
                     ->setELine($line)
                     ->setEColumn($column)
                     ->setEByteIndex($byteIndex)
+                    ->setMissingElements($missingElements)
             );
         }
     }

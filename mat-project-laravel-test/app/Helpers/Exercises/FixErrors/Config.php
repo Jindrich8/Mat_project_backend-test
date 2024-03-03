@@ -2,14 +2,16 @@
 
 namespace App\Helpers\Exercises\FixErrors {
 
+    use App\Types\ValidableString;
+
     class Config
     {
-        public readonly string $correctTextName;
-        public readonly string $wrongTextName;
+        public readonly ValidableString $correctText;
+        public readonly ValidableString $wrongText;
 
-        public function __construct(string $correctTextName, string $wrongTextName){
-            $this->correctTextName = $correctTextName;
-            $this->wrongTextName = $wrongTextName;
+        public function __construct(ValidableString $correctText, ValidableString $wrongText){
+            $this->wrongText = $wrongText;
+            $this->correctText = $correctText;
         }
     }
 }

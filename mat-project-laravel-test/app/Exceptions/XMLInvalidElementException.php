@@ -35,8 +35,17 @@ namespace App\Exceptions {
 
 
             $correctElements = $errorData->expectedElements;
-            if (!$description && $correctElements) {
-                $description = "Expected one of: " . Utils::arrayToStr($correctElements);
+            if(!$description){
+                $description = $correctElements ?
+                    (count($correctElements) > 1 ?
+                        "Expected one of: " . Utils::arrayToStr($correctElements) . "."
+                        : "Expected element '{$correctElements[0]}'."
+                    )
+                    : (
+                        $parent ?
+                        "Element '$parent' does not support any unspecified child element."
+                        : "No element is supported."
+                    );
             }
 
             parent::__construct(

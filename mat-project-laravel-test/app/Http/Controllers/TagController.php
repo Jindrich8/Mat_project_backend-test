@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class TagController extends Controller
 {
-    public static function construct():static{
-        return new static();
-    }
     /**
      * Get all tags
      */

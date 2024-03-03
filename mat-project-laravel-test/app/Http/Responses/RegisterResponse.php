@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Responses;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 
@@ -13,7 +14,7 @@ class RegisterResponse implements RegisterResponseContract
      */
     public function toResponse($request)
     {
-        return response()->json(['two_factor' => false]);
+        return response(status:Response::HTTP_NO_CONTENT);
     }
 
 }

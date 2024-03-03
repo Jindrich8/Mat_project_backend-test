@@ -45,6 +45,9 @@ namespace App\Types {
         public function getPos(?int &$column, ?int &$line, ?int &$byteIndex): void
         {
             $this->context->getPos($column, $line, $byteIndex);
+            if($this->lineOffset !== 0){
+                $column = 1;
+            }
             $column += $this->columnOffset;
             $line += $this->lineOffset;
             $byteIndex += $this->byteOffset;

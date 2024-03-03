@@ -24,6 +24,8 @@ namespace App\Helpers {
     use App\ModelConstants\TagTaskInfoConstants;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
+    use App\ModelConstants\TaskReviewConstants;
+    use App\ModelConstants\TaskReviewTemplateConstants;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
     use App\Types\SaveTask;
@@ -38,6 +40,38 @@ namespace App\Helpers {
 
     class TaskHelper
     {
+
+        /**
+         * @param int[] $taskInfoIds
+         */
+        public static function getTaskReviewIdsByTaskInfoId(array $taskInfoIds){
+            $userId = UserHelper::getUserId();
+            $taskReviewTemplateTable = TaskReviewTemplateConstants::TABLE_NAME;
+            $taskReviewTable = TaskReviewConstants::TABLE_NAME;
+        
+           $taskReviewIdsByTaskInfoId = DB::table($taskReviewTable)
+            ->select([
+                DBHelper::colFromTableAsCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
+                DBHelper::colFromTableAsCol($taskReviewTable,TaskReviewConstants::COL_ID)
+            ])
+            ->join(
+                $taskReviewTemplateTable,
+            DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID),
+            '=',
+            DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_ID)
+            )
+            ->whereIn(
+                DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
+            '=',
+            $taskInfoIds
+        )->where(
+            DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_USER_ID),
+        '=',
+        $userId)
+        ->pluck(TaskReviewConstants::COL_ID,TaskReviewTemplateConstants::COL_TASK_INFO_ID);
+        return $taskReviewIdsByTaskInfoId;
+        }
+
         /**
          * @template T
          * @template TExerciseDto of ClassStructure
@@ -117,7 +151,7 @@ namespace App\Helpers {
                     [$exerciseEnd, &$dest] =  $stack[$stackEntryKey];
                     unset($stack[$stackEntryKey]);
                 }
-                if ($exI === DBHelper::access($nextGroup, GroupConstants::COL_START)) {
+                if ($nextGroup && $exI === DBHelper::access($nextGroup, GroupConstants::COL_START)) {
                     $groupId = DBHelper::access($nextGroup, $groupIdName);
                     $groupDto = $groupToDto($resourcesByGroupId[$groupId] ?? []);
                     unset($resourcesByGroupId[$groupId]);
@@ -169,25 +203,6 @@ namespace App\Helpers {
                 }
             }
             return null;
-        }
-
-        public static function getInfo(BareTaskWAuthorName $task, ?TaskDetailInfo $info = null): TaskDetailInfo
-        {
-            return ($info ?? TaskDetailInfo::create())
-                ->setId(ResponseHelper::translateIdForUser($task->id))
-                ->setAuthor(
-                    AuthorInfo::create()
-                        ->setName($task->authorName)
-                )
-                ->setDifficulty(DtoUtils::createOrderedEnumDto($task->difficulty))
-                ->setClassRange(
-                    ResponseOrderedEnumRange::create()
-                        ->setMin(DtoUtils::createOrderedEnumDto($task->minClass))
-                        ->setMax(DtoUtils::createOrderedEnumDto($task->maxClass))
-                )
-                ->setDescription($task->description)
-                ->setVersion(ResponseHelper::translateIdForUser($task->version))
-                ->setName($task->name);
         }
 
         /**
@@ -254,8 +269,9 @@ namespace App\Helpers {
 
         /**
          * @param int[] &$taskInfoIds
+         * @return array<int,list<array{int,string}>> $tagsByTaskId
          */
-        public static function getTagsByTaskInfoId(array &$taskInfoIds)
+        public static function getTagsByTaskInfoId(array &$taskInfoIds):array
         {
             /**
              * @var array<int,list<array{int,string}>> $tagsByTaskId
@@ -465,7 +481,10 @@ namespace App\Helpers {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
                 $builder->whereBetween(
                     $column,
-                    [$minTimestamp, $maxTimestamp]
+                    [
+                        TimeStampUtils::timestampToString($minTimestamp), 
+                        TimeStampUtils::timestampToString($maxTimestamp)
+                    ]
                 );
                 $rangeOrError = null;
             }

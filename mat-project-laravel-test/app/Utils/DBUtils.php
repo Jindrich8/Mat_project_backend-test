@@ -3,7 +3,6 @@
 namespace App\Utils {
 
     use App\Exceptions\InternalException;
-    use App\Exceptions\UnsupportedVariantException;
     use App\Types\DBTypeEnum;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Str;

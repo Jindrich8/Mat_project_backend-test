@@ -20,7 +20,9 @@ return new class extends Migration
             $table->fixedFloat4('score');
             $table->fixedFloat4('max_points');
             $table->json('exercises');
+            $table->timestamp('evaluated_at');
             $table->autoTimestamps();
+            $table->unique(['user_id','task_review_template_id']);
         });
         
         DBUtils::addPercentDecimalConstraint('task_reviews','score');

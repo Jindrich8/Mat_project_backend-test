@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Responses;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
 
@@ -13,7 +14,7 @@ class LogoutResponse implements LogoutResponseContract
      */
     public function toResponse($request)
     {
-        return response()->json(['two_factor' => false]);
+        return response(Response::HTTP_NO_CONTENT);
     }
 
 }

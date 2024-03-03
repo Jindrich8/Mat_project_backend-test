@@ -20,8 +20,8 @@ namespace App\Helpers\Exercises\FixErrors {
         public static function create(){
             $node = new self();
             $node->setChildren(XMLChildren::construct()
-            ->addChild(CorrectTextNode::create($node))
-            ->addChild(WrongTextNode::create($node))
+            ->addChild(CorrectTextNode::create($node),required:true)
+            ->addChild(WrongTextNode::create($node),required:true)
         );
         return $node;
         }

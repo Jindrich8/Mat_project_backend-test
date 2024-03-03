@@ -43,7 +43,7 @@ namespace App\Helpers\CreateTask {
         $lastExercise = $taskRes->getLastExercise();
 
         $element = TaskSrcConfig::get()->exerciseInstructions;
-        $instructions =$lastExercise->instructions;
+        $instructions =$lastExercise->instructions  ?? '';
         $error = $element->validateWLength($instructions,$length);
         $lastExercise->instructions = $instructions;
         if($error){

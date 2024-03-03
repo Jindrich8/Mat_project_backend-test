@@ -23,7 +23,7 @@ namespace App\Helpers\Exercises\FixErrors {
         protected function __construct(FixErrorsXMLCreateNode $parent){
            $config = TaskSrcConfig::get()->getFixErrorsConfig();
             parent::__construct(
-                name:$config->wrongTextName,
+                name:$config->wrongText->name,
                 parent:$parent,
                 maxCount:1
             );
@@ -33,6 +33,16 @@ namespace App\Helpers\Exercises\FixErrors {
         {
            $content = $this->parent->getContent();
            $content->wrongText=($content->wrongText ?? "").$value;
+        }
+
+        protected function validate(XMLContextBase $context): void
+        {
+            $config = TaskSrcConfig::get()->getFixErrorsConfig();
+            $content = $this->parent->getContent();
+            $error = $config->wrongText->validateWLength($content->wrongText,$length);
+            if($error !== null){
+                $this->invalidValue($error);
+            }
         }
     }
 }

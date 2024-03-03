@@ -14,15 +14,13 @@ namespace App\Helpers {
         /**
          * @throws InvalidValue
          */
-        public static function success(SuccessResponse|ClassStructure|Response $data): Response|\Illuminate\Contracts\Routing\ResponseFactory
+        public static function success(ClassStructure|Response $data): Response|\Illuminate\Contracts\Routing\ResponseFactory
         {
             if($data instanceof ClassStructure){
-                if(!($data instanceof SuccessResponse)){
-                $data = SuccessResponse::create()
-                ->setData($data);
-                }
+                Log::info(self::class."::success - ClassStructure");
+                $data = DtoUtils::exportedDtoToJson(['data' => DtoUtils::exportDto($data)]);
                 $data = response(
-                    content: DtoUtils::dtoToJson($data)
+                    content: $data
                 );
             }
             Log::info("ResponseHelper::success: ",['data' => $data->content()]);

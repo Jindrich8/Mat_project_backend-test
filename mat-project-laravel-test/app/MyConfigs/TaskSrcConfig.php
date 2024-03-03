@@ -102,8 +102,8 @@ namespace App\MyConfigs {
             );
 
             $this->fixErrorsConfig = new FixErrors\Config(
-                correctTextName:'correctText',
-                wrongTextName:'text'
+                correctText: new ValidableString('correctText',maxLen:1024,minLen:1),
+                wrongText:new ValidableString('text',maxLen:1024,minLen:1)
             );
         }
 

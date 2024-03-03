@@ -20,6 +20,11 @@ namespace App\Utils {
             }
         }
 
+        public static function isLogin(\Illuminate\Routing\Route $route){
+            return $route->getName() === 'login' || $route->getActionName() === 'login'
+            || $route->uri() === $route->getPrefix().'/login';
+        }
+
         public static function post(string $uri, callable $action)
         {
             return Route::post($uri, fn(Request $request, ...$args)=>self::handle(

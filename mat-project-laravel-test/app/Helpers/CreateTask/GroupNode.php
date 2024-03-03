@@ -23,6 +23,11 @@ namespace App\Helpers\CreateTask {
          */
         private array $indexes;
 
+        /**
+         * @var int[] $counts
+         */
+        private array $counts;
+
         public static function create(DocumentContent $parent){
             $node = new self($parent);
 
@@ -55,6 +60,7 @@ namespace App\Helpers\CreateTask {
             );
             $this->parent = $parent;
                 $this->indexes = [];
+                $this->counts = [];
                 $this->members = null;
         }
 
@@ -125,7 +131,7 @@ namespace App\Helpers\CreateTask {
             if ($prevIndex !== null && Utils::lastArrayValue($this->indexes) !== $prevIndex) {
                 $this->indexes[] = $prevIndex;
             }
-
+            $this->counts[]=$this->count;
 
         }
 
@@ -151,6 +157,8 @@ namespace App\Helpers\CreateTask {
                 );
             }
             $group->length = $exerciseCount - $group->start;
+            
+            $this->count = array_pop($this->counts);
         }
 }
 }

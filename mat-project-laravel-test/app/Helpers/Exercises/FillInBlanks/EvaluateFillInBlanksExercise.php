@@ -14,6 +14,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Dtos\InternalTypes\TextInput;
     use App\Dtos\InternalTypes\Combobox;
     use App\Exceptions\InvalidEvaluateValueException;
+    use App\Utils\DtoUtils;
+    use Illuminate\Support\Facades\Log;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class EvaluateFillInBlanksExercise implements CEvaluateExercise
@@ -31,7 +33,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
          */
         public function evaluateAndSetAsContentTo(ClassStructure $value, ExerciseReview $exercise): void
         {
-            if(!($value instanceof FillInBlanksEvaluateRequest)){
+            if (!($value instanceof FillInBlanksEvaluateRequest)) {
                 throw new InvalidEvaluateValueException();
             }
             $points = 0;
@@ -40,52 +42,48 @@ namespace App\Helpers\Exercises\FillInBlanks {
 
             $response = FillInBlanksReviewResponse::create()
                 ->setContent([]);
-                /**
-                 * @var TextInput|Combobox|string $item
-                 */
-                foreach ($this->content->content as $item) {
-                    $responseItem = null;
-                    if (!is_string($item)) {
-                        $filled = $data->content[$uiI++] ?? null;
-                        if ($item instanceof TextInput) {
-                            $responseItem = DefsTxtI::create();
-                            if ($filled === null) {
-                                $responseItem->setCorrectValue($item->correctText);
-                            } else {
-                                $responseItem
-                                    ->setUserValue($filled);
-                                if ($filled === $item->correctText) {
-                                    ++$points;
-                                } else {
-                                    $responseItem->setCorrectValue($item->correctText);
-                                }
-                            }
+            /**
+             * @var TextInput|Combobox|string $item
+             */
+            foreach ($this->content->content as $item) {
+                $responseItem = null;
+                if (!is_string($item)) {
+                    $filled = $data->content[$uiI++] ?? null;
+                    if ($item instanceof TextInput) {
+                        $responseItem = DefsTxtI::create()
+                            ->setUserValue($filled);
+                        if ($filled === null) {
+                            $responseItem->setCorrectValue($item->correctText);
+                        } else if ($filled === $item->correctText) {
+                            ++$points;
                         } else {
-                            $responseItem = DefsCmb::create();
-                            if ($filled === null) {
-                                $responseItem->setCorrectValue($item->values[$item->selectedIndex]);
-                            } else {
-                                $responseItem
-                                    ->setUserValue($filled);
-                                if ($filled === $item->selectedIndex) {
-                                    ++$points;
-                                } else {
-                                    $responseItem->setCorrectValue($item->values[$item->selectedIndex]);
-                                }
-                            }
+                            $responseItem->setCorrectValue($item->correctText);
+                        }
+                    } else {
+                        $filledValue = $item->values[$filled] ?? null;
+                        $responseItem = DefsCmb::create()
+                            ->setUserValue($filledValue);
+                        if ($filledValue === null) {
+                            $responseItem->setCorrectValue($item->values[$item->selectedIndex]);
+                        } else if ($filled === $item->selectedIndex) {
+                            ++$points;
+                        } else {
+                            $responseItem->setCorrectValue($item->values[$item->selectedIndex]);
                         }
                     }
-                    else{
-                        $responseItem = $item;
-                    }
-                    $response->content[] = $responseItem;
+                } else {
+                    $responseItem = $item;
                 }
+                $response->content[] = $responseItem;
+            }
             $exercise->setPoints(
                 ExercisePoints::create()
                     ->setHas($points)
                     ->setMax($uiI)
             )
                 ->setDetails($response);
+            Log::info("exporting " . self::class . "", ['response' => $response]);
+            DtoUtils::exportDto($response);
         }
     }
 }

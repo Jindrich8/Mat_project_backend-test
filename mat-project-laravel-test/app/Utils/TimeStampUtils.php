@@ -10,11 +10,7 @@ namespace App\Utils {
     class TimeStampUtils
     {
         public static function tryParseIsoTimestamp(string $timestamp):Carbon|null{
-           $carbon = Carbon::createFromFormat(
-                format: DateTime::ATOM,
-                time: $timestamp,
-                timezone: new DateTimeZone('UTC')
-           );
+           $carbon = Carbon::createFromFormat(DateTime::ATOM,$timestamp);
            return $carbon ?: null;
         }
 
@@ -53,6 +49,12 @@ namespace App\Utils {
                 ]);
             }
             return $str;
+        }
+
+        public static function timestampNowUtcString():string{
+            $timestamp = Carbon::now();
+            self::timestampToUtc($timestamp);
+            return self::timestampToString($timestamp);
         }
     }
 }

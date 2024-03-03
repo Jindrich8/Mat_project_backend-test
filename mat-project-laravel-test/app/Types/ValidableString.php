@@ -30,14 +30,14 @@ namespace App\Types {
         }
 
         /**
-         * @param string &$value
+         * @param ?string &$value
          * @param ?int &$length
          * * If length is **null**, then it is set to calculated length, if length was calculated,
          * * if it is **negative**, exception is thrown,
          * * otherwise it is used as value length.
          * @return string|null
          */
-        public function validateWLength(string &$value,?int &$length):string|null{
+        public function validateWLength(?string &$value,?int &$length):string|null{
             $error = null;
             if(!ValidateUtils::validateString($value,$length,$this->minLen,$this->maxLen)){
                 $error = "Value of '{$this->name}' element should be string with length from '{$this->minLen}' to '{$this->maxLen}'.";

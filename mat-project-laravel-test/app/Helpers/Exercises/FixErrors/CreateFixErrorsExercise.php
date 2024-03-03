@@ -13,8 +13,10 @@ use App\Types\CCreateExerciseHelperState;
 use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
 use App\Utils\DtoUtils;
+use App\Utils\StrUtils;
 use DB;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Fisharebest\Algorithm\MyersDiff;
 use Swaggest\JsonSchema\Context;
 use Swaggest\JsonSchema\InvalidValue;
 use Symfony\Component\CssSelector\Exception\InternalErrorException;
@@ -69,11 +71,23 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
         }
         $data = [];
         for($i = 0; $i < $count; ++$i){
-            $exportedContent = DtoUtils::exportDto($this->contents[$i]);
+            $content = $this->contents[$i];
+            $distance = 0;
+            $myers = new MyersDiff();
+            // TODO: change this to calculate only distance between texts, there is no need to calculate whole edit sequence
+            $calculated = $myers->calculate(StrUtils::getChars($content->wrongText),StrUtils::getChars($content->correctText));
+            while(($op = array_shift($calculated)) !== null){
+                [$ch, $opAction] = $op;
+                if($opAction !== MyersDiff::KEEP){
+                    ++$distance;
+                }
+            }
+            $exportedContent = DtoUtils::exportDto($content);
             $data[]=[
                 FixErrorsConstants::COL_EXERCISEABLE_ID => $ids[$i],
-                FixErrorsConstants::COL_CORRECT_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::CORRECT_TEXT),
+                FixErrorsConstants::COL_CORRECT_TEXT => DtoUtils::accessExportedField($exportedContent,FixErrorsContent::CORRECT_TEXT),
                 FixErrorsConstants::COL_WRONG_TEXT =>DtoUtils::accessExportedField($exportedContent,FixErrorsContent::WRONG_TEXT),
+                FixErrorsConstants::COL_DISTANCE => $distance
             ];
         }
        if(!FixErrors::insert($data)){

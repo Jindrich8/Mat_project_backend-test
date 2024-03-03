@@ -6,6 +6,7 @@ namespace App\Types {
     use App\Exceptions\InvalidArgumentException;
     use App\Utils\DebugUtils;
     use App\Utils\StrUtils;
+    use Illuminate\Support\Facades\Log;
     use Illuminate\Support\Str;
     use XMLParser;
 
@@ -156,13 +157,14 @@ namespace App\Types {
         private function elementStartHandler(XMLParser $parser, string $name, array $attributes): void
         {
             $this->updateEntryType(XMLParserEntryType::ELEMENT_START);
-            // dump("ELEMENT START - $name");
+            Log::info("ELEMENT START - $name");
             $this->events->elementStartHandler($this, $name, $attributes);
             $this->updatePos();
         }
 
         private function elementEndHandler(XMLParser $parser, string $name): void
         {
+            Log::info("ELEMENT END - $name");
             $this->updateEntryType(XMLParserEntryType::ELEMENT_END);
             $this->events->elementEndHandler($this, $name);
             $this->updatePos();
@@ -312,12 +314,12 @@ namespace App\Types {
         private function updateEntryType(XMLParserEntryType $entryType)
         {
             // dump("Update entry type {$entryType->name}");
-            if ($this->entryType === null && $entryType !== XMLParserEntryType::ELEMENT_START) {
-                throw new InternalException(
-                    message: "XML file should start with element start, but found '" . $entryType->name . "'.",
-                    context: ['entryType' => $entryType, 'this' => $this]
-                );
-            }
+            // if ($this->entryType === null && $entryType !== XMLParserEntryType::ELEMENT_START) {
+            //     throw new InternalException(
+            //         message: "XML file should start with element start, but found '" . $entryType->name . "'.",
+            //         context: ['entryType' => $entryType, 'this' => $this]
+            //     );
+            // }
             $this->nextEntryType = $entryType;
         }
 

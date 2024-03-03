@@ -12,6 +12,8 @@ namespace App\Utils {
     use Swaggest\JsonSchema\Structure\ClassStructure;
     use Throwable;
     use BackedEnum;
+    use Illuminate\Support\Facades\Log;
+    use Swaggest\JsonSchema\Context;
 
     class DtoUtils
     {
@@ -59,7 +61,8 @@ namespace App\Utils {
          */
         public static function exportDto(ClassStructure $dto):mixed{
             try{
-            return $dto->export($dto);
+            $exported = $dto::export($dto);
+            return $exported;
             }
             catch(Throwable $e){
                 throw new InternalException(context:[

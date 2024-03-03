@@ -73,8 +73,7 @@ namespace App\Helpers\CreateTask {
         {
             $preGroupIndex = $this->currentGroupIndex;
             $this->currentGroupIndex = count($this->groupsAndResources);
-            $group = new BareGroup();
-            $group->start = $this->getExerciseCount();
+            $group = new BareGroup(start:$this->getExerciseCount());
             $this->groupsAndResources[] = [$group, []];
             // dump($this->groupsAndResources);
             return $preGroupIndex;
@@ -161,7 +160,9 @@ namespace App\Helpers\CreateTask {
                         );
                 }
             }
-            $this->currentExercise = new BareExercise();
+            $newExercise = new BareExercise();
+            $newExercise->order = $this->exerciseCount - 1;
+            $this->currentExercise = $newExercise;
         }
 
         public function getExerciseCount()
@@ -313,14 +314,13 @@ namespace App\Helpers\CreateTask {
             {
                 $exerciseBindings = [];
                 {
-                $exerciseI = 0;
                 foreach ($this->exerciseHelpers as $helperAndExercises) {
                     $exercises = $helperAndExercises[1];
 
                     foreach($exercises as $exercise){
                         $exerciseBindings[] = [
                             $taskInfoId,
-                            $exerciseI++,
+                            $exercise->order,
                             $exercise->instructions,
                             $exercise->weight,
                             $exercise->exerciseType->value
@@ -355,13 +355,13 @@ namespace App\Helpers\CreateTask {
             return $taskInfoId;
         }
 
-        public function insert(): int
+        public function insert(string $taskSource): int
         {
             $this->tryToGetHelper(addCurrentExercise: true);
             /**
              * @var int $taskId
              */
-            $taskId = DB::transaction(function () {
+            $taskId = DB::transaction(function ()use($taskSource) {
                $taskInfoId = $this->insertTaskInfoAndContent();
                 $taskId = null;
                 // insert task
@@ -371,6 +371,7 @@ namespace App\Helpers\CreateTask {
                 $task->user_id = UserHelper::getUserId();
                 $task->task_info_id = $taskInfoId;
                 $task->is_public = $this->task->isPublic;
+                $task->source = $taskSource;
                 $task->saveOrFail();
                 $taskId = $task->id;
                 }
@@ -382,14 +383,15 @@ namespace App\Helpers\CreateTask {
             return $taskId;
         }
 
-        public function update(int $taskId){
+        public function update(int $taskId,string $taskSource){
             $this->tryToGetHelper(addCurrentExercise: true);
-            DB::transaction(function () use($taskId) {
+            DB::transaction(function () use($taskId,$taskSource) {
                $taskUpdateQuery = DB::table(TaskConstants::TABLE_NAME)
                ->where(TaskConstants::COL_ID,'=',$taskId);
                 $taskUpdateData = [
                     TaskConstants::COL_IS_PUBLIC => $this->task->isPublic,
-                    TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION." + 1")
+                    TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION." + 1"),
+                    TaskConstants::COL_SOURCE => $taskSource
                 ];
 
                 DebugUtils::log("Task successfully inserted",['taskId' => $taskId]);

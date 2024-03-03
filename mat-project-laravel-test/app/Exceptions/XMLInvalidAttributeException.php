@@ -5,6 +5,8 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ApplicationErrorInformation;
+    use App\Utils\StrUtils;
+    use App\Utils\Utils;
 
 class XMLInvalidAttributeException extends XMLParsingException{
 
@@ -19,6 +21,9 @@ class XMLInvalidAttributeException extends XMLParsingException{
         $attribute = $errorData->invalidAttribute;
         if(!$message){
             $message = "Element '{$element}' has invalid attribute '{$attribute}'";
+        }
+        if(!$description){
+            $description = "Expected attributes: ".Utils::arrayToStr($errorData->expectedAttributes).".";
         }
         $message = self::formatMessage($message,
             column:$errorData->eColumn,

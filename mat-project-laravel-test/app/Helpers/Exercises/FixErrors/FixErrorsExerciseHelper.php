@@ -55,16 +55,27 @@ class FixErrorsExerciseHelper implements CExerciseHelper
     {
         $table = FixErrorsConstants::TABLE_NAME;
         $idName = FixErrors::getPrimaryKeyName();
-        $correctTextByIds = DB::table($table)
-            ->select([$idName, FixErrorsConstants::COL_CORRECT_TEXT])
+        $fixErrorsExercises = DB::table($table)
+            ->select([
+                $idName, 
+            FixErrorsConstants::COL_CORRECT_TEXT,
+            FixErrorsConstants::COL_DISTANCE
+            ])
             ->whereIn($idName, $ids)
-            ->pluck(FixErrorsConstants::COL_CORRECT_TEXT,key:$idName)
-            ->all();
+            ->get();
             unset($ids);
         $evaluateExercises = [];
-        while (($exerciseId = Utils::arrayFirstKey($correctTextByIds)) !== null) {
-            $correctText = Utils::arrayShift($correctTextByIds);
-            $evaluateExercises[$exerciseId] = new EvaluateFixErrorsExercise($correctText);
+        while (($fixErrorsExercise = $fixErrorsExercises->shift()) !== null) {
+            $exerciseId = DBHelper::access($fixErrorsExercise,$idName);
+            /**
+             * @var string $correctText
+             */
+            $correctText = DBHelper::access($fixErrorsExercise,FixErrorsConstants::COL_CORRECT_TEXT);
+            /**
+             * @var int $distance
+             */
+            $distance = DBHelper::access($fixErrorsExercise,FixErrorsConstants::COL_DISTANCE);
+            $evaluateExercises[$exerciseId] = new EvaluateFixErrorsExercise($correctText,$distance);
         }
         return $evaluateExercises;
     }

@@ -22,6 +22,7 @@ return new class extends Migration
 
             $table->string('correct_text', 2040);
             $table->string('wrong_text', 2040);
+            $table->unsignedInteger("distance");
             $table->autoTimestamps();
         });
     }
