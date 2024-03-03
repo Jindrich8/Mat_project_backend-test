@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Defs\Endpoints\Task\Evaluate\EvaluateResponseTask;
 use App\Dtos\Defs\Types\Errors\EnumArrayError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use App\Dtos\Defs\Endpoints\Task\Review;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
+use App\Exceptions\UnsupportedVariantException;
 use App\Helpers\Database\DBHelper;
 use App\Helpers\Database\UserHelper;
 use App\Helpers\RequestHelper;
@@ -35,13 +37,15 @@ use App\Types\ConstructableTrait;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
 use App\Utils\Utils;
+use App\Utils\ValidateUtils;
+use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
 
 class TaskReviewController extends Controller
 {
-    use ConstructableTrait;
 
     public function get(Request $request, int $id): Review\Get\ReviewTaskResponse
     {
@@ -53,7 +57,7 @@ class TaskReviewController extends Controller
         $review = DB::table($taskReviewTable)
             ->select([
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_EXERCISES),
-                DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_CREATED_AT),
+                DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_EVALUATED_AT),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_ID),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_MAX_POINTS),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_SCORE),
@@ -61,11 +65,11 @@ class TaskReviewController extends Controller
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable, TaskReviewTemplateConstants::COL_TASK_ID),
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable, TaskReviewTemplateConstants::COL_TASK_INFO_ID),
                 DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
-                DBHelper::colExpression($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
-                DBHelper::colExpression($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
-                DBHelper::colExpression($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
-                DBHelper::colExpression($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
-                DBHelper::colExpression($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS)
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS)
             ])
             ->join(
                 $taskReviewTemplateTable,
@@ -89,7 +93,8 @@ class TaskReviewController extends Controller
                 '=',
                 $userId
             )
-            ->first();
+            ->first()
+            ?? throw new AppModelNotFoundException('Review',['id'=>$id]);
         /**
          * @var int $taskInfoId
          */
@@ -104,17 +109,31 @@ class TaskReviewController extends Controller
             wrapper: TaskReviewExercisesContent::CONTENT
         );
 
-        $score = DBHelper::access($review, TaskReviewConstants::COL_SCORE);
-        $maxPoints = DBHelper::access($review, TaskReviewConstants::COL_MAX_POINTS);
-        $evaluationTimestamp = TimeStampUtils::parseIsoTimestampToUtc(
-            DBHelper::access($review, TaskReviewConstants::COL_CREATED_AT)
+        $score = ValidateUtils::validateFloat(
+            DBHelper::access($review, TaskReviewConstants::COL_SCORE)
+        );
+        $maxPoints = ValidateUtils::validateFloat(
+            DBHelper::access($review, TaskReviewConstants::COL_MAX_POINTS)
+        );
+        $evaluationTimestamp = Carbon::parse(
+            DBHelper::access($review, TaskReviewConstants::COL_EVALUATED_AT),
+            'UTC'
         );
 
-
-        $responseTask = Review\Get\GetResponseTask::create()
-            ->setId(DBHelper::access($review, TaskReviewConstants::COL_ID))
+        $orientation = TaskDisplay::fromThrow(DBHelper::access($review, TaskInfoConstants::COL_ORIENTATION));
+        $responseTask = EvaluateResponseTask::create()
+            ->setId(
+                ResponseHelper::translateIdForUser(
+                    DBHelper::access($review, TaskReviewConstants::COL_ID)
+                )
+            )
             ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
-            ->setDisplay(TaskDisplay::translateFrom(DBHelper::access($review, TaskInfoConstants::COL_ORIENTATION)))
+            ->setDisplay(match($orientation){
+                TaskDisplay::HORIZONTAL => EvaluateResponseTask::HORIZONTAL,
+                TaskDisplay::VERTICAL => EvaluateResponseTask::VERTICAL,
+                default => throw new UnsupportedVariantException($orientation)
+            })
+            ->setDescription(DBHelper::access($review, TaskInfoConstants::COL_DESCRIPTION))
             ->setPoints(
                 ExercisePoints::create()
                     ->setHas($maxPoints * $score)
@@ -122,7 +141,7 @@ class TaskReviewController extends Controller
             )
             ->setEvaluationTimestamp(TimeStampUtils::timestampToString($evaluationTimestamp));
 
-        $taskEntries = &$responseTask->entries;
+        $taskEntries = &$responseTask->setEntries([])->entries;
         TaskHelper::getTaskEntries(
             taskInfoId: $taskInfoId,
             exercises: $exercises->content,
@@ -159,6 +178,7 @@ class TaskReviewController extends Controller
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_CREATED_AT),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_MAX_POINTS),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_SCORE),
+                DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_EVALUATED_AT),
                 DBHelper::colFromTableAsCol($taskReviewTable, TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID),
 
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable, TaskReviewTemplateConstants::COL_TASK_ID),
@@ -216,7 +236,7 @@ class TaskReviewController extends Controller
             ->setName(DBHelper::access($review, TaskReviewTemplateConstants::COL_AUTHOR_NAME));
         $authorId = DBHelper::access($review, TaskReviewTemplateConstants::COL_AUTHOR_ID);
         if ($authorId !== null) {
-            $author->setId($authorId);
+            $author->setId(ResponseHelper::translateIdForUser($authorId));
         }
 
 
@@ -225,45 +245,56 @@ class TaskReviewController extends Controller
         $score = (float)DBHelper::access($review, TaskReviewConstants::COL_SCORE);
 
         $response = Review\Detail\TaskReviewDetailResponse::create()
-            ->setId($id)
+            ->setId(ResponseHelper::translateIdForUser($id))
             ->setPoints(
                 ExercisePoints::create()
                     ->setMax($maxPoints)
                     ->setHas($score * $maxPoints)
             )
-            ->setTaskHasChanged($taskHasChanged)
-            ->setTaskDetail(
-                ReviewTaskDetailInfo::create()
-                    ->setId(DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_ID))
-                    ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
-                    ->setDescription(DBHelper::access($review, TaskInfoConstants::COL_DESCRIPTION))
-                    ->setDifficulty(
-                        DtoUtils::accessAsOrderedEnumDto(
-                            record: $review,
-                            prop: TaskInfoConstants::COL_DIFFICULTY,
-                            enum: TaskDifficulty::class
+            ->setEvaluationTimestamp(TimeStampUtils::parseIsoTimestampToUtc(
+                TimeStampUtils::timestampToString(
+                    TimeStampUtils::parseIsoTimestampToUtc(
+                        DBHelper::access($review, TaskReviewConstants::COL_EVALUATED_AT)
+                    )
+                )
+            )
+                ->setTaskHasChanged($taskHasChanged)
+                ->setTaskDetail(
+                    ReviewTaskDetailInfo::create()
+                        ->setId(
+                            ResponseHelper::translateIdForUser(
+                                DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_ID)
+                            )
                         )
-                    )
-                    ->setTags($tags)
-                    ->setAuthor($author)
-                    ->setClassRange(
-                        ResponseOrderedEnumRange::create()
-                            ->setMin(
-                                DtoUtils::accessAsOrderedEnumDto(
-                                    record: $review,
-                                    prop: TaskInfoConstants::COL_MIN_CLASS,
-                                    enum: TaskClass::class
-                                )
+                        ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
+                        ->setDescription(DBHelper::access($review, TaskInfoConstants::COL_DESCRIPTION))
+                        ->setDifficulty(
+                            DtoUtils::accessAsOrderedEnumDto(
+                                record: $review,
+                                prop: TaskInfoConstants::COL_DIFFICULTY,
+                                enum: TaskDifficulty::class
                             )
-                            ->setMax(
-                                DtoUtils::accessAsOrderedEnumDto(
-                                    record: $review,
-                                    prop: TaskInfoConstants::COL_MAX_CLASS,
-                                    enum: TaskClass::class
+                        )
+                        ->setTags($tags)
+                        ->setAuthor($author)
+                        ->setClassRange(
+                            ResponseOrderedEnumRange::create()
+                                ->setMin(
+                                    DtoUtils::accessAsOrderedEnumDto(
+                                        record: $review,
+                                        prop: TaskInfoConstants::COL_MIN_CLASS,
+                                        enum: TaskClass::class
+                                    )
                                 )
-                            )
-                    )
-            );
+                                ->setMax(
+                                    DtoUtils::accessAsOrderedEnumDto(
+                                        record: $review,
+                                        prop: TaskInfoConstants::COL_MAX_CLASS,
+                                        enum: TaskClass::class
+                                    )
+                                )
+                        )
+                ));
         return $response;
     }
 
@@ -377,7 +408,7 @@ class TaskReviewController extends Controller
             $rangeError = TaskHelper::filterByTimestampColumn(
                 $evaluationRange,
                 $builder,
-                column: DBHelper::tableCol($taskReviewTable, TaskReviewConstants::COL_CREATED_AT)
+                column: DBHelper::tableCol($taskReviewTable, TaskReviewConstants::COL_EVALUATED_AT)
             );
             if ($rangeError) {
                 ($filterErrorData ??= Review\List\Errors\FilterErrorDetailsErrorData::create())
@@ -425,7 +456,7 @@ class TaskReviewController extends Controller
             fn (int $key, array $tag) => [
                 $key,
                 ResponseEnumElement::create()
-                    ->setId($tag[0])
+                    ->setId(ResponseHelper::translateIdForUser($tag[0]))
                     ->setName($tag[1])
             ],
             $tagsByTaskInfoId
@@ -438,7 +469,7 @@ class TaskReviewController extends Controller
                 ->setName(DBHelper::access($review, TaskReviewTemplateConstants::COL_AUTHOR_NAME));
             $authorId = DBHelper::access($review, TaskReviewTemplateConstants::COL_AUTHOR_ID);
             if ($authorId !== null) {
-                $author->setId($authorId);
+                $author->setId(ResponseHelper::translateIdForUser($authorId));
             }
             $taskPreviewInfo = ReviewTaskPreviewInfo::create()
                 ->setName(DBHelper::access($review, TaskInfoConstants::COL_NAME))
@@ -485,7 +516,7 @@ class TaskReviewController extends Controller
                 ->setEvaluationTimestamp(
                     TimeStampUtils::timestampToString(
                         TimeStampUtils::parseIsoTimestampToUtc(
-                            DBHelper::access($review, TaskReviewConstants::COL_CREATED_AT)
+                            DBHelper::access($review, TaskReviewConstants::COL_EVALUATED_AT)
                         )
                     )
                 )
@@ -496,9 +527,10 @@ class TaskReviewController extends Controller
             ->setReviews($reviews->all());
     }
 
-    public function delete(Request $request, int $id)
+    public function delete(Request $request, int $id): Response
     {
         $userId = UserHelper::getUserId();
+        $response = response(status: Response::HTTP_NO_CONTENT);
         // Task review never changes nor task template review does
 
         // Get task review template id and task info id
@@ -522,7 +554,7 @@ class TaskReviewController extends Controller
 
             if ($temp === null) {
                 throw new AppModelNotFoundException(
-                    TaskReview::class,
+                    'Review',
                     withProperties: [
                         'id' => $id,
                         'userId' => $userId
@@ -547,7 +579,7 @@ class TaskReviewController extends Controller
         if ($deleted === 0) {
             // someone already deleted this task review for us,
             // so we let them to also delete everything else
-            return;
+            return $response;
         }
 
         $taskReferingToTaskInfoExists = null;
@@ -565,14 +597,14 @@ class TaskReviewController extends Controller
                 // If there is task with same task info, we won't try to delete template again,
                 // because it just recreates it again and maybe we hit some special case where
                 // we would try to delete locked template
-                return;
+                return $response;
             }
             if (DB::table(TaskReviewConstants::TABLE_NAME)
                 ->where(TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID, '=', $templateId)
                 ->exists()
             ) {
                 // If there are dependant task reviews on this template, we are done
-                return;
+                return $response;
             }
 
             $deleted = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
@@ -583,25 +615,26 @@ class TaskReviewController extends Controller
         if ($deleted === 0) {
             // Someone already deleted this template for us,
             // so we let them to delete task info if possible too.
-            return;
+            return $response;
         }
 
         $taskReferingToTaskInfoExists ??= DB::table(TaskConstants::TABLE_NAME)
             ->where(TaskConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
             ->exists();
         if ($taskReferingToTaskInfoExists) {
-            return;
+            return $response;
         }
 
         $taskReviewTemplateReferencingToTaskInfoExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
             ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
             ->exists();
         if ($taskReviewTemplateReferencingToTaskInfoExists) {
-            return;
+            return $response;
         }
 
         DB::table(TaskInfoConstants::TABLE_NAME)
             ->where(TaskInfoConstants::COL_ID, '=', $taskInfoId)
             ->delete();
+        return $response;
     }
 }

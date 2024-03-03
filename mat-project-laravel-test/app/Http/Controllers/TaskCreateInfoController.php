@@ -8,6 +8,7 @@ use App\Utils\Utils;
 use App\Dtos\Defs\Endpoints\CreateInfo;
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
 use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
+use App\Helpers\ResponseHelper;
 use App\ModelConstants\TagConstants;
 use App\TableSpecificData\TaskDifficulty;
 use App\Types\ConstructableTrait;
@@ -17,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 
 class TaskCreateInfoController extends Controller
 {
-    use ConstructableTrait;
 
     public function getCreateInfo(Request $request): CreateInfo\CreateInfoResponse
     {
@@ -29,7 +29,7 @@ class TaskCreateInfoController extends Controller
                         fn ($name, $id) =>
                         ResponseEnumElement::create()
                             ->setName($name)
-                            ->setId($id)
+                            ->setId(ResponseHelper::translateIdForUser($id))
                     )->all())
             )
             ->setDifficulties(
