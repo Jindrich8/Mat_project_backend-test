@@ -21,12 +21,14 @@ namespace App\Helpers\Exercises\FixErrors {
          * @var string|string[] $correctText
          */
         private string|array $correctText;
+        private string|array $defaultText;
         private int $defaultDistance;
 
-        public function __construct(string $correctText,int $defaultDistance)
+        public function __construct(string $correctText, string $defaultText, int $defaultDistance)
         {
             $this->correctText = $correctText;
             $this->defaultDistance = $defaultDistance;
+            $this->defaultText = $defaultText;
         }
 
         /**
@@ -37,62 +39,51 @@ namespace App\Helpers\Exercises\FixErrors {
             if (!($value instanceof FixErrorsEvaluateRequest)) {
                 throw new InvalidEvaluateValueException();
             }
-            
+
             $response = FixErrorsReviewResponse::create();
             $ops =  &$response->content;
             $distance = null;
             $value = $value->content;
-            if ($value) {
-                $this->correctText = is_array($this->correctText) ?
-                    $this->correctText
-                    : StrUtils::getChars($this->correctText);
-
-                $correctChars = $this->correctText;
-                $value = StrUtils::getChars($value);
-
-                $calculated = null;
-                $distance = 0; {
-                    $myers = new MyersDiff();
-                    /**
-                     * @var array{0:string,1:int}[] $calculated
-                     */
-                    $calculated = $myers->calculate($value,$correctChars);
-                    unset($myers);
+            if ($value === null) {
+                if (!is_array($this->defaultText)) {
+                    $this->defaultText = StrUtils::getChars($this->defaultText);
                 }
-                Log::info(self::class . " calculated", [
-                    'correctText' => implode("", $correctChars),
-                    'userText' => implode("", $value),
-                    'calculated' => $calculated
-                ]);
-                if ($calculated) {
-                    $str = "";
-                    $action = $calculated[0][1];
-                    while (($op = array_shift($calculated))) {
-                        [$ch, $opAction] = $op;
-                        if ($action !== MyersDiff::KEEP) {
-                            ++$distance;
-                        }
-                        if ($opAction === $action) {
-                            $str .= $ch;
-                        } else {
-                            $responseOp = $str;
-                            $resAction = match ($action) {
-                                MyersDiff::DELETE => Action::DEL,
-                                MyersDiff::INSERT => Action::INS,
-                                default => null
-                            };
-                            if ($resAction !== null) {
-                                $responseOp = Action::create()
-                                    ->setAction($resAction)
-                                    ->setValue($str);
-                            }
+                $value = $this->defaultText;
+            } else {
+                $value = StrUtils::getChars($value);
+            }
+            $this->correctText = is_array($this->correctText) ?
+                $this->correctText
+                : StrUtils::getChars($this->correctText);
 
-                            $ops[] = $responseOp;
-                            $str = $ch;
-                            $action = $opAction;
-                        }
+            $correctChars = $this->correctText;
+
+
+            $calculated = null;
+            $distance = 0; {
+                $myers = new MyersDiff();
+                /**
+                 * @var array{0:string,1:int}[] $calculated
+                 */
+                $calculated = $myers->calculate($value, $correctChars);
+                unset($myers);
+            }
+            Log::info(self::class . " calculated", [
+                'correctText' => implode("", $correctChars),
+                'userText' => implode("", $value),
+                'calculated' => $calculated
+            ]);
+            if ($calculated) {
+                $str = "";
+                $action = $calculated[0][1];
+                while (($op = array_shift($calculated))) {
+                    [$ch, $opAction] = $op;
+                    if ($action !== MyersDiff::KEEP) {
+                        ++$distance;
                     }
-                    if ($str) {
+                    if ($opAction === $action) {
+                        $str .= $ch;
+                    } else {
                         $responseOp = $str;
                         $resAction = match ($action) {
                             MyersDiff::DELETE => Action::DEL,
@@ -106,26 +97,30 @@ namespace App\Helpers\Exercises\FixErrors {
                         }
 
                         $ops[] = $responseOp;
+                        $str = $ch;
+                        $action = $opAction;
                     }
                 }
-            } else {
-                $correctTextStr = null;
-                if (is_array($this->correctText)) {
-                    $correctTextStr = implode("", $this->correctText);
-                } else {
-                    $correctTextStr = $this->correctText;
-                }
+                if ($str) {
+                    $responseOp = $str;
+                    $resAction = match ($action) {
+                        MyersDiff::DELETE => Action::DEL,
+                        MyersDiff::INSERT => Action::INS,
+                        default => null
+                    };
+                    if ($resAction !== null) {
+                        $responseOp = Action::create()
+                            ->setAction($resAction)
+                            ->setValue($str);
+                    }
 
-                $distance = $this->defaultDistance;
-                $ops = [
-                    Action::create()
-                ->setAction(Action::INS)
-                ->setValue($correctTextStr)
-            ];
+                    $ops[] = $responseOp;
+                }
             }
-            Log::info("Evaluate FixErrors",['distance' => $distance,'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
+
+            Log::info("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
             $has = $this->defaultDistance - $distance;
-            if($has < 0){
+            if ($has < 0) {
                 $has = 0;
             }
             $exercise->setPoints(

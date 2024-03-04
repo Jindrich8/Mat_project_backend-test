@@ -59,6 +59,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
             ->select([
                 $idName, 
             FixErrorsConstants::COL_CORRECT_TEXT,
+            FixErrorsConstants::COL_WRONG_TEXT,
             FixErrorsConstants::COL_DISTANCE
             ])
             ->whereIn($idName, $ids)
@@ -71,11 +72,20 @@ class FixErrorsExerciseHelper implements CExerciseHelper
              * @var string $correctText
              */
             $correctText = DBHelper::access($fixErrorsExercise,FixErrorsConstants::COL_CORRECT_TEXT);
+
+             /**
+             * @var string $wrongText
+             */
+            $wrongText = DBHelper::access($fixErrorsExercise,FixErrorsConstants::COL_WRONG_TEXT);
             /**
              * @var int $distance
              */
             $distance = DBHelper::access($fixErrorsExercise,FixErrorsConstants::COL_DISTANCE);
-            $evaluateExercises[$exerciseId] = new EvaluateFixErrorsExercise($correctText,$distance);
+            $evaluateExercises[$exerciseId] = new EvaluateFixErrorsExercise(
+                correctText:$correctText,
+                defaultText:$wrongText,
+                defaultDistance:$distance
+            );
         }
         return $evaluateExercises;
     }
