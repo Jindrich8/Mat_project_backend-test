@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/mat-project-laravel-test/tests" isTestSource="true" packagePrefix="Tests\" />
       <sourceFolder url="file://$MODULE_DIR$/mat-project-laravel-test/tests/Feature" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/mat-project-laravel-test/tests/Unit" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/mat-project-laravel-test/Dev" isTestSource="true" packagePrefix="Dev\" />
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/barryvdh/laravel-ide-helper" />
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/barryvdh/reflection-docblock" />
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/brick/math" />
@@ -129,6 +130,19 @@
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/bacon/bacon-qr-code" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/carbonphp/carbon-doctrine-types" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/dasprid/enum" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/fisharebest/algorithm" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/laravel/fortify" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/paragonie/constant_time_encoding" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/php-yaoi/php-yaoi" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/phplang/scope-exit" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/pragmarx/google2fa" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/swaggest/code-builder" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/swaggest/json-diff" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/swaggest/json-schema" />
+      <excludeFolder url="file://$MODULE_DIR$/mat-project-laravel-test/vendor/swaggest/php-code-builder" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -133,6 +133,19 @@
       <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/doctrine/lexer" />
       <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/fakerphp/faker" />
       <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/dragonmantank/cron-expression" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/carbonphp/carbon-doctrine-types" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/fisharebest/algorithm" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/php-yaoi/php-yaoi" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/dasprid/enum" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/phplang/scope-exit" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/pragmarx/google2fa" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/swaggest/code-builder" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/swaggest/json-diff" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/swaggest/json-schema" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/swaggest/php-code-builder" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/paragonie/constant_time_encoding" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/bacon/bacon-qr-code" />
+      <path value="$PROJECT_DIR$/mat-project-laravel-test/vendor/laravel/fortify" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />
