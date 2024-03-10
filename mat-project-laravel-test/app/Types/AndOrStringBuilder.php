@@ -18,12 +18,12 @@ namespace App\Types {
          * @var string[] $andGroups
          */
         private array $andGroups = ['(', ')'];
-        private int $depth = 0;
-        private int $maxDepth = 0;
+        private int $depth;
+        private int $maxDepth;
         /**
          * @var (string|AndGroupDepth)[] $strs
          */
-        private array $strs = [];
+        private array $strs;
 
         /**
          * @param (array{0:string,1:string})[] $andGroups
@@ -82,7 +82,7 @@ namespace App\Types {
             $this->maxDepth = 0;
             $this->strs = [];
 
-            
+
             $this->and($elements);
             $maxDepth = $this->maxDepth;
             $andGroupsCount = count($this->andGroups);

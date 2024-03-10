@@ -17,17 +17,10 @@ namespace App\Types {
     use App\Exceptions\XMLInvalidElementValuePartException;
     use App\Exceptions\XMLMissingRequiredAttributesException;
     use App\Exceptions\XMLMissingRequiredElementsException;
-    use App\Types\GetXMLParserPosition;
-    use App\Types\XMLAttributes;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
     use App\Utils\StrUtils;
     use App\Utils\Utils;
-    use App\Types\XMLContextWOffset;
-    use App\Types\XMLSimpleContext;
     use App\Utils\DebugUtils;
     use App\Dtos\Defs\Errors\XML\DefsOr;
-    use Illuminate\Support\Facades\Log;
 
     abstract class XMLNodeBase
     {
@@ -68,14 +61,6 @@ namespace App\Types {
         public abstract function getParentObjectId(): ?object;
 
 
-
-
-        /**
-         * @param string $name
-         * @param ?XMLAttributes $attributes
-         * @param bool $shouldHaveAtLeastOneChild
-         * @param int $maxCount
-         */
         protected function __construct(
             string $name,
             ?XMLAttributes $attributes = null,
@@ -217,8 +202,9 @@ namespace App\Types {
         }
 
 
-
-
+        /**
+         * @throws XMLInvalidElementException
+         */
         public function getChild(string $name, GetXMLParserPosition $getParserPosition): XMLNodeBase
         {
             $child = $this->children->tryGetChild($name);
@@ -249,7 +235,7 @@ namespace App\Types {
             if (++$this->count > $this->maxCount) {
                 $this->tooManyElements($context, $this->maxCount);
             }
-            Log::info("Add count - {$this->name}",['count' => $this->count]);
+            DebugUtils::log("Add count - '".$this->getParentName()."'->'{$this->name}'",['count' => $this->count]);
             $this->handleAttributes($attributes, $context);
             // dump("validateStart - {$this->name}");
             $this->elementStartPos ??= new XMLValidParserPosition();
@@ -303,6 +289,9 @@ namespace App\Types {
             return $startPos;
         }
 
+        /**
+         * @throws XMLMissingRequiredElementsException
+         */
         public function validateAndMoveUp(XMLContextBase $context): ?XMLNodeBase
         {
             $this->validate($context);
@@ -366,7 +355,7 @@ namespace App\Types {
                             usedRequiredAttributes: $usedRequiredAttributes,
                             usedNonRequiredAttributes: $usedNonRequiredAttributes
                         ),
-                        context: $context
+                        getPosCallback: $context
                     );
                 }
 
@@ -391,14 +380,20 @@ namespace App\Types {
             }
         }
 
+        /**
+         * @throws XMLInvalidElementValueException
+         */
         protected function valueNotSupported(): void
         {
             $this->invalidValue(
-                message: "Element '{$this->name}' does not support any value",
-                description: ''
+                description: '',
+                message: "Element '{$this->name}' does not support any value"
             );
         }
 
+        /**
+         * @throws XMLInvalidElementException
+         */
         protected function tooManyElements(GetXMLParserPosition $getPosCallback, ?int $maximum = null, ?int $specified = null, string $description = ''): void
         {
             if ($maximum === null && $specified !== null) {
@@ -412,6 +407,9 @@ namespace App\Types {
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValueException
+         */
         protected function invalidValue(
             string $description = '',
             string $message = ''
@@ -472,6 +470,9 @@ namespace App\Types {
             );
         }
 
+        /**
+         * @throws XMLInvalidElementValueException
+         */
         protected function valueShouldNotBeEmpty(
             string $description,
             string $message = ''
@@ -482,6 +483,9 @@ namespace App\Types {
             );
         }
 
+        /**
+         * @throws XMLInvalidAttributeValueException
+         */
         protected function invalidAttributeValue(string $attribute, string $description, GetXMLParserPosition $getPosCallback)
         {
             $getPosCallback->getPos($column, $line, $byteIndex);
@@ -512,6 +516,9 @@ namespace App\Types {
         }
 
 
+        /**
+         * @throws XMLInvalidElementException
+         */
         protected function invalidElement(GetXMLParserPosition $getPosCallback, ?string $elementName = null, string $message = '', string $description = '', bool $isInvalidSelf = false)
         {
             $expectedElements = [];
@@ -543,14 +550,14 @@ namespace App\Types {
 
             throw new XMLInvalidElementException(
                 element: $elementName ?? $name,
-                parent: $parentName,
-                message: $message,
-                description: $description,
                 errorData: XMLInvalidElementErrorData::create()
                     ->setEColumn($column)
                     ->setELine($line)
                     ->setEByteIndex($byteIndex)
-                    ->setExpectedElements($expectedElements)
+                    ->setExpectedElements($expectedElements),
+                parent: $parentName,
+                message: $message,
+                description: $description
             );
         }
 
@@ -581,7 +588,10 @@ namespace App\Types {
         }
 
         /**
+         * @param string $attribute
          * @param string[] $expectedAttributes
+         * @param GetXMLParserPosition $getPosCallback
+         * @throws XMLInvalidAttributeException
          */
         protected function duplicateAttribute(string $attribute,array $expectedAttributes, GetXMLParserPosition $getPosCallback)
         {
