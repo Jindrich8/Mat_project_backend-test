@@ -4,8 +4,6 @@ namespace App\Utils {
 
     use App\Dtos\Defs\Endpoints\Login\Errors\LoginErrorDetails;
     use App\Dtos\Defs\Endpoints\Login\Errors\LoginErrorDetailsErrorData;
-    use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetails;
-    use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetailsErrorData;
     use App\Dtos\Defs\Errors\Access\UnathenticatedError;
     use App\Dtos\Defs\Errors\CSRFTokenMismatchError;
     use App\Dtos\Defs\Types\Errors\FieldError;
@@ -15,22 +13,25 @@ namespace App\Utils {
     use App\Exceptions\AppUnathorizedException;
     use App\Exceptions\InternalException;
     use Illuminate\Auth\AuthenticationException;
+    use Swaggest\JsonSchema\InvalidValue;
     use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
     use Illuminate\Database\Eloquent\ModelNotFoundException;
     use Illuminate\Http\Request as HttpRequest;
     use Illuminate\Http\Response;
-    use Illuminate\Support\Facades\Log;
-    use Illuminate\Support\ItemNotFoundException;
     use \Illuminate\Http\Request;
     use Illuminate\Session\TokenMismatchException;
+    use Illuminate\Support\ItemNotFoundException;
     use Illuminate\Validation\UnauthorizedException;
-    use IntlBreakIterator;
-    use Str;
     use Throwable;
+    use Illuminate\Support\Str;
 
     class ExceptionUtils
     {
-        public static function renderModelNotFoundException(ModelNotFoundException $e, HttpRequest $request){
+        /**
+         * @throws InvalidValue
+         */
+        public static function renderModelNotFoundException(ModelNotFoundException $e, HttpRequest $request): Response
+        {
                 $model = $e->getModel();
                 $model = Str::ucfirst(Str::afterLast($model, "\\"));
                 $modelId = Utils::tryGetFirstArrayValue($e->getIds());
@@ -45,10 +46,13 @@ namespace App\Utils {
                 ))->render($request);
         }
 
+        /**
+         * @throws InvalidValue
+         */
         public static function renderException(Throwable $e, Request $request) {
             DebugUtils::log("Rendering  '" . get_debug_type($e) . "'", $e);
             if($e instanceof ApplicationException){
-                Log::info("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
+                DebugUtils::log("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
                 return $e->render($request);
             }
             if ($e instanceof AuthenticationException) {
@@ -70,7 +74,7 @@ namespace App\Utils {
             if($e instanceof TokenMismatchException){
                 $message = $e->getMessage();
                 if(preg_match('/(?<!\\w)CSRF(?!\\w)/',$message)){
-                    return (new ApplicationException(419, 
+                    return (new ApplicationException(419,
                     ApplicationErrorInformation::create()
                     ->setUserInfo(
                         UserSpecificPartOfAnError::create()
@@ -83,7 +87,7 @@ namespace App\Utils {
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 $errors = $e->validator->errors();
-                Log::info("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
+                DebugUtils::log("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
                 $uri = $request->route()?->uri;
                 if ($uri === 'api/login') {
                     $data = LoginErrorDetailsErrorData::create();
@@ -119,11 +123,6 @@ namespace App\Utils {
             }
 
             $prevE = $e->getPrevious();
-            if (($response = ExceptionUtils::tryRender($e, $request))
-                || $prevE && ($response = ExceptionUtils::tryRender($prevE, $request))
-            ) {
-                return $response;
-            }
             if ($e instanceof ModelNotFoundException) {
                 return self::renderModelNotFoundException($e, $request);
             }
@@ -162,7 +161,7 @@ namespace App\Utils {
             ))
                 ->render($request);
         }
-       
+
         public static function isRenderable(Throwable $e):bool{
             return method_exists($e,'render');
         }
