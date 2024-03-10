@@ -24,7 +24,7 @@ namespace App\Helpers\BareModels {
         ){}
 
         /**
-         * @param callable(Builder $builder):void $modifyQuery
+         * @param callable(Builder $builder):(array|void|null) $modifyQuery
          */
         public static function tryFetchPublic(callable $modifyQuery)
         {
@@ -65,21 +65,24 @@ namespace App\Helpers\BareModels {
                     '=',
                     true
                 );
-                $modifyQuery($builder);
 
-               $tasks = $builder->get()
-                ->map(fn($task) =>
-                     new self(
-                        id: DBHelper::access($task, TaskConstants::COL_ID),
-                        taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
-                        name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
-                        authorName:DBHelper::access($task,$authorNameCol),
-                        authorId: DBHelper::access($task,TaskConstants::COL_USER_ID),
-                        minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),
-                        maxClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MAX_CLASS)),
-                        difficulty:TaskDifficulty::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_DIFFICULTY))
-                    )
-                );
+
+               $tasks = $modifyQuery($builder);
+               
+               $tasks = (is_array($tasks) ? collect($tasks) : $builder->get())
+               ->map(fn($task) =>
+               new self(
+                  id: DBHelper::access($task, TaskConstants::COL_ID),
+                  taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
+                  name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
+                  authorName:DBHelper::access($task,$authorNameCol),
+                  authorId: DBHelper::access($task,TaskConstants::COL_USER_ID),
+                  minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),
+                  maxClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MAX_CLASS)),
+                  difficulty:TaskDifficulty::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_DIFFICULTY))
+               ));
+
+               
             return $tasks;
         }
     }

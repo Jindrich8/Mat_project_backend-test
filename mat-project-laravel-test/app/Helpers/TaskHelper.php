@@ -6,9 +6,6 @@ namespace App\Helpers {
     use App\Dtos\Defs\Types\Errors\RangeError;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Defs\Types\Request\TimestampRange;
-    use App\Dtos\Defs\Types\Response\ResponseOrderedEnumRange;
-    use App\Dtos\Defs\Types\Task\AuthorInfo;
-    use App\Dtos\Defs\Types\Task\TaskDetailInfo;
     use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Dtos\InternalTypes\TaskSaveContent;
     use App\Exceptions\ApplicationException;
@@ -33,6 +30,7 @@ namespace App\Helpers {
     use App\Utils\TimeStampUtils;
     use App\Utils\Utils;
     use Carbon\Carbon;
+    use Illuminate\Auth\AuthenticationException;
     use Illuminate\Database\Query\Builder;
     use Illuminate\Http\Response;
     use Illuminate\Support\Facades\DB;
@@ -43,16 +41,19 @@ namespace App\Helpers {
 
         /**
          * @param int[] $taskInfoIds
+         * @return (array{0:int,1:float})[]
+         * @throws AuthenticationException
          */
-        public static function getTaskReviewIdsByTaskInfoId(array $taskInfoIds){
+        public static function getTaskReviewIdsAndScoreByTaskInfoId(array $taskInfoIds){
             $userId = UserHelper::getUserId();
             $taskReviewTemplateTable = TaskReviewTemplateConstants::TABLE_NAME;
             $taskReviewTable = TaskReviewConstants::TABLE_NAME;
-        
-           $taskReviewIdsByTaskInfoId = DB::table($taskReviewTable)
+
+           $taskReviews = DB::table($taskReviewTable)
             ->select([
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
-                DBHelper::colFromTableAsCol($taskReviewTable,TaskReviewConstants::COL_ID)
+                DBHelper::colFromTableAsCol($taskReviewTable,TaskReviewConstants::COL_ID),
+                DBHelper::colFromTableAsCol($taskReviewTable,TaskReviewConstants::COL_SCORE)
             ])
             ->join(
                 $taskReviewTemplateTable,
@@ -62,14 +63,20 @@ namespace App\Helpers {
             )
             ->whereIn(
                 DBHelper::tableCol($taskReviewTemplateTable,TaskReviewTemplateConstants::COL_TASK_INFO_ID),
-            '=',
             $taskInfoIds
         )->where(
             DBHelper::tableCol($taskReviewTable,TaskReviewConstants::COL_USER_ID),
         '=',
         $userId)
-        ->pluck(TaskReviewConstants::COL_ID,TaskReviewTemplateConstants::COL_TASK_INFO_ID);
-        return $taskReviewIdsByTaskInfoId;
+        ->get();
+        $res = [];
+        while(($review = $taskReviews->pop()) !== null){
+            $taskInfoId = DBHelper::access($review,TaskReviewTemplateConstants::COL_TASK_INFO_ID);
+            $reviewId = DBHelper::access($review,TaskReviewConstants::COL_ID);
+            $score = DBHelper::access($review,TaskReviewConstants::COL_SCORE);
+            $res[$taskInfoId] = [$reviewId,$score];
+        }
+        return $res;
         }
 
         /**
@@ -278,8 +285,8 @@ namespace App\Helpers {
              */
             $tagsByTaskId = [];
             $tagTaskInfoTable = TagTaskInfoConstants::TABLE_NAME;
-            $taskInfoTable = TaskInfoConstants::TABLE_NAME;
-            $tagTable = TagConstants::COL_ID;
+            $tagTable = TagConstants::TABLE_NAME;
+            $tagNameCol ='name';
             foreach (DB::table($tagTaskInfoTable)
                 ->select([
                     DBHelper::colFromTableAsCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TAG_ID),
@@ -287,7 +294,7 @@ namespace App\Helpers {
                     DBHelper::colExpression(
                         table: $tagTable,
                         column: TagConstants::COL_NAME,
-                        as: 'name'
+                        as: $tagNameCol
                     )
                 ])
                 ->join(
@@ -303,20 +310,23 @@ namespace App\Helpers {
                     )
                 )
                 ->whereIn(
-                    DBHelper::colFromTableAsCol($taskInfoTable,TagTaskInfoConstants::COL_TASK_INFO_ID),
+                    DBHelper::tableCol($tagTaskInfoTable,TagTaskInfoConstants::COL_TASK_INFO_ID),
                     $taskInfoIds
                     )
                 ->get() as $tag) {
                 /**
                  * @var int $taskInfoId
                  */
-                $taskInfoId = $tag[TagTaskInfoConstants::COL_TASK_INFO_ID];
+                $taskInfoId = DBHelper::access($tag,TagTaskInfoConstants::COL_TASK_INFO_ID);
                 $tagsByTaskId[$taskInfoId] ??= [];
 
                 /**
                  * @var array{int,string} $tagData
                  */
-                $tagData = [$tag[TagTaskInfoConstants::COL_TAG_ID] + 0, $tag['name'] . ''];
+                $tagData = [
+                    DBHelper::access($tag,TagTaskInfoConstants::COL_TAG_ID) + 0,
+                    DBHelper::access($tag,$tagNameCol) . ''
+                ];
                 $tagsByTaskId[$taskInfoId][] = $tagData;
             }
             return $tagsByTaskId;
@@ -328,7 +338,7 @@ namespace App\Helpers {
         public static function getTaskInfoTags(int $taskInfoId)
         {
             $tagTaskTable = TagTaskInfoConstants::TABLE_NAME;
-            $tagTable = TagConstants::COL_ID;
+            $tagTable = TagConstants::TABLE_NAME;
             $tags = DB::table($tagTaskTable)
                 ->select([
                     DBHelper::colFromTableAsCol($tagTaskTable, TagTaskInfoConstants::COL_TAG_ID),
@@ -341,20 +351,20 @@ namespace App\Helpers {
                 ])
                 ->join(
                     $tagTable,
-                    DBHelper::colExpression(
-                        table: $tagTaskTable,
-                        column: TagTaskInfoConstants::COL_TAG_ID
+                    DBHelper::tableCol(
+                       $tagTaskTable,
+                       TagTaskInfoConstants::COL_TAG_ID
                     ),
                     '=',
-                    DBHelper::colExpression(
-                        table: $tagTable,
-                        column: TagConstants::COL_ID
+                    DBHelper::tableCol(
+                       $tagTable,
+                     TagConstants::COL_ID
                     )
                 )
                 ->where(
-                    DBHelper::colExpression(
-                        table: $tagTaskTable,
-                        column: TagTaskInfoConstants::COL_TASK_INFO_ID
+                    DBHelper::tableCol(
+                        $tagTaskTable,
+                       TagTaskInfoConstants::COL_TASK_INFO_ID
                     ),
                     '=',
                     $taskInfoId
@@ -376,7 +386,7 @@ namespace App\Helpers {
          * @return string[]
          * Returns all invalid tags
          */
-        public static function filterTaskByTags(array &$tags, Builder $builder,string $taskInfoIdColName = TaskConstants::COL_TASK_INFO_ID): array
+        public static function filterTaskByTags(array &$tags, Builder $builder,string $taskInfoIdColName = TaskConstants::COL_TASK_INFO_ID,bool $hasAll = false): array
         {
             $areInvalid = false;
             $translatedTags = [];
@@ -393,12 +403,35 @@ namespace App\Helpers {
                 }
             }
             if (!$areInvalid) {
-                $taskInfoIds = DB::table(TagTaskInfoConstants::TABLE_NAME)
+                $taskInfoIdsBuilder = DB::table(TagTaskInfoConstants::TABLE_NAME)
                     ->select([TagTaskInfoConstants::COL_TASK_INFO_ID])
-                    ->whereIn(TagTaskInfoConstants::COL_TAG_ID, $translatedTags)
-                    ->get()->unique()->all();
-                $builder->whereIn($taskInfoIdColName, $taskInfoIds);
-                return [];
+                    ->whereIn(TagTaskInfoConstants::COL_TAG_ID, $translatedTags);
+                    
+                    if($hasAll){
+                        $map =[];
+                        $taskInfoIds = $taskInfoIdsBuilder->pluck(TagTaskInfoConstants::COL_TASK_INFO_ID);
+                        while(($taskInfoId = $taskInfoIds->pop()) !== null){
+                            $map[$taskInfoId] = ($map[$taskInfoId] ?? 0) + 1;
+                        }
+                        $taskInfoIds = [];
+                        $translatedTagsCount = count($translatedTags);
+                        while(($id = array_key_last($map)) !== null){
+                            if($map[$id] >= $translatedTagsCount){
+                             $taskInfoIds[]=$id;
+                            }
+                            if(array_pop($map) === null){
+                                break;
+                            }
+                         }
+                    }
+                    else{
+                       $taskInfoIds = array_keys(
+                        $taskInfoIdsBuilder->pluck(TagTaskInfoConstants::COL_TASK_INFO_ID,TagTaskInfoConstants::COL_TASK_INFO_ID)
+                        ->all()
+                    );
+                    }
+                    $builder->whereIn($taskInfoIdColName, $taskInfoIds);
+                    return [];
             }
             return $translatedTags;
         }
@@ -435,7 +468,19 @@ namespace App\Helpers {
                 $column = $withPrefix ?
                 DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,TaskInfoConstants::COL_DIFFICULTY)
                 : TaskInfoConstants::COL_DIFFICULTY;
+                if($min <= TaskDifficulty::EASY->value){
+                    if($max < TaskDifficulty::HARD->value){
+                        $builder->where($column,'<=',$max);
+                    }
+                }
+                else if ($max >= TaskDifficulty::HARD->value){
+                    if($min > TaskDifficulty::EASY->value){
+                        $builder->where($column,'>=',$min);
+                    }
+                }
+                else{
                 $builder->whereBetween($column, [$min, $max]);
+                }
             }
             return $RangeError;
         }
@@ -450,8 +495,12 @@ namespace App\Helpers {
                     $minClass = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,$minClass);
                     $maxClass = DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,$maxClass);
                 }
+                if($min > TaskClass::ZS_1->value){
                 $builder->where($minClass, '>=', $min);
+                }
+                if($max < TaskClass::AFTER_SS->value){
                 $builder->where($maxClass, '<=', $max);
+                }
             }
             return $RangeError;
         }
@@ -482,7 +531,7 @@ namespace App\Helpers {
                 $builder->whereBetween(
                     $column,
                     [
-                        TimeStampUtils::timestampToString($minTimestamp), 
+                        TimeStampUtils::timestampToString($minTimestamp),
                         TimeStampUtils::timestampToString($maxTimestamp)
                     ]
                 );

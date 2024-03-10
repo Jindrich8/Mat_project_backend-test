@@ -4,20 +4,30 @@ namespace App\Utils {
 
     use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
-    use App\Http\Middleware\TrimStrings;
-    use App\Types\CharIteratorKeyType;
     use App\Types\TrimType;
-    use Doctrine\DBAL\Platforms\TrimMode;
     use Generator;
     use Illuminate\Support\Str;
     use IntlBreakIterator;
-    use IntlChar;
 
     class StrUtils
     {
 
         private const TRIM_WHITES_NO_LINE_BREAK = " \r\t\v\0";
         private const TRIM_WHITES = " \n\r\t\v\0";
+
+        /**
+         * @template T
+         * @param string $str
+         * @param T $default
+         * @return float|T
+         */
+        public static function tryParseFloat(string $str,mixed $default = null):mixed{
+            $filtered = filter_var($str,FILTER_VALIDATE_FLOAT);
+            if($filtered === false){
+            $filtered = $default;
+            }
+            return $filtered;
+        }
 
         /**
          * @return array{0:int,1:int}|false
@@ -150,7 +160,7 @@ namespace App\Utils {
 
         public static function utf8LtrimWhites(string $str, int &$trimmedCount,int $maxTrimCount = -1, bool $includeLineBreak = true): string
         {
-          
+
             $prevLen = strlen($str);
             $res = ltrim($str, self::getTrimWsSet($includeLineBreak));
             $trimmedCount = $prevLen - strlen($res);
@@ -261,11 +271,6 @@ namespace App\Utils {
 
 
         /**
-         * @param string $str
-         * @param int &$bytePos
-         * @param int &$linePos
-         * @param int &$columnPos
-         * @param int $byteOffset
          * @return int
          * Returns count of skipped chars
          */
