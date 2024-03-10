@@ -1,9 +1,6 @@
 <?php
 
-use App\Dtos;
 use App\Helpers\RequestHelper;
-use App\Helpers\ResponseHelper;
-use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
@@ -13,7 +10,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Middleware\Authorize as MiddlewareAuthorize;
 use App\TableSpecificData\UserRole;
 use App\Utils\RouteUtils;
-use Illuminate\Auth\Middleware\Authorize;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +24,7 @@ use Illuminate\Auth\Middleware\Authorize;
 
 #region Teacher
 Route::middleware(['auth:sanctum', MiddlewareAuthorize::class . ':' . UserRole::TEACHER->value])->group(function () {
-    
+
     RouteUtils::post(
         '/task/create',
         fn (Request $request) =>
@@ -48,13 +44,6 @@ Route::middleware(['auth:sanctum', MiddlewareAuthorize::class . ':' . UserRole::
         fn (Request $request, string $id) =>
         TaskController::construct()
             ->delete($request, RequestHelper::translateId($id))
-    );
-
-    RouteUtils::get(
-        '/task/create_info',
-        fn (Request $request) =>
-        TaskCreateInfoController::construct()
-            ->getCreateInfo($request)
     );
 
     RouteUtils::get(
@@ -111,6 +100,13 @@ Route::middleware('auth:sanctum')->group(function () {
     );
 });
 #endregion User
+
+RouteUtils::get(
+    '/task/create_info',
+    fn (Request $request) =>
+    TaskCreateInfoController::construct()
+        ->getCreateInfo($request)
+);
 
 RouteUtils::get(
     '/task/{id}/detail',
