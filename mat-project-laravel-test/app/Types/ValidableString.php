@@ -10,11 +10,13 @@ namespace App\Types {
         public readonly string $name;
         public readonly int $minLen;
         public readonly int $maxLen;
+        private bool $isElement;
 
-        public function __construct(string $name,int $maxLen, int $minLen = 0){
+        public function __construct(string $name,int $maxLen, int $minLen = 0,bool $isElement = true ){
             $this->name = $name;
             $this->minLen = $minLen;
             $this->maxLen = $maxLen;
+            $this->isElement = $isElement;
 
             if($this->maxLen < $this->minLen){
                 throw new InvalidArgumentException(
@@ -40,7 +42,9 @@ namespace App\Types {
         public function validateWLength(?string &$value,?int &$length):string|null{
             $error = null;
             if(!ValidateUtils::validateString($value,$length,$this->minLen,$this->maxLen)){
-                $error = "Value of '{$this->name}' element should be string with length from '{$this->minLen}' to '{$this->maxLen}'.";
+                $error = "Value of '{$this->name}'"
+                .($this->isElement ? 'element' : 'attribute')
+                ." should be string with length from '{$this->minLen}' to '{$this->maxLen}'.";
             }
             return $error;
         }
