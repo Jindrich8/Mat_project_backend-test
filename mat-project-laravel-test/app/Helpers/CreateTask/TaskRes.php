@@ -6,10 +6,7 @@ namespace App\Helpers\CreateTask {
     use App\Helpers\Database\PgDB;
     use App\Helpers\CCreateExerciseHelper;
     use App\Helpers\ExerciseHelper;
-    use App\Helpers\ExerciseType;
-    use App\Models\Exercise;
     use App\Helpers\BareModels\BareExercise;
-    use App\Models\Group;
     use App\Helpers\BareModels\BareGroup;
     use App\Models\Task;
     use App\Types\CCreateExerciseHelperState;
@@ -23,16 +20,11 @@ namespace App\Helpers\CreateTask {
     use App\ModelConstants\TagTaskInfoConstants;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskReviewTemplateConstants;
-    use App\Models\Resource;
-    use App\Models\Tag;
     use App\Models\TaskInfo;
-    use App\Models\User;
     use App\Types\TaskResTask;
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
     use App\Utils\DebugUtils;
-    use Auth;
-    use Illuminate\Database\Eloquent\ModelNotFoundException;
     use DB;
 
     class TaskRes
@@ -205,7 +197,9 @@ namespace App\Helpers\CreateTask {
                     //     message: "There is no exercise helper for type '{$this->currentExercise->exerciseable_type}' but there is current exercise with this type.",
                     //     context: ['taskRes' => $this]
                     // );
-                    $this->exerciseHelpers[$type->name] = [ExerciseHelper::getHelper($type)->getCreateHelper(), []];
+                    $createHelper = ExerciseHelper::getHelper($type)->getCreateHelper();
+                    $createHelper->reset();
+                    $this->exerciseHelpers[$type->name] = [$createHelper, []];
                     $helperAndExercises = &$this->exerciseHelpers[$type->name];
                 }
                 if ($addCurrentExercise) {
@@ -347,6 +341,7 @@ namespace App\Helpers\CreateTask {
                             $helper = $helperAndExercises[0];
                             $exerciseCount = count($helperAndExercises[1]);
                             $helper->insertAll(array_slice($ids,0,$exerciseCount));
+                            $helper->reset();
                             array_splice($ids,0,$exerciseCount);
                         }
                     }
@@ -355,6 +350,9 @@ namespace App\Helpers\CreateTask {
             return $taskInfoId;
         }
 
+        /**
+         * @throws \Throwable
+         */
         public function insert(string $taskSource): int
         {
             $this->tryToGetHelper(addCurrentExercise: true);
@@ -383,7 +381,10 @@ namespace App\Helpers\CreateTask {
             return $taskId;
         }
 
-        public function update(int $taskId,string $taskSource){
+        /**
+         * @throws \Throwable
+         */
+        public function update(int $taskId, string $taskSource){
             $this->tryToGetHelper(addCurrentExercise: true);
             DB::transaction(function () use($taskId,$taskSource) {
                $taskUpdateQuery = DB::table(TaskConstants::TABLE_NAME)

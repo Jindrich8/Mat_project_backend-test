@@ -2,11 +2,9 @@
 
 namespace App\Helpers;
 
-use App\Exceptions\BadSaveExerciseException;
 use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
 use App\Types\CCreateExerciseHelperState;
-use App\Types\Transformable;
 
 interface CCreateExerciseHelper
 {
@@ -19,4 +17,6 @@ interface CCreateExerciseHelper
      * @param int[] $ids
      */
     public function insertAll(array $ids):void;
+
+    public function reset():void;
 }

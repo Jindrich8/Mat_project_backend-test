@@ -10,14 +10,12 @@ use App\Models\FillInBlanks;
 use App\Types\CCreateExerciseHelperState;
 use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
+use App\Utils\DebugUtils;
 use App\Utils\DtoUtils;
-use App\Utils\StrUtils;
 use DB;
-use Doctrine\DBAL\Query\QueryBuilder;
-use Swaggest\JsonSchema\Context;
+use Illuminate\Support\Facades\Log;
 use Swaggest\JsonSchema\InvalidValue;
 use Swaggest\JsonSchema\Structure\ClassStructure;
-use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class CreateFillInBlanksExercise implements CCreateExerciseHelper
 {
@@ -31,10 +29,18 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
     public function __construct()
     {
         $this->createNode = null;
+        $this->contents = [];
+    }
+
+    public function reset(): void
+    {
+        $this->createNode = null;
+        $this->contents = [];
     }
 
     public function getContentNode(string $name,XMLNodeBase $parent): XMLDynamicNodeBase
     {
+        DebugUtils::debug("getFillInBlanksContentNode (".count($this->contents).") for '$name'",['parent'=>$parent]);
         $content = FillInBlanksContent::create();
         $this->contents[]=$content;
         $this->createNode ??= FillInBlanksXMLCreateNode::create();
@@ -58,8 +64,9 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
     public function insertAll(array $ids): void
     {
         $count = count($ids);
-        if($count !== count($this->contents)){
-            throw new InternalException("There should be same count of ids as contents",
+        $contentCount = count($this->contents);
+        if($count !== $contentCount){
+            throw new InternalException("There should be same count of ids '$count' as contents '$contentCount'",
             context:[
                 'contents'=>$this->contents,
             'ids'=>$ids

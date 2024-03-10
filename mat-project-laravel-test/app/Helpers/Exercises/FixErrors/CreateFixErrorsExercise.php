@@ -5,8 +5,6 @@ namespace App\Helpers\Exercises\FixErrors;
 use App\Dtos\InternalTypes\FixErrorsContent;
 use App\Exceptions\InternalException;
 use App\Helpers\CCreateExerciseHelper;
-use App\Helpers\Database\DBHelper;
-use App\Helpers\DtoHelper;
 use App\ModelConstants\FixErrorsConstants;
 use App\Models\FixErrors;
 use App\Types\CCreateExerciseHelperState;
@@ -14,12 +12,8 @@ use App\Types\XMLDynamicNodeBase;
 use App\Types\XMLNodeBase;
 use App\Utils\DtoUtils;
 use App\Utils\StrUtils;
-use DB;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Fisharebest\Algorithm\MyersDiff;
-use Swaggest\JsonSchema\Context;
 use Swaggest\JsonSchema\InvalidValue;
-use Symfony\Component\CssSelector\Exception\InternalErrorException;
 
 class CreateFixErrorsExercise implements CCreateExerciseHelper
 {
@@ -33,6 +27,7 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
     public function __construct()
     {
         $this->createNode = null;
+        $this->contents = [];
     }
 
 
@@ -48,7 +43,6 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
          $this->createNode->change($parent,$name);
         $this->createNode->setContent($content);
         return $this->createNode;
-
     }
 
     public function getState(): CCreateExerciseHelperState
@@ -57,7 +51,8 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
     }
 
     /**
-     * @throws InvalidValue
+     * @param array $ids
+     * @throws \Exception
      */
     public function insertAll(array $ids): void
     {
@@ -96,5 +91,11 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
         context:['data'=>$data]
     );
        }
+    }
+
+    public function reset(): void
+    {
+        $this->createNode = null;
+        $this->contents = [];
     }
 }

@@ -8,7 +8,6 @@ namespace App\Helpers\Exercises\FixErrors {
     use App\Types\XMLContextBase;
     use App\Types\XMLDynamicNodeBase;
     use App\Types\XMLNodeBase;
-    use App\Types\XMLNodeValueType;
     use App\Types\CCreateExerciseHelperState as ParsingState;
 
     final class FixErrorsXMLCreateNode extends XMLDynamicNodeBase
@@ -36,11 +35,11 @@ namespace App\Helpers\Exercises\FixErrors {
             return $this->content;
         }
 
-        public function setContent(FixErrorsContent $content) { 
+        public function setContent(FixErrorsContent $content) {
             $this->content = $content;
         }
 
-        public function getParsingState(): ParsingState{ 
+        public function getParsingState(): ParsingState{
             return $this->state;
         }
 
@@ -71,10 +70,11 @@ namespace App\Helpers\Exercises\FixErrors {
             $this->content = null;
             $this->state = ParsingState::EXERCISE_ENDED;
         }
-        
+
 
         public function change(XMLNodeBase $newParent, string $newName): void
         {
+            $this->reset();
             $this->parent = $newParent;
             $this->name = $newName;
             $this->content = null;
@@ -91,7 +91,7 @@ namespace App\Helpers\Exercises\FixErrors {
             $this->getContent();
             $this->state = ParsingState::STARTED_EXERCISE_HAS_CONTENT;
         }
-       
+
        protected function validate(XMLContextBase $context): void
        {
         parent::validate($context);
