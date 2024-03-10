@@ -6,10 +6,10 @@ use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Utils\DtoUtils;
 use App\Utils\EndpointUtils;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use LogicException;
+use Swaggest\JsonSchema\InvalidValue;
 use Throwable;
 
 class InternalException extends LogicException
@@ -27,7 +27,7 @@ class InternalException extends LogicException
             code:$code,
             previous:$previous
         );
-        
+
     }
 
     public function getUsercode(): int
@@ -59,18 +59,20 @@ class InternalException extends LogicException
         return array_map(fn($value)=>$value,$this->context);
     }
 
-    
 
+    /**
+     * @throws InvalidValue
+     */
     public function render(Request $request)
     {
         $error = UserSpecificPartOfAnError::create()
         ->setMessage($this->getUserMessage())
         ->setDescription($this->getUserDescription());
 
-        $response =  ApplicationErrorInformation::create()
-        ->setUserInfo($error);
-        return response(
-            DtoUtils::dtoToJson($response)
-           , $this->getUserStatus());
+        return (new ApplicationException(
+            $this->getUserStatus(),
+         ApplicationErrorInformation::create()
+        ->setUserInfo($error)
+    ))->render($request);
     }
 }
