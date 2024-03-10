@@ -8,7 +8,9 @@ namespace App\Helpers {
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
     use App\Exceptions\EnumConversionException;
-    use App\Exceptions\InternalException;
+    use App\Utils\JsonSchemaUtils;
+    use App\Utils\DebugUtils;
+    use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Illuminate\Http\Request;
     use App\Utils\ValidateUtils;
@@ -34,7 +36,7 @@ namespace App\Helpers {
         {
             $translatedId = ValidateUtils::validateInt($id);
             if (is_int($translatedId)) {
-                return EnumHelper::fromThrow($enum,$translatedId)->value;
+                return EnumHelper::fromThrow($enum, $translatedId)->value;
             }
             throw new EnumConversionException($enum, $id);
         }
@@ -83,37 +85,21 @@ namespace App\Helpers {
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
             try {
-                Log::debug("requestToDto: '$dtoClass'",["data" => var_export($data,true)]);
+                DebugUtils::debug("requestToDto: '$dtoClass'", ["data" => var_export($data, true)]);
                 $dto = $dtoClass::import($data);
                 return $dto;
             } catch (Exception | InvalidValue $e) {
                 report($e);
                 $message = "";
-                $messagePosfix = "";
+                $path =[];
                 if ($e instanceof InvalidValue) {
                     $message = $e->error;
-                    $matches = [];
-                    /** @noinspection PhpRegExpInvalidDelimiterInspection */
-                    if (preg_match_all(<<<'EOF'
-             /->properties:(.*?)(?:->|$)/u
-             EOF, $e->path, $matches)) {
-                        echo "Matches\n";
-                        dump($matches);
-                        array_splice($matches, 0, 1);
-                        $segments = [];
-                        foreach ($matches as $match) {
-                            array_push($segments, ...$match);
-                        }
-                        $messagePosfix = ' at ' . implode('->', $segments);
-                    }
+                    $path = JsonSchemaUtils::getPathProps($e->path);
                 } else {
                     $message = $e->getMessage();
                 }
-                $regex = '/(.*?)\\s*,?(?:data:|at\\s|#|\\$|{|\\[)/u';
-                if (preg_match(pattern: $regex, subject: $message, matches: $matches)) {
-                    $message = $matches[1];
-                }
-                $message = rtrim($message, ', ') . $messagePosfix . '.';
+                $message = JsonSchemaUtils::filterError($message);
+                $message = JsonSchemaUtils::formatError($message,$path);
                 throw new ApplicationException(
                     ResponseAlias::HTTP_BAD_REQUEST,
                     ApplicationErrorInformation::create()
@@ -150,34 +136,34 @@ namespace App\Helpers {
         public static function getData(Request $request): mixed
         {
             $validated = self::validateAndExtractRequestData($request);
-            Log::debug("getData: ",["validated" => var_export($validated,true)]);
+            DebugUtils::debug("getData: ", ["validated" => var_export($validated, true)]);
             $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
-            Log::debug("getData: (assoc => stdClass): ",["res" => var_export($res,true)]);
+            DebugUtils::debug("getData: (assoc => stdClass): ", ["res" => var_export($res, true)]);
             return $res ?: new stdClass;
         }
 
+        /**
+         * @throws ValidationException
+         */
         public static function getQuery(Request $request): mixed
         {
             $query = $request->query() ?:  [];
-            report(new InternalException(
-                "LOG: getQuery '" . var_export($query, true) . "'",
-                context: [
-                    'query' => $query
-                ]
-            ));
 
             $validated = self::validateAndExtractRequestData($query);
-            report(new InternalException(
-                "LOG: validated query '" . var_export($validated, true) . "'",
-                context: [
-                    'validatedQuery' => $validated
-                ]
-            ));
             unset($query);
-            report(new InternalException("LOG: query VALIDATION SUCCEEDED"));
-            Log::debug("getQuery: ",["validated" => var_export($validated,true)]);
-            $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
-            Log::debug("getQuery: (assoc => stdClass): ",["res" => var_export($res,true)]);
+            Log::debug("getQuery: ", ["validated" => var_export($validated, true)]);
+            $res = Utils::recursiveAssocArrayToStdClass(
+                arr: $validated,
+                canChange: true,
+                parseValue: fn ($value) => is_string($value) ?
+                    (
+                        $value[0] === "'" ?
+                        substr($value, 1) :
+                        StrUtils::tryParseFloat($value, $value)
+                    )
+                    : $value
+            );
+            Log::debug("getQuery: (assoc => stdClass): ", ["res" => var_export($res, true)]);
             return $res ?: new stdClass;
         }
     }

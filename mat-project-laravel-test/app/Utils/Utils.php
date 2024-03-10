@@ -2,11 +2,9 @@
 
 namespace App\Utils;
 
-use BackedEnum;
 use Closure;
 use ReflectionFunction;
 use stdClass;
-use UnitEnum;
 
 class Utils
 {
@@ -74,13 +72,17 @@ class Utils
         }
     }
 
-    public static function recursiveAssocArrayToStdClass(array $arr, bool $canChange = false)
+    /**
+     * @param ?callable(mixed $value):mixed $parseValue
+     */
+    public static function recursiveAssocArrayToStdClass(array $arr, bool $canChange = false,?callable $parseValue = null)
     {
         $res = array_is_list($arr) ? [] : new stdClass;
-        
+
         foreach($arr as $key => $value){
+            $value = $parseValue ? $parseValue($value) : $value;
             if(is_array($value)){
-                $value = self::recursiveAssocArrayToStdClass($value);
+                $value = self::recursiveAssocArrayToStdClass($value,$canChange,$parseValue);
             }
             if(is_array($res)){
                 $res[]=$value;
