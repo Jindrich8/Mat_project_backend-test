@@ -5,18 +5,19 @@ namespace App\Actions\Fortify;
 use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetails;
 use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetailsErrorData;
 use App\Dtos\Defs\Endpoints\Register\RegisterRequest;
+use App\Dtos\Defs\Errors\GeneralErrorDetails;
 use App\Dtos\Defs\Types\Errors\FieldError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Exceptions\ApplicationException;
-use App\Exceptions\InternalException;
 use App\Exceptions\UnPreparedCaseException;
+use App\Helpers\RequestHelper;
 use App\Models\User;
 use App\TableSpecificData\UserRole;
+use App\Types\JsonSchemaUtils;
 use App\Utils\DebugUtils;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -28,14 +29,13 @@ class CreateNewUser implements CreatesNewUsers
 
     /**
      * Validate and create a newly registered user.
-     
      * @param array<string, string> $input
-     * @throws ValidationException
+     * @return User
+     * @throws ApplicationException
      */
     public function create(array $input): User
     {
-        Log::info("CreateNewUser - input: ",['input' => $input]);
-        DebugUtils::log("CreateNewUser - input: ",['input' => $input]);
+        DebugUtils::log("CreateNewUser - input: ", ['input' => $input]);
         try {
             Validator::make($input, [
                 'name' => ['required', 'string', 'max:255'],
@@ -47,6 +47,7 @@ class CreateNewUser implements CreatesNewUsers
                     Rule::unique(User::class),
                 ],
                 'password' => $this->passwordRules(),
+                RegisterRequest::ROLE => ['string',Rule::in([RegisterRequest::TEACHER])]
             ])->validate();
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
@@ -64,11 +65,16 @@ class CreateNewUser implements CreatesNewUsers
                         ->setMessage($error)
                 );
             }
-            $passwordError = $errors->first('password');
-            if ($passwordError) {
+            if (($error = $errors->first('password'))) {
                 $data->setPassword(
                     FieldError::create()
-                        ->setMessage($passwordError)
+                        ->setMessage($error)
+                );
+            }
+            if(($error = $errors->first(RegisterRequest::ROLE))){
+                $data->setRole(
+                    FieldError::create()
+                    ->setMessage($error)
                 );
             }
 
@@ -86,25 +92,13 @@ class CreateNewUser implements CreatesNewUsers
             );
         }
         $role = $input[RegisterRequest::ROLE] ?? null;
-        Log::info("CreateNewUser - ROLE FROM INPUT!!! IS ",['ROLE' => $role]);
-       $role = match($role){
-        RegisterRequest::TEACHER => UserRole::TEACHER,
-        null => UserRole::NONE,
-        default => throw new UnPreparedCaseException(CreateNewUser::class,RegisterRequest::ROLE,$role)
+        DebugUtils::log("CreateNewUser - ROLE FROM INPUT!!! IS ", ['ROLE' => $role]);
+        $role = match ($role) {
+            RegisterRequest::TEACHER => UserRole::TEACHER,
+            null => UserRole::NONE,
+            default => throw new UnPreparedCaseException(CreateNewUser::class, RegisterRequest::ROLE, $role)
         };
 
- Log::info("CreateNewUser: ",[
-    'name' => $input['name'],
-    'email' => $input['email'],
-    'password' => Hash::make($input['password']),
-    'role' => $role->value
-]);
-        DebugUtils::log("CreateNewUser: ",[
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => Hash::make($input['password']),
-            'role' => $role->value
-        ]);
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],

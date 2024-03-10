@@ -23,14 +23,13 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      *
      * @param User $user
      * @param array<string, string> $input
-     * @throws ValidationException
+     * @throws ApplicationException
      */
     public function update(User $user, array $input): void
     {
         try{
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
-
             'email' => [
                 'required',
                 'string',
