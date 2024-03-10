@@ -2,13 +2,6 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Illuminate\Support\Str;
-use  Dev\DtoGen\PhpDtosGenerator;
-use  Dev\DtoGen\MyFileInfo;
-use Dev\DtoGen\PathHelper;
-use Dev\DtoGen\StrUtils;
-use Dev\Utils\ScriptArgsBuilder;
-use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use App\Dtos\Task\Create\Request;
 use App\Dtos\Errors\XML\InvalidAttribute;
 
