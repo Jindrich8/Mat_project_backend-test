@@ -18,7 +18,7 @@ return new class extends Migration
     {
         Schema::create(self::$table, function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->string('name',250);
+            $table->string('name',250)->unique();
             $table->unsignedTinyInteger('orientation');
             $table->string('description',2040);
             $table->unsignedTinyInteger('difficulty');

@@ -18,7 +18,7 @@ class TagFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'=>fake()->name
+            'name'=>fake()->realText(mt_rand(10, 20))
         ];
     }
 }
