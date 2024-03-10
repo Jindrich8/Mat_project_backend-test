@@ -9,6 +9,18 @@
             "items": {
                 "$ref":"@/defs/types/task/preview_info.json"
             }
+        },
+        "config":{
+            "type":"object",
+            "properties": {
+                "prev_cursor":{
+                    "type":"string"
+                },
+                "next_cursor":{
+                    "type":"string"
+                }
+            }
         }
-    }
+    },
+    "required": ["tasks", "config"]
 }

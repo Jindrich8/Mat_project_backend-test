@@ -19,6 +19,9 @@
                 },
                 "password": {
                     "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "role":{
+                    "$ref": "@/defs/types/errors/field_error.json"
                 }
             }
         }

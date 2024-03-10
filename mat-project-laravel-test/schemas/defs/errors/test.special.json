@@ -1,0 +1,23 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title":"TEST TYPE",
+    "type":"object",
+    "properties": {
+        "prop1":{
+            "type":"object",
+            "properties": {
+                "prop11":{
+                    "type":"object",
+                    "properties": {
+                        "prop111":{
+                            "type":"string"
+                        }
+                    }
+                }
+            }
+        },
+        "prop2":{
+            "type":"integer"
+        }
+    }
+}

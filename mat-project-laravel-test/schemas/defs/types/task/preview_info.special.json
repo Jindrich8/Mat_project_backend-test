@@ -21,8 +21,17 @@
                 "$ref": "@/defs/types/response/enum_element.json"
             }
         },
-        "task_review_id":{
-            "$ref":"@/defs/types/id.json"
+        "task_review":{
+            "type":"object",
+            "properties": {
+                "id":{
+                    "$ref":"@/defs/types/id.json"
+                },
+                "score":{
+                    "type":"number"
+                }
+            },
+            "required": ["id", "score"]
         },
         "author": {
             "$ref":"@/defs/types/task/author_info.json"

@@ -63,9 +63,5 @@
                 ]
             }
         }
-    },
-    "required": [
-        "filters",
-        "order_by"
-    ]
+    }
 }

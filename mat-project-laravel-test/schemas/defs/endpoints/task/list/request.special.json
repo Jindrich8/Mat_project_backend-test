@@ -54,10 +54,16 @@
                     "type"
                 ]
             }
+        },
+        "cursor":{
+            "type":["string","null"]
+        },
+        "limit":{
+            "type":"number"
         }
     },
     "required": [
-        "filters",
-        "order_by"
+        "cursor",
+        "limit"
     ]
 }

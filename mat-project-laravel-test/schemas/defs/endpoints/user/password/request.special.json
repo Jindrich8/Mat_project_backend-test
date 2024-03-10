@@ -4,15 +4,19 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "current_password": {
+            "type": "string"
+        },
         "password": {
             "type": "string"
         },
-        "current_password": {
-            "type": "string"
+        "password_confirmation":{
+            "type":"string"
         }
     },
     "required": [
+        "current_password",
         "password",
-        "current_password"
+        "password_confirmation"
     ]
 }
