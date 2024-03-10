@@ -6,19 +6,17 @@ namespace App\Types {
     use App\Exceptions\InvalidArgumentException;
     use XMLParser;
 
-    use function PHPSTORM_META\type;
-
     /**
      * XML parser position
-     * 
-     * Column - from 1  
-     * Line - from 1    
-     * ByteIndex - sometimes is not updated properly, but when it changes it should be correct  
      *
-     * Getting position:    
-     * Element start - element end ('>')    
-     * Element end - element end end ('>')  
-     * Element value - element value start, (last element value) = next construct start 
+     * Column - from 1
+     * Line - from 1
+     * ByteIndex - sometimes is not updated properly, but when it changes it should be correct
+     *
+     * Getting position:
+     * Element start - element end ('>')
+     * Element end - element end end ('>')
+     * Element value - element value start, (last element value) = next construct start
      */
     class XMLParserPosition
     {
@@ -53,7 +51,7 @@ namespace App\Types {
 
         public function setByteIndex(int $byteIndex,bool $canBeSame = false):bool{
             $isValid =  $this->byteIndex < $byteIndex || $canBeSame && $this->byteIndex <= $byteIndex;
-            
+
             $this->byteIndex = $byteIndex;
             $this->byteIndexIsValid = $isValid;
             return $isValid;
@@ -124,7 +122,7 @@ namespace App\Types {
                $column = self::getValidPos(xml_get_current_column_number($parser), $parser);
                $line = self::getValidPos(xml_get_current_line_number($parser), $parser);
                $byteIndex = self::getValidPos(xml_get_current_byte_index($parser), $parser);
-            
+
         }
 
         /**

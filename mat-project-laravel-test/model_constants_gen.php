@@ -2,17 +2,12 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use App\Console\Kernel;
-use App\Exceptions\InternalException;
 use App\Utils\ValidateUtils;
 use Illuminate\Support\Str;
-use  Dev\DtoGen\PhpDtosGenerator;
 use  Dev\DtoGen\MyFileInfo;
 use Dev\DtoGen\PathHelper;
-use Dev\DtoGen\StrUtils;
 use Dev\Utils\ScriptArgsBuilder;
 use Illuminate\Support\Facades\Schema;
-use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 use Illuminate\Support\Arr;
 use Symfony\Component\Finder\Finder;

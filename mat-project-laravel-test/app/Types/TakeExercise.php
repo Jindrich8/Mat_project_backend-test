@@ -3,7 +3,6 @@
 namespace App\Types;
 
 use App\Helpers\CTakeExercise;
-use App\Helpers\ExerciseType;
 
 class TakeExercise
 {

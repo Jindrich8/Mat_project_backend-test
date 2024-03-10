@@ -3,10 +3,10 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\XMLInvalidElementValueException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNodeValueType;
 
     class ExerciseInstructionsNode extends XMLNodeBaseWParentNode
     {
@@ -34,7 +34,9 @@ namespace App\Helpers\CreateTask {
     }
 
         /**
+         * @param XMLContextBase $context
          * @throws XMLInvalidElementValueException
+         * @throws XMLMissingRequiredElementsException
          */
         protected function validate(XMLContextBase $context): void
     {

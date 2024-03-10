@@ -3,14 +3,10 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\XMLInvalidElementValueException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\CreatableNodeTrait;
     use App\Types\XMLContextBase;
-    use App\Utils\Utils;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNodeBase;
-    use App\Types\XMLNodeValueType;
-    use ValueError;
 
     class ResourcesResourceNode extends XMLNodeBaseWParentNode
     {
@@ -46,7 +42,9 @@ namespace App\Helpers\CreateTask {
     }
 
         /**
+         * @param XMLContextBase $context
          * @throws XMLInvalidElementValueException
+         * @throws XMLMissingRequiredElementsException
          */
         protected function validate(XMLContextBase $context): void
     {

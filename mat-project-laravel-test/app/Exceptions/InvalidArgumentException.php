@@ -2,7 +2,6 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Http\Response;
 use Throwable;
 
 class InvalidArgumentException extends InternalException
@@ -17,7 +16,7 @@ class InvalidArgumentException extends InternalException
      * [optional] The previous throwable used for the exception chaining.
      */
     public function __construct(string $argumentName,mixed $argumentValue,string $isNotValidBecause = "",array $context = [],?int $code = 0,?Throwable $previous = null){
-        
+
         $message = "Argument '$argumentName' does not have a valid value"
         . ($isNotValidBecause ? ", because $isNotValidBecause":"")
         .".";

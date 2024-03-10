@@ -3,6 +3,7 @@
 namespace App\Helpers\CreateTask\Document {
 
     use App\Exceptions\XMLInvalidElementValueException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Types\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLContextBase;
@@ -29,7 +30,9 @@ namespace App\Helpers\CreateTask\Document {
     }
 
         /**
+         * @param XMLContextBase $context
          * @throws XMLInvalidElementValueException
+         * @throws XMLMissingRequiredElementsException
          */
         protected function validate(XMLContextBase $context): void
     {

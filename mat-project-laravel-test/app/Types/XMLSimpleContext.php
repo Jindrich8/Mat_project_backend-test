@@ -2,7 +2,6 @@
 
 namespace App\Types {
 
-    use App\Exceptions\InternalException;
     use App\Helpers\CreateTask\TaskRes;
 
     class XMLSimpleContext extends XMLContextBase

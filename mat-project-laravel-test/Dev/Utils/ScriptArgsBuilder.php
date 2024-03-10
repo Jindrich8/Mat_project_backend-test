@@ -2,7 +2,6 @@
 namespace Dev\Utils {
 
     use Exception;
-    use Illuminate\Support\Str;
 
     class ScriptArgsBuilder{
 
@@ -181,8 +180,10 @@ namespace Dev\Utils {
          }
 
 
-
-         private function showHelp(){
+        /**
+         * @throws Exception
+         */
+        private function showHelp(){
 
             $options = $this->decodeOptions();
 
@@ -239,7 +240,10 @@ namespace Dev\Utils {
            return $this;
          }
 
-         private static function checkOptionName(string $name,bool $isShort){
+        /**
+         * @throws Exception
+         */
+        private static function checkOptionName(string $name, bool $isShort){
             if($isShort){
                 self::checkShortOptionName($name);
             }
@@ -248,13 +252,19 @@ namespace Dev\Utils {
             }
          }
 
-         private static function checkLongOptionName(string $name){
+        /**
+         * @throws Exception
+         */
+        private static function checkLongOptionName(string $name){
             if(strlen($name) === 0){
                 throw new Exception("Long options cannot be empty strings.");
             }
          }
 
-         private static function checkShortOptionName(string $name){
+        /**
+         * @throws Exception
+         */
+        private static function checkShortOptionName(string $name){
             if(mb_strlen($name) !== 1){
                 throw new Exception("Short options should have only one character name\nPassed name: '$name'.");
             }

@@ -3,12 +3,9 @@
 namespace App\Helpers\CreateTask {
 
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLNodeBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\CreatableNodeTrait;
     use App\Types\XMLChildren;
     use App\Types\XMLContextBase;
-    use App\Types\XMLNodeValueType;
 
     class GroupResourcesNode extends XMLNodeBaseWParentNode
     {

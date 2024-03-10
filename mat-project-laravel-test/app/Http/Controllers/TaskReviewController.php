@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Dtos\Defs\Endpoints\Task\Evaluate\EvaluateResponseTask;
+use App\Dtos\Defs\Endpoints\Task\Review\List\ListTaskReviewsResponse;
 use App\Dtos\Defs\Types\Errors\EnumArrayError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
@@ -14,7 +15,6 @@ use App\Dtos\Defs\Types\Review\ReviewTaskDetailInfo;
 use App\Dtos\Defs\Types\Review\ReviewTaskPreviewInfo;
 use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Dtos\InternalTypes\TaskReviewExercisesContent;
-use App\Models\TaskReview;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use App\Dtos\Defs\Endpoints\Task\Review;
@@ -33,7 +33,6 @@ use App\ModelConstants\TaskReviewTemplateConstants;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
-use App\Types\ConstructableTrait;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
 use App\Utils\Utils;
@@ -41,12 +40,17 @@ use App\Utils\ValidateUtils;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
 
 class TaskReviewController extends Controller
 {
 
+    /**
+     * @throws AppModelNotFoundException
+     * @throws AuthenticationException
+     */
     public function get(Request $request, int $id): Review\Get\ReviewTaskResponse
     {
         $userId = UserHelper::getUserId();
@@ -165,6 +169,9 @@ class TaskReviewController extends Controller
             ->setTask($responseTask);
     }
 
+    /**
+     * @throws AuthenticationException
+     */
     public function detail(Request $request, int $id): Review\Detail\TaskReviewDetailResponse
     {
         $userId = UserHelper::getUserId();
@@ -300,8 +307,11 @@ class TaskReviewController extends Controller
 
 
     /**
+     * @param Request $request
+     * @return ListTaskReviewsResponse
      * @throws ApplicationException
      * @throws AuthenticationException
+     * @throws ValidationException
      */
     public function list(Request $request): Review\List\ListTaskReviewsResponse
     {
@@ -527,6 +537,10 @@ class TaskReviewController extends Controller
             ->setReviews($reviews->all());
     }
 
+    /**
+     * @throws AppModelNotFoundException
+     * @throws AuthenticationException
+     */
     public function delete(Request $request, int $id): Response
     {
         $userId = UserHelper::getUserId();

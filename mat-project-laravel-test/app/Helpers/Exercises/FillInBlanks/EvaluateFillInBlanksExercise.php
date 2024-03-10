@@ -14,8 +14,8 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Dtos\InternalTypes\TextInput;
     use App\Dtos\InternalTypes\Combobox;
     use App\Exceptions\InvalidEvaluateValueException;
+    use App\Utils\DebugUtils;
     use App\Utils\DtoUtils;
-    use Illuminate\Support\Facades\Log;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class EvaluateFillInBlanksExercise implements CEvaluateExercise
@@ -82,7 +82,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     ->setMax($uiI)
             )
                 ->setDetails($response);
-            Log::info("exporting " . self::class . "", ['response' => $response]);
+            DebugUtils::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

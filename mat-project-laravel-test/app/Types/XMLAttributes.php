@@ -3,7 +3,6 @@
 namespace App\Types {
 
     use App\Exceptions\InvalidArgumentException;
-    use App\Helpers\CreateTask\TaskRes;
 
     class XMLAttributes
     {
@@ -106,20 +105,20 @@ namespace App\Types {
             return $this;
         }
 
-       
+
         /**
          * @param string $name
-         * @return array{callable(XMLNodeBase $node, string $value,XMLContextBase $context):void,bool}|false
+         * @return array{0:callable(XMLNodeBase $node, string $value,XMLContextBase $context):void,1:bool}|false
          */
         public function tryGetAttribute(string $name):array|false{
             $attributes = &$this->requiredAttributes;
-            if(!array_key_exists($name,$attributes) && 
+            if(!array_key_exists($name,$attributes) &&
             !array_key_exists($name,($attributes = &$this->nonRequiredAttributes))){
                 return false;
             }
             return [$attributes[$name],$attributes === $this->requiredAttributes];
         }
 
-        
+
     }
 }

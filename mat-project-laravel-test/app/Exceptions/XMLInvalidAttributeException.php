@@ -5,12 +5,11 @@ namespace App\Exceptions{
     use App\Dtos\Defs\Errors\XML\XMLInvalidAttributeErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ApplicationErrorInformation;
-    use App\Utils\StrUtils;
     use App\Utils\Utils;
 
 class XMLInvalidAttributeException extends XMLParsingException{
 
-    
+
     public function __construct(
         string $element,
         XMLInvalidAttributeErrorData $errorData,

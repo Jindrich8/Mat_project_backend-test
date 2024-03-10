@@ -4,13 +4,10 @@ namespace App\Http\Middleware;
 
 use App\Exceptions\AppUnathorizedException;
 use App\Helpers\Database\UserHelper;
-use App\Models\User;
 use App\TableSpecificData\UserRole;
-use App\Types\SimpleReadonlyEnumSet;
 use Closure;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
-use Illuminate\Validation\UnauthorizedException;
-use Ramsey\Collection\Set;
 use Symfony\Component\HttpFoundation\Response;
 
 class Authorize
@@ -18,16 +15,18 @@ class Authorize
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param Request $request
+     * @param \Closure(Request): (Response) $next
      * @param value-of<UserRole> $role
-     * @throws AuthenticationException
+     * @return Response
      * @throws AppUnathorizedException
+     * @throws AuthenticationException
      */
     public function handle(Request $request, Closure $next,int $role): Response
     {
         $r = UserHelper::getUser()->role;
         if($r !== $role){
-            throw new AppUnathorizedException([$role->translate()]);
+            throw new AppUnathorizedException([UserRole::translateFrom($role)]);
         }
         return $next($request);
     }

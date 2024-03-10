@@ -3,8 +3,6 @@
 namespace App\Types {
 
     use App\Exceptions\InternalException;
-    use App\Types\GetXMLParserPosition;
-    use App\Types\XMLContextBase;
 
     abstract class XMLValueParsingNode extends XMLNodeBaseWParentNode
     {
@@ -19,7 +17,7 @@ namespace App\Types {
 
            $this->contentNode = $node;
            $this->contentNode->validateStart($attributes,$context,$name);
-           
+
         }
 
         private function checkContentNode(XMLContextBase|GetXMLParserPosition $context):XMLNodeBase{

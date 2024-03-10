@@ -2,7 +2,6 @@
 
 namespace Dev\DtoGen {
 
-    use Illuminate\Support\Str;
     use Swaggest\PhpCodeBuilder\App\PhpApp;
 
     class MyApp extends PhpApp

@@ -3,7 +3,9 @@
 namespace App\Helpers\CreateTask {
 
     use App\Exceptions\InternalException;
+    use App\Exceptions\XMLInvalidAttributeException;
     use App\Exceptions\XMLInvalidElementException;
+    use App\Exceptions\XMLMissingRequiredAttributesException;
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Helpers\CreateTask\Document\DocumentContent;
     use App\MyConfigs\TaskSrcConfig;
@@ -113,7 +115,12 @@ namespace App\Helpers\CreateTask {
 
 
         /**
+         * @param iterable $attributes
+         * @param XMLContextBase $context
+         * @param string|null $name
+         * @throws XMLInvalidAttributeException
          * @throws XMLInvalidElementException
+         * @throws XMLMissingRequiredAttributesException
          */
         public function validateStart(iterable $attributes, XMLContextBase $context, ?string $name = null): void
         {
@@ -157,7 +164,7 @@ namespace App\Helpers\CreateTask {
                 );
             }
             $group->length = $exerciseCount - $group->start;
-            
+
             $this->count = array_pop($this->counts);
         }
 }

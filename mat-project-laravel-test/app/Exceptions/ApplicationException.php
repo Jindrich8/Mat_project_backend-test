@@ -9,7 +9,6 @@ use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Swaggest\JsonSchema\InvalidValue;
-use Swaggest\JsonSchema\Structure\ClassStructure;
 
 class ApplicationException extends Exception
 {

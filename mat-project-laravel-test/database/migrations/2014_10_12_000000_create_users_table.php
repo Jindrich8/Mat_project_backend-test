@@ -1,6 +1,5 @@
 <?php
 
-use App\Helpers\Database\DBHelper;
 use App\TableSpecificData\UserRole;
 use App\Utils\DBUtils;
 use Illuminate\Database\Migrations\Migration;

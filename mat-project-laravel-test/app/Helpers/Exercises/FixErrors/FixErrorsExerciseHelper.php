@@ -2,8 +2,6 @@
 
 namespace App\Helpers\Exercises\FixErrors;
 
-use App\Dtos\Defs\Exercises\FixErrors\FixErrorsReviewResponse;
-use App\Dtos\Defs\Exercises\FixErrors\FixErrorsReviewResponseContent;
 use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponse;
 use App\Dtos\Defs\Exercises\FixErrors\FixErrorsTakeResponseContent;
 use App\Helpers\CCreateExerciseHelper;
@@ -11,7 +9,6 @@ use App\Helpers\CExerciseHelper;
 use App\Helpers\Database\DBHelper;
 use App\ModelConstants\FixErrorsConstants;
 use App\Models\FixErrors;
-use App\Utils\Utils;
 use Illuminate\Support\Facades\DB;
 
 class FixErrorsExerciseHelper implements CExerciseHelper
@@ -57,7 +54,7 @@ class FixErrorsExerciseHelper implements CExerciseHelper
         $idName = FixErrors::getPrimaryKeyName();
         $fixErrorsExercises = DB::table($table)
             ->select([
-                $idName, 
+                $idName,
             FixErrorsConstants::COL_CORRECT_TEXT,
             FixErrorsConstants::COL_WRONG_TEXT,
             FixErrorsConstants::COL_DISTANCE

@@ -1,6 +1,5 @@
 <?php
 namespace App\Types {
-    use App\Types\XMLNodeBase;
 
     abstract class XMLDynamicNodeBase extends XMLNodeBase
     {

@@ -2,12 +2,7 @@
 
 namespace App\Types {
 
-    use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
-    use App\Types\XMLNodeBase;
-    use App\Utils\Utils;
-    use Iterator;
-    use Ramsey\Collection\Exception\OutOfBoundsException;
 
     class XMLChildren
     {
@@ -78,10 +73,8 @@ namespace App\Types {
                 throw $e;
             }
 
-            //report(new InternalException($child->getName()." getting parent obj id"));
             $parent = $child->getParentObjectId();
 
-            //report(new InternalException($child->getName()." got parent obj id"));
             if($parent === null){
                 $e = new InvalidArgumentException(
                     argumentName:"child",

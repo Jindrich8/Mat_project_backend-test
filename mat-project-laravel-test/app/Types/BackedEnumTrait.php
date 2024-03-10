@@ -3,7 +3,6 @@
 namespace App\Types {
 
     use App\Exceptions\EnumConversionException;
-    use App\Helpers\Database\DBHelper;
     use App\Helpers\EnumHelper;
     use BackedEnum;
 

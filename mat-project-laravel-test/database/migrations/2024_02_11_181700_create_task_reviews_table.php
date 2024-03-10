@@ -1,6 +1,5 @@
 <?php
 
-use App\Helpers\Database\DBHelper;
 use App\Utils\DBUtils;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -24,7 +23,7 @@ return new class extends Migration
             $table->autoTimestamps();
             $table->unique(['user_id','task_review_template_id']);
         });
-        
+
         DBUtils::addPercentDecimalConstraint('task_reviews','score');
     }
 

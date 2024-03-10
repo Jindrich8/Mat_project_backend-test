@@ -2,10 +2,6 @@
 
 namespace App\Types {
 
-    use App\Types\XMLAttributes;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBase;
-
     /**
      * @template T of XMLNodeBase
      */
@@ -33,12 +29,8 @@ namespace App\Types {
             return $this->parent;
         }
          /**
-         * @param string $name
-         * @param ?XMLAttributes $attributes
-         * @param ?T $parent
-         * @param bool $shouldHaveAtLeastOneChild
-         * @param int $maxCount
-         */
+          * @param ?T $parent
+          */
         protected function __construct(string $name,?XMLAttributes $attributes = null,?XMLNodeBase $parent = null,bool $shouldHaveAtLeastOneChild = false,int $maxCount = PHP_INT_MAX,bool $isValueNode = true)
         {
             $this->parent = $parent;

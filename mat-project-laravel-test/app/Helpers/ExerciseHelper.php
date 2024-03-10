@@ -4,23 +4,15 @@ namespace App\Helpers;
 
 use App\Exceptions\UnsupportedVariantException;
 use App\Helpers\Database\DBHelper;
-use App\Helpers\Database\DBJsonHelper;
 use App\Helpers\Exercises\FillInBlanks\FillInBlanksExerciseHelper;
 use App\Helpers\Exercises\FixErrors\FixErrorsExerciseHelper;
-use App\Models\Exercise;
-use App\Models\SavedTask;
 use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
-use App\Dtos\InternalTypes\TaskSaveContent;
 use App\ModelConstants\ExerciseConstants;
 use App\Types\SavedTaskContentProvider;
-use App\Types\SaveTask;
 use App\Utils\DebugUtils;
-use App\Utils\DtoUtils;
 use App\Utils\Utils;
-use DateTimeZone;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -54,7 +46,8 @@ class ExerciseHelper
     };
   }
 
-  public static function getHelpers(){
+  public static function getHelpers(): \Generator
+  {
     foreach(ExerciseType::cases() as $case){
       $helper = self::tryGetHelper($case);
       if($helper){

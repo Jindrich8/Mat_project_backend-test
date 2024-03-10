@@ -2,11 +2,10 @@
 
 namespace App\Helpers\Exercises\FixErrors {
 
+    use App\Exceptions\XMLInvalidElementValueException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\XMLContextBase;
     use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNodeValueType;
-    use App\Utils\ValidateUtils;
 
     /**
      * @extends XMLNodeBaseWParentNode<FixErrorsXMLCreateNode>
@@ -36,6 +35,9 @@ namespace App\Helpers\Exercises\FixErrors {
            $content->correctText = ($content->correctText ?? "").$value;
         }
 
+        /**
+         * @throws XMLInvalidElementValueException
+         */
         protected function validate(XMLContextBase $context): void
         {
             $config = TaskSrcConfig::get()->getFixErrorsConfig();

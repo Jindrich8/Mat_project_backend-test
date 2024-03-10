@@ -4,17 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Utils\Utils;
 use App\Dtos\Defs\Endpoints\CreateInfo;
 use App\Dtos\Defs\Types\Response\ResponseEnumElement;
-use App\Dtos\Defs\Types\Response\ResponseOrderedEnumElement;
 use App\Helpers\ResponseHelper;
 use App\ModelConstants\TagConstants;
 use App\TableSpecificData\TaskDifficulty;
-use App\Types\ConstructableTrait;
 use App\TableSpecificData\TaskClass;
+use App\Utils\DebugUtils;
 use App\Utils\DtoUtils;
-use Illuminate\Support\Facades\Log;
 
 class TaskCreateInfoController extends Controller
 {
@@ -44,7 +41,7 @@ class TaskCreateInfoController extends Controller
                     TaskClass::cases()
                 )
             );
-        Log::info("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
+        DebugUtils::log("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
         return $response;
     }
 }

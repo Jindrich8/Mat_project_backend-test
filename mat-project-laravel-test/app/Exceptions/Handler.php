@@ -3,15 +3,9 @@
 namespace App\Exceptions;
 
 
-use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Utils\ExceptionUtils;
-use App\Utils\Utils;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Http\Request as HttpRequest;
-use Illuminate\Support\Str;
 use \Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -34,7 +28,7 @@ class Handler extends ExceptionHandler
     {
         $this->renderable(function(Throwable $e,Request $request){
             return ExceptionUtils::renderException(
-                e:$e, 
+                e:$e,
                 request:$request
             );
         });

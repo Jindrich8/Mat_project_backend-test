@@ -3,7 +3,6 @@
 namespace App\Models {
 
     use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Support\Str;
 
     abstract class BaseModel extends Model
     {
@@ -21,7 +20,7 @@ namespace App\Models {
         public static function getPrimaryKeyName():string{
             return self::getInfo()[1];
         }
-        
+
         private static function getInfo(){
             return (self::$dict[static::class]??= self::getModelInfo(new static));
         }

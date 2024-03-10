@@ -87,6 +87,9 @@ EOF,
     }
 }
 
+/**
+ * @throws Exception
+ */
 function processFile(
     MyFileInfo $file,
     Context $Context,
@@ -228,6 +231,9 @@ function processFile(
     }
 }
 
+/**
+ * @throws Exception
+ */
 function parsePath(string $path, string $sep = DIRECTORY_SEPARATOR, bool $real = false)
 {
     $replaced = Str::replace(['/', '\\'], $sep, $path);

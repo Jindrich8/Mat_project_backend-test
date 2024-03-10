@@ -12,8 +12,6 @@ namespace App\Utils {
     use Swaggest\JsonSchema\Structure\ClassStructure;
     use Throwable;
     use BackedEnum;
-    use Illuminate\Support\Facades\Log;
-    use Swaggest\JsonSchema\Context;
 
     class DtoUtils
     {
@@ -43,7 +41,11 @@ namespace App\Utils {
         }
 
         /**
-         * @throws InvalidValue
+         * @param ClassStructure $dto
+         * @param string $field
+         * @param string $wrap
+         * @return array|mixed
+         * @throws Exception
          */
         public static function prepareDtoForJsonResponse(ClassStructure $dto, string $field="", string $wrap=""){
             $exported = self::exportDto($dto);
@@ -118,8 +120,7 @@ namespace App\Utils {
         }
 
           /**
-         * @throws InvalidValue
-         * @throws Exception
+           * @throws Exception
          */
         public static function dtoToJson(ClassStructure $dto,string $field="",string $wrap="",int $otherJsonOptions = 0):string{
            $exported = self::exportDto($dto);

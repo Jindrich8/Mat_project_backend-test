@@ -74,6 +74,9 @@ function replaceValueAtJsonPath(array &$json, array $path, array|int|string|bool
 }
 
 
+/**
+ * @throws Exception
+ */
 function parsePath(string $path, string $sep = DIRECTORY_SEPARATOR, bool $real = false)
 {
     $replaced = Str::replace(['/', '\\'], $sep, $path);

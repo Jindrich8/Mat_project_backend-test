@@ -9,10 +9,10 @@ namespace App\Helpers\Exercises\FixErrors {
     use App\Dtos\Defs\Types\Review\ExerciseReview;
     use App\Exceptions\InvalidEvaluateValueException;
     use App\Helpers\CEvaluateExercise;
+    use App\Utils\DebugUtils;
     use App\Utils\DtoUtils;
     use App\Utils\StrUtils;
     use Fisharebest\Algorithm\MyersDiff;
-    use Illuminate\Support\Facades\Log;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class EvaluateFixErrorsExercise implements CEvaluateExercise
@@ -33,6 +33,7 @@ namespace App\Helpers\Exercises\FixErrors {
 
         /**
          * @throws InvalidEvaluateValueException
+         * @throws \Exception
          */
         public function evaluateAndSetAsContentTo(ClassStructure $value, ExerciseReview $exercise): void
         {
@@ -68,7 +69,7 @@ namespace App\Helpers\Exercises\FixErrors {
                 $calculated = $myers->calculate($value, $correctChars);
                 unset($myers);
             }
-            Log::info(self::class . " calculated", [
+            DebugUtils::log(self::class . " calculated", [
                 'correctText' => implode("", $correctChars),
                 'userText' => implode("", $value),
                 'calculated' => $calculated
@@ -118,7 +119,7 @@ namespace App\Helpers\Exercises\FixErrors {
                 }
             }
 
-            Log::info("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
+            DebugUtils::log("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
             $has = $this->defaultDistance - $distance;
             if ($has < 0) {
                 $has = 0;
@@ -130,7 +131,7 @@ namespace App\Helpers\Exercises\FixErrors {
             )
                 ->setDetails($response);
 
-            Log::info("exporting " . self::class . "", ['response' => $response]);
+            DebugUtils::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

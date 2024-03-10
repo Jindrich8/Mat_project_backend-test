@@ -4,7 +4,6 @@ namespace App\Helpers {
 
     use App\Dtos\Defs\Types\Errors\InvalidBoundsError;
     use App\Dtos\Defs\Types\Errors\RangeError;
-    use App\Dtos\Defs\Types\Request\TimestampRange;
     use App\Utils\TimeStampUtils;
     use Carbon\Carbon;
 

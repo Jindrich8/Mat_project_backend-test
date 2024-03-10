@@ -6,7 +6,6 @@ namespace App\Helpers\BareModels {
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
     use App\TableSpecificData\TaskClass;
-    use App\TableSpecificData\TaskDifficulty;
     use App\TableSpecificData\TaskDisplay;
     use Illuminate\Support\Facades\DB;
 

@@ -2,13 +2,14 @@
 
 namespace Dev\DtoGen {
 
-    use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Illuminate\Support\Str;
     use Swaggest\JsonSchema\Context;
+    use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\JsonSchema;
     use Swaggest\JsonSchema\Schema;
     use Swaggest\PhpCodeBuilder\JsonSchema\ClassHookCallback;
+    use Swaggest\PhpCodeBuilder\JsonSchema\Exception;
     use Swaggest\PhpCodeBuilder\JsonSchema\PhpBuilder;
     use Swaggest\PhpCodeBuilder\PhpClass;
     use Swaggest\PhpCodeBuilder\PhpCode;
@@ -20,6 +21,12 @@ namespace Dev\DtoGen {
     {
         const DEFS = "defs";
 
+        /**
+         * @throws Exception
+         * @throws \Swaggest\JsonSchema\Exception
+         * @throws \Swaggest\PhpCodeBuilder\Exception
+         * @throws InvalidValue
+         */
         public static function generate(mixed $schemaData, string $rootName, string $basePath, string $baseNameSpace, string $relResolverDir = null, string $schemaFilePath = null, string $separator = DIRECTORY_SEPARATOR)
         {
             if ($schemaFilePath) {

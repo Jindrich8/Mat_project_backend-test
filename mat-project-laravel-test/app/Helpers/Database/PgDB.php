@@ -10,11 +10,8 @@ namespace App\Helpers\Database {
     class PgDB extends DB
     {
         /**
-         * @param string $tableName
-         * @param string $primaryKeyName
          * @param string[] $columns
          * @param array<array<mixed>> $values
-         * @return array
          */
         public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values,bool $unsetValuesArray = false): array
         {

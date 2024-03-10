@@ -2,13 +2,11 @@
 
 namespace App\Exceptions {
 
-    use App\Dtos\Defs\Errors\XML\DefsOr;
     use App\Dtos\Defs\Errors\XML\XMLMissingRequiredElements;
     use App\Dtos\Defs\Errors\XML\XMLMissingRequiredElementsErrorData;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ApplicationErrorInformation;
     use App\Types\AndOrStringBuilder;
-    use App\Utils\Utils;
 
     class XMLMissingRequiredElementsException extends XMLParsingException
     {

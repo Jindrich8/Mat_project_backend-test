@@ -1,8 +1,7 @@
 <?php
 
 namespace Dev\DtoGen {
-    use Dev\DtoGen\PathHelper;
-    use Illuminate\Support\Str;
+
     use Swaggest\JsonSchema\RemoteRef\BasicFetcher;
     use Swaggest\JsonSchema\RemoteRefProvider;
 

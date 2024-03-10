@@ -6,20 +6,20 @@ namespace App\Helpers\CreateTask {
     use App\Dtos\Defs\Errors\XML\XMLUnsupportedConstructErrorData as XMLXMLUnsupportedConstructErrorData;
     use App\Exceptions\ApplicationException;
     use App\Exceptions\InternalException;
+    use App\Exceptions\XMLInvalidAttributeException;
+    use App\Exceptions\XMLInvalidElementException;
+    use App\Exceptions\XMLMissingRequiredAttributesException;
     use App\Exceptions\XMLSyntaxErrorException;
     use App\Exceptions\XMLUnsupportedConstructException;
     use App\Helpers\CreateTask\Document\Document;
-    use App\Helpers\CreateTask\TaskRes;
     use App\Types\BaseXMLParser;
     use App\Types\LibXmlParser;
-    use App\Types\TrimType;
     use App\Types\XMLNodeBase;
     use App\Types\XMLContext;
     use App\Types\XMLParserEvents;
     use App\Types\XMLUnsupportedConstructType;
     use App\Utils\DebugUtils;
     use App\Utils\DtoUtils;
-    use App\Utils\StrUtils;
     use Exception;
 
     class ParseEntry implements XMLParserEvents
@@ -37,15 +37,16 @@ namespace App\Helpers\CreateTask {
 
         public function __construct()
         {
-            report(new InternalException('ParseEntry constructor'));
             $this->context = null;
-            report(new InternalException('Document::create'));
             $this->node = Document::create();
-            report(new InternalException('Document::created'));
             $this->start = true;
-            report(new InternalException('ParseEntry constructor end'));
         }
 
+        /**
+         * @throws XMLInvalidElementException
+         * @throws XMLInvalidAttributeException
+         * @throws XMLMissingRequiredAttributesException
+         */
         public function elementStartHandler(BaseXMLParser $parser, string $name, array $attributes): void
         {
             // dump("START - ".$this->node->getName()." -> $name");

@@ -2,12 +2,7 @@
 
 namespace App\Types {
 
-    use App\Exceptions\InvalidArgumentException;
-    use App\Utils\ValidateUtils;
     use BackedEnum;
-    use Illuminate\Support\Str as SupportStr;
-    use PHPUnit\Framework\Attributes\BackupGlobals;
-    use Str;
 
     /**
      * @template T of BackedEnum
@@ -25,7 +20,7 @@ namespace App\Types {
          * @var int $flags
          */
         public readonly int $flags;
-        
+
         public readonly BackedEnum $enum;
 
         public function hasFlag(int $flag):bool{
@@ -47,7 +42,7 @@ namespace App\Types {
             $this->flags = $flags;
         }
 
-        
+
 
         public function getAllowedEnumValues()
         {

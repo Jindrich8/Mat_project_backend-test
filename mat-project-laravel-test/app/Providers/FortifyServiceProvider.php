@@ -13,7 +13,6 @@ use App\Utils\DebugUtils;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -34,7 +33,7 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 DebugUtils::log("LogoutResponse::toResponse");
-                Log::info("LogoutResponse::toResponse");
+                DebugUtils::log("LogoutResponse::toResponse");
                return (new LogoutResponse)->toResponse($request);
             }
         });
@@ -78,7 +77,7 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 DebugUtils::log("LogoutResponse::toResponse");
-                Log::info("LogoutResponse::toResponse");
+                DebugUtils::log("LogoutResponse::toResponse");
                 return (new LogoutResponse)->toResponse($request);
             }
         });

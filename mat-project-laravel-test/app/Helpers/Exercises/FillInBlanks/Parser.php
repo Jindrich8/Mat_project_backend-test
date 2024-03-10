@@ -8,6 +8,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Exceptions\InternalException;
     use App\Exceptions\XMLInvalidElementValueException;
     use App\Exceptions\XMLInvalidElementValuePartException;
+    use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\TrimType;
     use App\Types\XMLContextBase;
@@ -122,7 +123,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
 
 
         /**
-         * @throws XMLInvalidElementValueException|XMLInvalidElementValuePartException
+         * @param XMLContextBase $context
+         * @throws XMLInvalidElementValueException
+         * @throws XMLInvalidElementValuePartException
+         * @throws XMLMissingRequiredElementsException
          */
         protected function validate(XMLContextBase $context): void
         {

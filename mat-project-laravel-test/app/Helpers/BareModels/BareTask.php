@@ -5,13 +5,10 @@ namespace App\Helpers\BareModels {
     use App\Helpers\Database\DBHelper;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
-    use App\Models\Task;
-    use App\Models\User;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
     use App\TableSpecificData\TaskDisplay;
     use App\Utils\TimeStampUtils;
-    use App\Utils\Utils;
     use Carbon\Carbon;
     use Illuminate\Database\Query\Builder;
     use DB;

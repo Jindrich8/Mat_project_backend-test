@@ -2,7 +2,6 @@
 
 namespace App\Types {
 
-    use IntlBreakIterator;
     use IntlPartsIterator;
 
     enum CharIteratorKeyType:int

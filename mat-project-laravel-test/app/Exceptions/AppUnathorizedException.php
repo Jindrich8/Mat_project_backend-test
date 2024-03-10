@@ -5,7 +5,6 @@ namespace App\Exceptions {
     use App\Dtos\Defs\Errors\Access\UnauthorizedError;
     use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
     use App\Dtos\Errors\ApplicationErrorInformation;
-    use App\TableSpecificData\UserRole;
     use App\Utils\Utils;
     use Illuminate\Http\Response;
 

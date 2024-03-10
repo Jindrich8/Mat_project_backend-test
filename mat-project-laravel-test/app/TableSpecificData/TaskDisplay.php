@@ -2,7 +2,6 @@
 
 namespace App\TableSpecificData;
 
-use App\Types\BackedEnumTrait;
 use App\Types\DBTranslationEnumTrait;
 
 enum TaskDisplay: int

@@ -2,11 +2,9 @@
 
 namespace App\Helpers\Database {
 
-    use App\Exceptions\InternalException;
     use App\Helpers\EnumHelper;
     use App\Utils\Utils;
     use BackedEnum;
-    use DB;
     use Illuminate\Database\Query\Builder;
 
     class DBHelper

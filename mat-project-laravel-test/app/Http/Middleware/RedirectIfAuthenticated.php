@@ -6,9 +6,7 @@ use App\Dtos\Defs\Errors\Access\AlreadyAuthenticatedError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Exceptions\ApplicationException;
-use App\Http\Responses\LoginResponse;
 use App\Providers\RouteServiceProvider;
-use App\Utils\RouteUtils;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -20,7 +18,11 @@ class RedirectIfAuthenticated
     /**
      * Handle an incoming request.
      *
+     * @param Request $request
      * @param Closure(Request): (Response) $next
+     * @param string ...$guards
+     * @return Response
+     * @throws ApplicationException
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
