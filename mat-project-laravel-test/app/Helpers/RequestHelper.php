@@ -9,7 +9,7 @@ namespace App\Helpers {
     use App\Exceptions\ConversionException;
     use App\Exceptions\EnumConversionException;
     use App\Utils\JsonSchemaUtils;
-    use App\Utils\DebugUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\StrUtils;
     use App\Utils\Utils;
     use Illuminate\Http\Request;
@@ -85,7 +85,7 @@ namespace App\Helpers {
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
             try {
-                DebugUtils::debug("requestToDto: '$dtoClass'", ["data" => var_export($data, true)]);
+                DebugLogger::debug("requestToDto: '$dtoClass'", ["data" => var_export($data, true)]);
                 $dto = $dtoClass::import($data);
                 return $dto;
             } catch (Exception | InvalidValue $e) {
@@ -136,9 +136,9 @@ namespace App\Helpers {
         public static function getData(Request $request): mixed
         {
             $validated = self::validateAndExtractRequestData($request);
-            DebugUtils::debug("getData: ", ["validated" => var_export($validated, true)]);
+            DebugLogger::debug("getData: ", ["validated" => var_export($validated, true)]);
             $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
-            DebugUtils::debug("getData: (assoc => stdClass): ", ["res" => var_export($res, true)]);
+            DebugLogger::debug("getData: (assoc => stdClass): ", ["res" => var_export($res, true)]);
             return $res ?: new stdClass;
         }
 

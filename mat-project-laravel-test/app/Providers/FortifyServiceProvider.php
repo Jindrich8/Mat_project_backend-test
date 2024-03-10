@@ -9,7 +9,7 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\LogoutResponse;
 use App\Models\User;
-use App\Utils\DebugUtils;
+use App\Utils\DebugLogger;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -32,8 +32,8 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                DebugUtils::log("LogoutResponse::toResponse");
-                DebugUtils::log("LogoutResponse::toResponse");
+                DebugLogger::log("LogoutResponse::toResponse");
+                DebugLogger::log("LogoutResponse::toResponse");
                return (new LogoutResponse)->toResponse($request);
             }
         });
@@ -76,8 +76,8 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                DebugUtils::log("LogoutResponse::toResponse");
-                DebugUtils::log("LogoutResponse::toResponse");
+                DebugLogger::log("LogoutResponse::toResponse");
+                DebugLogger::log("LogoutResponse::toResponse");
                 return (new LogoutResponse)->toResponse($request);
             }
         });

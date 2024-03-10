@@ -3,9 +3,9 @@
 namespace App\Helpers\Exercises\FillInBlanks {
 
     use App\Dtos\InternalTypes\FillInBlanksContent;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBase;
-    use App\Types\CCreateExerciseHelperState as ParsingState;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\CCreateExerciseHelperStateEnum as ParsingState;
 
     final class FillInBlanksXMLCreateNode extends Parser
     {

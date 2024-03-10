@@ -5,7 +5,7 @@ namespace App\Types {
     use App\Dtos\Defs\Errors\XML\DefsOr;
     use App\Exceptions\InvalidArgumentException;
 
-    enum AndGroupDepth{
+    enum AndGroupDepthEnum{
         case GROUP_START;
         case GROUP_END;
     }
@@ -21,7 +21,7 @@ namespace App\Types {
         private int $depth;
         private int $maxDepth;
         /**
-         * @var (string|AndGroupDepth)[] $strs
+         * @var (string|AndGroupDepthEnum)[] $strs
          */
         private array $strs;
 
@@ -59,7 +59,7 @@ namespace App\Types {
             $this->orDel = $orDel;
         }
 
-        private function addAndGroup(AndGroupDepth $gr){
+        private function addAndGroup(AndGroupDepthEnum $gr){
             $this->strs[]=$gr;
         }
 
@@ -96,7 +96,7 @@ namespace App\Types {
             while(($strOrGroup = array_shift($this->strs)) !== null){
                 if(!is_string($strOrGroup)){
                     $grpI = $groupIStart;
-                    if($strOrGroup === AndGroupDepth::GROUP_START){
+                    if($strOrGroup === AndGroupDepthEnum::GROUP_START){
                         $grpI += $depth*2;
                         ++$depth;
                     }
@@ -126,7 +126,7 @@ namespace App\Types {
             if ($a) {
                 $inGroup = $this->andGroups && $this->depth >= 1 && count($a) >= 2;
                 if ($inGroup) {
-                    $this->addAndGroup(AndGroupDepth::GROUP_START);
+                    $this->addAndGroup(AndGroupDepthEnum::GROUP_START);
                 }
                 while (($item = $a[$i++] ?? null) !== null) {
                     if (is_string($item)) {
@@ -139,7 +139,7 @@ namespace App\Types {
                     }
                 }
                 if ($inGroup) {
-                    $this->addAndGroup(AndGroupDepth::GROUP_END);
+                    $this->addAndGroup(AndGroupDepthEnum::GROUP_END);
                 }
             }
             $this->decreaseDepth();

@@ -10,10 +10,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Exceptions\XMLInvalidElementValuePartException;
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\TrimType;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLDynamicNodeBase;
-    use App\Types\XMLValidParserPosition;
+    use App\Types\TrimTypeEnum;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLDynamicNodeBase;
+    use App\Types\XML\XMLValidParserPosition;
     use App\Utils\StrUtils;
     use App\Utils\Utils;
 
@@ -112,7 +112,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
         public function appendValue(string $value, XMLContextBase $context): void
         {
             if($this->trimming){
-               $value = StrUtils::trimWhites($value,TrimType::TRIM_START);
+               $value = StrUtils::trimWhites($value,TrimTypeEnum::TRIM_START);
                if(!$value){
                 return;
                }
@@ -131,7 +131,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
         protected function validate(XMLContextBase $context): void
         {
             parent::validate($context);
-            $this->prevText = StrUtils::trimWhites($this->prevText,TrimType::TRIM_END);
+            $this->prevText = StrUtils::trimWhites($this->prevText,TrimTypeEnum::TRIM_END);
             if ($this->prevText) {
                 if($this->state !== State::TEXT){
                     $context->getPos(

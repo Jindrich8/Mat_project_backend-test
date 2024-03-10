@@ -3,13 +3,13 @@
 namespace App\Helpers;
 
 use App\Exceptions\BadSaveExerciseException;
-use App\Types\Transformable;
+use App\Types\TransformableInterface;
 
 interface CSaveExercise
 {
     /**
      * @throws BadSaveExerciseException
-     * @return Transformable
+     * @return TransformableInterface
      */
-    public function validate():Transformable;
+    public function validate():TransformableInterface;
 }

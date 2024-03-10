@@ -4,11 +4,11 @@ namespace App\Helpers\CreateTask {
 
     use App\Helpers\CreateTask\Document\DocumentContent;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLAttributes;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBaseWParentNode;
-    use App\Types\XMLNodeBase;
+    use App\Types\XML\XMLAttributes;
+    use App\Types\XML\XMLChildren;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLNodeBase;
 
     class ExerciseNode extends XMLNodeBaseWParentNode
     {

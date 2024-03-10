@@ -2,16 +2,16 @@
 
 namespace App\Helpers;
 
-use App\Types\XMLDynamicNodeBase;
-use App\Types\XMLNodeBase;
-use App\Types\CCreateExerciseHelperState;
+use App\Types\XML\XMLDynamicNodeBase;
+use App\Types\XML\XMLNodeBase;
+use App\Types\CCreateExerciseHelperStateEnum;
 
 interface CCreateExerciseHelper
 {
 
     public function getContentNode(string $name,XMLNodeBase $parent):XMLDynamicNodeBase;
 
-    public function getState():CCreateExerciseHelperState;
+    public function getState():CCreateExerciseHelperStateEnum;
 
     /**
      * @param int[] $ids

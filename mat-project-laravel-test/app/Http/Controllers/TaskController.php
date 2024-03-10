@@ -51,7 +51,7 @@ use App\Helpers\BareModels\BareEvaluateTask;
 use App\Helpers\BareModels\BareListTask;
 use App\Helpers\BareModels\BareTakeTask;
 use App\Helpers\BareModels\BareTask;
-use App\Helpers\BareModels\BareTaskWAuthorName;
+use App\Utils\DebugLogger;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\Database\DBHelper;
 use App\Helpers\Database\UserHelper;
@@ -113,13 +113,13 @@ class TaskController extends Controller
                 default => throw new UnsupportedVariantException($task->orientation)
             });
 
-        DebugUtils::log("timestamp", $requestData->localySavedTask?->timestamp ?? null);
+        DebugLogger::log("timestamp", $requestData->localySavedTask?->timestamp ?? null);
         // dump($requestData->localySavedTask?->timestamp);
         $localySavedTaskTimeStamp = $requestData->localySavedTask ?
             TimeStampUtils::tryParseIsoTimestampToUtc($requestData->localySavedTask->timestamp)
             : null;
 
-        DebugUtils::log("localySavedTaskTimeStamp", $localySavedTaskTimeStamp);
+        DebugLogger::log("localySavedTaskTimeStamp", $localySavedTaskTimeStamp);
         $saveTask = TaskHelper::getSavedTask(
             taskId: $taskId,
             localySavedTaskUtcTimestamp: $localySavedTaskTimeStamp
@@ -163,7 +163,7 @@ class TaskController extends Controller
             },
             entries: $taskEntries
         );
-        DebugUtils::debug("TakeTaskResponse: ", ['dto' => DtoUtils::exportDto(Take\TakeTaskResponse::create()
+        DebugLogger::debug("TakeTaskResponse: ", ['dto' => DtoUtils::exportDto(Take\TakeTaskResponse::create()
             ->setTask($responseTask))]);
         return Take\TakeTaskResponse::create()
             ->setTask($responseTask);
@@ -318,7 +318,7 @@ class TaskController extends Controller
                 taskInfoId: $task->taskInfoId,
                 exercises: $exercises,
                 exerciseToDto: function (EvaluateExercise $exercise, int $i) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
-                    DebugUtils::log("exerciseToDto - task evaluate");
+                    DebugLogger::log("exerciseToDto - task evaluate");
                     $exerciseDto = ExerciseReview::create()
                         ->setInstructions(
                             ReviewExerciseInstructions::create()
@@ -349,7 +349,7 @@ class TaskController extends Controller
                     $taskPoints += $exerciseDto->points->has;
                     $taskmax += $exerciseDto->points->max;
                     if ($evaluatedExercises !== null) {
-                        DebugUtils::log("push evaluated exercise to evaluated exercises");
+                        DebugLogger::log("push evaluated exercise to evaluated exercises");
                         $evaluatedExercises[] = $exerciseDto;
                     }
                     return $exerciseDto;
@@ -387,7 +387,7 @@ class TaskController extends Controller
                  */
                 $evaluatedExercises = [];
                 $task = $do($evaluatedExercises, $responseTask);
-                DebugUtils::log('TaskEvaluate - evaluated exercises: ', ['exercises' => $evaluatedExercises]);
+                DebugLogger::log('TaskEvaluate - evaluated exercises: ', ['exercises' => $evaluatedExercises]);
                 $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                     ->select([TaskReviewTemplateConstants::COL_ID])
                     ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $task->taskInfoId)

@@ -2,13 +2,13 @@
 
 namespace App\Helpers\CreateTask\Document {
 
-    use App\Types\XMLNodeBase;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\XML\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\TaskResTask;
-    use App\Types\XMLAttributes;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
+    use App\Types\XML\XMLAttributes;
+    use App\Types\XML\XMLChildren;
+    use App\Types\XML\XMLContextBase;
 
     class Document extends XMLNodeBaseWParentNode
     {

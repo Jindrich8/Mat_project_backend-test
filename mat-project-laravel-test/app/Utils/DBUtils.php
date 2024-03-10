@@ -10,19 +10,10 @@ namespace App\Utils {
 
     class DBUtils
     {
-        public static function getDBType(): DBTypeEnum
+        public static function getDBType(): ?DBTypeEnum
         {
             $db = env('DB_CONNECTION');
             $type = DBTypeEnum::tryFrom($db);
-            if (!$type) {
-                throw new InternalException(
-                    "Unsupported Database engine '$db'.",
-                    context: [
-                        'database' => $db,
-                        'supported_databases' => DBTypeEnum::getValues()
-                    ]
-                );
-            }
             return $type;
         }
 
@@ -151,14 +142,6 @@ namespace App\Utils {
                     ]
                 );
             }
-        }
-
-        /**
-         * @param class-string<BackedEnum> $enumName
-         */
-        public static function getPGEnumTypeName(string $enumName): string
-        {
-            return Str::snake($enumName) . "_pq_enum";
         }
 
     }

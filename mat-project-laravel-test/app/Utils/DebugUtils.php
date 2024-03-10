@@ -2,59 +2,13 @@
 
 namespace App\Utils {
 
-    use App\Types\LogLogger;
-    use App\Types\MessageLogger;
     use BackedEnum;
     use Exception;
-    use Illuminate\Log\Logger;
-    use Illuminate\Support\Facades\Log;
     use UnitEnum;
+    use App\Utils\DebugLogger;
 
     class DebugUtils
     {
-        private static ?MessageLogger $logger = null;
-        private static bool $dump = true;
-
-        private static function logger(){
-        return (self::$logger ??= new LogLogger());
-        }
-
-        public static function withLogger(MessageLogger $logger,callable $action,?bool $dump = null){
-            $prevLogger = self::$logger;
-            self::$logger = $logger;
-            $prevDump = self::$dump;
-            self::$dump = $dump ?? self::$dump;
-            $action();
-            self::$dump = $prevDump;
-            self::$logger = $prevLogger;
-        }
-
-        private static function logWithLevel(int $level,string $message,mixed $value = null){
-             if(is_callable($value)){
-                $value = $value();
-            }
-            if(PHP_SAPI === 'cli'){
-                if(self::$dump){
-                echo '\n'.$message;
-                dump($value);
-                }
-            }
-            else{
-                self::logger()->log($level,$message,context:['value' => $value]);
-            }
-        }
-
-        public static function log(string $message,mixed $value = null):void{
-           self::logWithLevel(LOG_INFO,$message,$value);
-        }
-
-        public static function warning(string $message,mixed $value = null):void{
-           self::logWithLevel(LOG_WARNING,$message,$value);
-        }
-
-        public static function debug(string $message,mixed $value = null){
-            self::logWithLevel(LOG_DEBUG,$message,$value);
-        }
 
         public static function enumToStr(UnitEnum|BackedEnum $enum)
         {
@@ -73,7 +27,7 @@ namespace App\Utils {
 
         public static function printStackTrace(){
             $e = new Exception();
-           DebugUtils::log("Trace",$e->getTraceAsString());
+           DebugLogger::log("Trace",$e->getTraceAsString());
         }
         public static function jsonEncode(mixed $value):string{
             return json_encode($value,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);

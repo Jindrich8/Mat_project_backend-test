@@ -57,7 +57,7 @@ namespace App\Helpers\BareModels {
                     '=',
                     true
                 )
-                ->sharedLock()
+                //->sharedLock()
                 ->first();
             if ($task) {
                 $task = new self(

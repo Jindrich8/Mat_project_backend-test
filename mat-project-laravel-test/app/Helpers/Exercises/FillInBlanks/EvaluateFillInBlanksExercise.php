@@ -14,7 +14,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
     use App\Dtos\InternalTypes\TextInput;
     use App\Dtos\InternalTypes\Combobox;
     use App\Exceptions\InvalidEvaluateValueException;
-    use App\Utils\DebugUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\DtoUtils;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
@@ -82,7 +82,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     ->setMax($uiI)
             )
                 ->setDetails($response);
-            DebugUtils::log("exporting " . self::class . "", ['response' => $response]);
+            DebugLogger::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

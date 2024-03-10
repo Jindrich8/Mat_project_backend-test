@@ -13,15 +13,16 @@ use App\Models\User;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\UserRole;
-use App\Types\EasyLogger;
+use App\Types\EasyMessageLogger;
+use App\Types\LogLogger;
 use App\Types\SimpleAuthProvider;
-use App\Utils\DebugUtils;
+use App\Utils\DebugLogger;
 use App\Utils\DtoUtils;
 use Illuminate\Database\Seeder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Stringable as SupportStringable;
+use Psr\Log\LoggerInterface;
 use Str;
-use Stringable;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
 class TaskSeeder extends Seeder
@@ -249,17 +250,30 @@ class TaskSeeder extends Seeder
             //    dump($validated);
             return $request;
         };
-        $logger = new class extends EasyLogger
+        /**
+         * @extends EasyMessageLogger<LoggerInterface,string>
+         */
+        $logger = new class extends EasyMessageLogger
         {
-            public function log($level, string|Stringable $message, array $context = []): void
+            private LogLogger $logger;
+
+            public function __construct(){
+                $this->logger = new LogLogger();
+            }
+
+            protected function getChannel(mixed $channel): mixed
             {
-                
+                return $this->logger->channel($channel);
+            }
+            
+            public function logToChannelWContext($level, string|SupportStringable $message, array $context = [], mixed $channel = null): void
+            {
                 if ($level <= LOG_ERR) {
-                    Log::log($level, $message, $context);
+                    $this->logger->logToChannel($level, $message, $context,$channel);
                 }
             }
         };
-        DebugUtils::withLogger($logger, function () use ($sourceCount, $sources, $createRequest) {
+        DebugLogger::withLogger($logger, function () use ($sourceCount, $sources, $createRequest) {
             UserHelper::withAuthProvider(
                 new SimpleAuthProvider(User::whereRole(UserRole::TEACHER->value)->get()->random()),
                 function () use ($sourceCount, $sources, $createRequest) {
@@ -269,7 +283,7 @@ class TaskSeeder extends Seeder
                     $tagCount = count($tags);
 
                     for ($i = 0; $i < 300; ++$i) {
-                        DebugUtils::log("!!!!---------------INSERTING TASK ---------- - SEEEDING TASK -----------------!!!!!!");
+                        DebugLogger::log("!!!!---------------INSERTING TASK ---------- - SEEEDING TASK -----------------!!!!!!");
                         $minClass = rand(0, $classCount - 1);
                         $maxClass = rand($minClass, $classCount - 1);
 

@@ -1,6 +1,6 @@
 <?php
 
-use App\Types\DBCascadeType;
+use App\Types\DBCascadeTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,7 +17,7 @@ return new class extends Migration
                 'exerciseable_id',
                 references: 'id',
                 onTable: 'exercises',
-                cascadeType:DBCascadeType::DELETE
+                cascadeType:DBCascadeTypeEnum::DELETE
             );
 
             $table->string('correct_text', 2040);

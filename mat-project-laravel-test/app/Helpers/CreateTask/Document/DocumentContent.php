@@ -4,9 +4,9 @@ namespace App\Helpers\CreateTask\Document {
 
     use App\Helpers\CreateTask\ExerciseNode;
     use App\Helpers\CreateTask\GroupNode;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLChildren;
+    use App\Types\XML\XMLChildren;
 
     class DocumentContent extends XMLNodeBaseWParentNode{
 

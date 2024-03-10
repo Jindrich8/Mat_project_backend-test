@@ -5,8 +5,8 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\XMLInvalidElementValueException;
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLNodeBaseWParentNode;
 
     class ExerciseInstructionsNode extends XMLNodeBaseWParentNode
     {

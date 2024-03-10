@@ -4,9 +4,9 @@ namespace App\Helpers\CreateTask\Document {
 
     use App\Exceptions\XMLInvalidElementValueException;
     use App\Exceptions\XMLMissingRequiredElementsException;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLContextBase;
+    use App\Types\XML\XMLContextBase;
 
     class DocumentDescription extends XMLNodeBaseWParentNode{
 

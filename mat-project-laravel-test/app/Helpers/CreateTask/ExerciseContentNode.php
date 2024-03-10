@@ -3,9 +3,9 @@
 namespace App\Helpers\CreateTask {
 
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLValueParsingNode;
-    use App\Types\XMLNodeBase;
-    use App\Types\XMLContextBase;
+    use App\Types\XML\XMLValueParsingNode;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\XML\XMLContextBase;
 
     class ExerciseContentNode extends XMLValueParsingNode
     {

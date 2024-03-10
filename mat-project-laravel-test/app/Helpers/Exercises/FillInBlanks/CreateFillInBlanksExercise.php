@@ -7,13 +7,12 @@ use App\Exceptions\InternalException;
 use App\Helpers\CCreateExerciseHelper;
 use App\ModelConstants\FillInBlanksConstants;
 use App\Models\FillInBlanks;
-use App\Types\CCreateExerciseHelperState;
-use App\Types\XMLDynamicNodeBase;
-use App\Types\XMLNodeBase;
-use App\Utils\DebugUtils;
+use App\Types\CCreateExerciseHelperStateEnum;
+use App\Types\XML\XMLDynamicNodeBase;
+use App\Types\XML\XMLNodeBase;
+use App\Utils\DebugLogger;
 use App\Utils\DtoUtils;
 use DB;
-use Illuminate\Support\Facades\Log;
 use Swaggest\JsonSchema\InvalidValue;
 use Swaggest\JsonSchema\Structure\ClassStructure;
 
@@ -40,7 +39,7 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
 
     public function getContentNode(string $name,XMLNodeBase $parent): XMLDynamicNodeBase
     {
-        DebugUtils::debug("getFillInBlanksContentNode (".count($this->contents).") for '$name'",['parent'=>$parent]);
+        DebugLogger::debug("getFillInBlanksContentNode (".count($this->contents).") for '$name'",['parent'=>$parent]);
         $content = FillInBlanksContent::create();
         $this->contents[]=$content;
         $this->createNode ??= FillInBlanksXMLCreateNode::create();
@@ -53,7 +52,7 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
 
     }
 
-    public function getState(): CCreateExerciseHelperState
+    public function getState(): CCreateExerciseHelperStateEnum
     {
        return $this->createNode->getParsingState();
     }

@@ -23,6 +23,7 @@ namespace App\Utils {
     use Illuminate\Support\ItemNotFoundException;
     use Illuminate\Validation\UnauthorizedException;
     use Throwable;
+    use App\Utils\DebugLogger;
     use Illuminate\Support\Str;
 
     class ExceptionUtils
@@ -50,9 +51,9 @@ namespace App\Utils {
          * @throws InvalidValue
          */
         public static function renderException(Throwable $e, Request $request) {
-            DebugUtils::log("Rendering  '" . get_debug_type($e) . "'", $e);
+            DebugLogger::log("Rendering  '" . get_debug_type($e) . "'", $e);
             if($e instanceof ApplicationException){
-                DebugUtils::log("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
+                DebugLogger::log("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
                 return $e->render($request);
             }
             if ($e instanceof AuthenticationException) {
@@ -87,7 +88,7 @@ namespace App\Utils {
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 $errors = $e->validator->errors();
-                DebugUtils::log("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
+                DebugLogger::log("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
                 $uri = $request->route()?->uri;
                 if ($uri === 'api/login') {
                     $data = LoginErrorDetailsErrorData::create();

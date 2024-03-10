@@ -4,7 +4,7 @@ namespace App\Http\Responses;
 use App\Dtos\Defs\Endpoints\Login\LoginResponse as LoginLoginResponse;
 use App\Helpers\Database\UserHelper;
 use App\Helpers\ResponseHelper;
-use App\Utils\DebugUtils;
+use App\Utils\DebugLogger;
 use Exception;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
@@ -19,8 +19,8 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request)
     {
        $user = UserHelper::getUser();
-       DebugUtils::log("LoginResponse");
-        DebugUtils::log("LoginResponse");
+       DebugLogger::log("LoginResponse");
+        DebugLogger::log("LoginResponse");
        return ResponseHelper::success(
         LoginLoginResponse::create()
        ->setName($user->name)

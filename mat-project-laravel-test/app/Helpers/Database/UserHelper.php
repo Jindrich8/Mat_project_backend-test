@@ -4,22 +4,22 @@ namespace App\Helpers\Database {
 
     use App\Models\User;
     use App\Types\AuthUserAuthProvider;
-    use App\Types\UserAuthProvider;
+    use App\Types\UserAuthProviderInterface;
     use Illuminate\Auth\AuthenticationException;
 
     class UserHelper
     {
-        private static ?UserAuthProvider $authProvider = null;
+        private static ?UserAuthProviderInterface $authProvider = null;
 
-        private static function getAuthProvider():UserAuthProvider{
+        private static function getAuthProvider():UserAuthProviderInterface{
            return (self::$authProvider ??= new AuthUserAuthProvider());
         }
 
         /**
-         * @param UserAuthProvider $provider
+         * @param UserAuthProviderInterface $provider
          * @param callable():void $action
          */
-        public static function withAuthProvider(UserAuthProvider $provider,callable $action):void{
+        public static function withAuthProvider(UserAuthProviderInterface $provider,callable $action):void{
             $prevProvider = self::$authProvider;
             self::$authProvider = $provider;
             $action();

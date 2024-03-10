@@ -9,8 +9,8 @@ use App\Helpers\Exercises\FixErrors\FixErrorsExerciseHelper;
 use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
 use App\ModelConstants\ExerciseConstants;
-use App\Types\SavedTaskContentProvider;
-use App\Utils\DebugUtils;
+use App\Types\SavedTaskContentProviderInterface;
+use App\Utils\DebugLogger;
 use App\Utils\Utils;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +67,7 @@ class ExerciseHelper
    * @return R[]
    * @throws UnsupportedVariantException
    */
-  public static function fetchRealExercises(int $taskInfoId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProvider $savedTask = null, bool $shouldFetchInstructions = true): array
+  public static function fetchRealExercises(int $taskInfoId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProviderInterface $savedTask = null, bool $shouldFetchInstructions = true): array
   {
 
     $exerciseIDName = ExerciseConstants::COL_ID;
@@ -81,7 +81,7 @@ class ExerciseHelper
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
-    DebugUtils::log("Exercises: ", $exercises);
+    DebugLogger::log("Exercises: ", $exercises);
     $savedExercises = $savedTask?->getContent()->exercises ?? [];
     /**
      * @var array<string,array<int,mixed>> $map array of exercise type to array of exercise id to saved value or null
@@ -104,7 +104,7 @@ class ExerciseHelper
     }
     $cExercises = [];
     foreach ($map as $exerciseType => $savedValuesByIds) {
-      DebugUtils::log("Ids and saved values for {$exerciseType} ", $savedValuesByIds);
+      DebugLogger::log("Ids and saved values for {$exerciseType} ", $savedValuesByIds);
       $cExercises += $fetchConcreteOnes(
         ExerciseHelper::getHelper(ExerciseType::from($exerciseType)),
         $savedValuesByIds
@@ -135,7 +135,7 @@ class ExerciseHelper
    * @return TakeExercise[]
    * @throws UnsupportedVariantException
    */
-  public static function takeTaskInfo(int $taskInfoId, ?SavedTaskContentProvider $savedTask): array
+  public static function takeTaskInfo(int $taskInfoId, ?SavedTaskContentProviderInterface $savedTask): array
   {
 
     return  ExerciseHelper::fetchRealExercises(
@@ -176,7 +176,7 @@ class ExerciseHelper
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
-    DebugUtils::log("Exercises: ", $exercises);
+    DebugLogger::log("Exercises: ", $exercises);
     /**
      * @var array<string,array{int[],mixed[]}> $map
      */
@@ -197,7 +197,7 @@ class ExerciseHelper
      * @var array<string,array{int[],mixed[]}> $map
      */
     foreach ($map as $exerciseType => $ids) {
-      DebugUtils::log("Ids for {$exerciseType} ", $ids);
+      DebugLogger::log("Ids for {$exerciseType} ", $ids);
       $cExercises +=
         ExerciseHelper::getHelper(ExerciseType::fromThrow($exerciseType))
         ->fetchEvaluate($ids);

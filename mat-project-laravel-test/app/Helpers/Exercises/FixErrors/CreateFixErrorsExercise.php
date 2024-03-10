@@ -7,9 +7,9 @@ use App\Exceptions\InternalException;
 use App\Helpers\CCreateExerciseHelper;
 use App\ModelConstants\FixErrorsConstants;
 use App\Models\FixErrors;
-use App\Types\CCreateExerciseHelperState;
-use App\Types\XMLDynamicNodeBase;
-use App\Types\XMLNodeBase;
+use App\Types\CCreateExerciseHelperStateEnum;
+use App\Types\XML\XMLDynamicNodeBase;
+use App\Types\XML\XMLNodeBase;
 use App\Utils\DtoUtils;
 use App\Utils\StrUtils;
 use Fisharebest\Algorithm\MyersDiff;
@@ -45,7 +45,7 @@ class CreateFixErrorsExercise implements CCreateExerciseHelper
         return $this->createNode;
     }
 
-    public function getState(): CCreateExerciseHelperState
+    public function getState(): CCreateExerciseHelperStateEnum
     {
         return $this->createNode->getParsingState();
     }

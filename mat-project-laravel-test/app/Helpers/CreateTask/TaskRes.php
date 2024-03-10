@@ -9,9 +9,10 @@ namespace App\Helpers\CreateTask {
     use App\Helpers\BareModels\BareExercise;
     use App\Helpers\BareModels\BareGroup;
     use App\Models\Task;
-    use App\Types\CCreateExerciseHelperState;
+    use App\Types\CCreateExerciseHelperStateEnum;
     use App\Utils\Utils;
     use App\Helpers\BareModels\BareResource;
+    use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\UserHelper;
     use App\Helpers\TaskHelper;
     use App\ModelConstants\ExerciseConstants;
@@ -21,10 +22,12 @@ namespace App\Helpers\CreateTask {
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskReviewTemplateConstants;
     use App\Models\TaskInfo;
+    use App\Types\DBTypeEnum;
     use App\Types\TaskResTask;
-    use App\Types\XMLDynamicNodeBase;
-    use App\Types\XMLNodeBase;
-    use App\Utils\DebugUtils;
+    use App\Types\XML\XMLDynamicNodeBase;
+    use App\Types\XML\XMLNodeBase;
+    use App\Utils\DBUtils;
+    use App\Utils\DebugLogger;
     use DB;
 
     class TaskRes
@@ -139,7 +142,7 @@ namespace App\Helpers\CreateTask {
             if ($helper = $this->tryToGetHelper(addCurrentExercise: true)) {
                 $state = $helper->getState();
                 switch ($state) {
-                    case CCreateExerciseHelperState::EXERCISE_ENDED:
+                    case CCreateExerciseHelperStateEnum::EXERCISE_ENDED:
                         break;
 
                     default:
@@ -237,7 +240,7 @@ namespace App\Helpers\CreateTask {
                  $taskInfoId = $taskInfo->id;
              }
 
-             DebugUtils::log("Task info successfully inserted",['taskInfoId' => $taskInfoId]);
+             DebugLogger::log("Task info successfully inserted",['taskInfoId' => $taskInfoId]);
               // insert groups and resources
               {
 
@@ -249,18 +252,31 @@ namespace App\Helpers\CreateTask {
 
 
                 if ($insertGroupsBindings) {
-                    $groupIds = PgDB::insertAndGetIds(
+                    $groupBindingsColumns = [
+                        GroupConstants::COL_TASK_INFO_ID,
+                        GroupConstants::COL_START,
+                        GroupConstants::COL_LENGTH
+                    ];
+                    $groupIds = DBHelper::insertAndGetIds(
                         GroupConstants::TABLE_NAME,
                         GroupConstants::COL_ID,
-                        columns: [
-                            GroupConstants::COL_TASK_INFO_ID,
-                            GroupConstants::COL_START,
-                            GroupConstants::COL_LENGTH
-                        ],
+                        columns: $groupBindingsColumns,
+                        getIdsIfNotSupported:fn()=>array_values(
+                            DB::table(GroupConstants::TABLE_NAME)
+                        ->select(GroupConstants::COL_ID)
+                        ->where(GroupConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
+                        ->pluck(GroupConstants::COL_ID)->all()
+                    ),
                         values: $insertGroupsBindings,
                         unsetValuesArray: false
                     );
-                    DebugUtils::log("Group ids",$groupIds);
+                    if(!$groupIds){
+                        throw new InternalException("Could not insert groups.",[
+                            'groupBindings'=>$insertGroupsBindings,
+                            'groupBindingsColumns'=>$groupBindingsColumns
+                        ]);
+                    }
+                    DebugLogger::log("Group ids",$groupIds);
 
                     // insert resources associated with groups
                     {
@@ -283,7 +299,7 @@ namespace App\Helpers\CreateTask {
                             );
                         }
                         if ($insertResourcesAssocData) {
-                            DebugUtils::log("Resources",$insertResourcesAssocData);
+                            DebugLogger::log("Resources",$insertResourcesAssocData);
                             $success = DB::table(ResourceConstants::TABLE_NAME)
                             ->insert($insertResourcesAssocData);
                             // /**
@@ -300,7 +316,7 @@ namespace App\Helpers\CreateTask {
                             }
                         }
                     }
-                    DebugUtils::log("Resources were successfully inserted.");
+                    DebugLogger::log("Resources were successfully inserted.");
                 }
             }
 
@@ -323,20 +339,35 @@ namespace App\Helpers\CreateTask {
                 }
             }
                     if ($exerciseBindings) {
-                        DebugUtils::log("Exercise bindings",$exerciseBindings);
-                        $ids =  PgDB::insertAndGetIds(
+                        $exerciseBindingsColumns = [
+                            ExerciseConstants::COL_TASK_INFO_ID,
+                            ExerciseConstants::COL_ORDER,
+                            ExerciseConstants::COL_INSTRUCTIONS,
+                            ExerciseConstants::COL_WEIGHT,
+                            ExerciseConstants::COL_EXERCISEABLE_TYPE
+                        ];
+                        DebugLogger::log("Exercise bindings",$exerciseBindings);
+                        $ids =  DBHelper::insertAndGetIds(
                             ExerciseConstants::TABLE_NAME,
                             ExerciseConstants::COL_ID,
-                            columns: [
-                                ExerciseConstants::COL_TASK_INFO_ID,
-                                ExerciseConstants::COL_ORDER,
-                                ExerciseConstants::COL_INSTRUCTIONS,
-                                ExerciseConstants::COL_WEIGHT,
-                                ExerciseConstants::COL_EXERCISEABLE_TYPE
-                            ],
+                            columns: $exerciseBindingsColumns,
                             values: $exerciseBindings,
+                            getIdsIfNotSupported:fn()=>
+                            array_values(
+                                DB::table(ExerciseConstants::TABLE_NAME)
+                            ->select(ExerciseConstants::COL_ID)
+                            ->where(ExerciseConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
+                            ->pluck(ExerciseConstants::COL_ID)
+                            ->all()
+                        ),
                             unsetValuesArray: false
                         );
+                        if(!$ids){
+                            throw new InternalException("Could not insert exercises",[
+                                'exerciseBindings' =>$exerciseBindings,
+                                'exerciseBindingsColumns' =>$exerciseBindingsColumns
+                            ]);
+                        }
                         foreach($this->exerciseHelpers as $helperAndExercises){
                             $helper = $helperAndExercises[0];
                             $exerciseCount = count($helperAndExercises[1]);
@@ -373,7 +404,7 @@ namespace App\Helpers\CreateTask {
                 $task->saveOrFail();
                 $taskId = $task->id;
                 }
-                DebugUtils::log("Task successfully inserted",['taskId' => $taskId]);
+                DebugLogger::log("Task successfully inserted",['taskId' => $taskId]);
 
                 return $taskId;
             });
@@ -395,7 +426,7 @@ namespace App\Helpers\CreateTask {
                     TaskConstants::COL_SOURCE => $taskSource
                 ];
 
-                DebugUtils::log("Task successfully inserted",['taskId' => $taskId]);
+                DebugLogger::log("Task successfully inserted",['taskId' => $taskId]);
 
                $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
                 ->select([TaskConstants::COL_TASK_INFO_ID])

@@ -3,6 +3,9 @@
 namespace App\Utils {
 
     use App\Helpers\ResponseHelper;
+    use App\Types\SIUnitPrefixEnum;
+    use App\Types\StopWatchTimer;
+    use Carbon\CarbonInterval;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Route;
     use Throwable;
@@ -10,6 +13,8 @@ namespace App\Utils {
     class RouteUtils
     {
         private static function handle(Request $request,callable $action, ...$args){
+          return StopWatchTimer::run("REQUEST '".$request->getUri()."'",
+          function()use($request,$action,$args){
             try{
                 return ResponseHelper::success(
                     $action($request, ...$args)
@@ -18,6 +23,7 @@ namespace App\Utils {
             catch(Throwable $e){
                 return ExceptionUtils::renderException($e,$request);
             }
+           });
         }
 
         public static function isLogin(\Illuminate\Routing\Route $route){

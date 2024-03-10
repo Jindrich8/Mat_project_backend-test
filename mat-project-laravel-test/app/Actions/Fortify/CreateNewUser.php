@@ -5,17 +5,14 @@ namespace App\Actions\Fortify;
 use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetails;
 use App\Dtos\Defs\Endpoints\Register\Errors\RegisterErrorDetailsErrorData;
 use App\Dtos\Defs\Endpoints\Register\RegisterRequest;
-use App\Dtos\Defs\Errors\GeneralErrorDetails;
 use App\Dtos\Defs\Types\Errors\FieldError;
 use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
 use App\Dtos\Errors\ApplicationErrorInformation;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\UnPreparedCaseException;
-use App\Helpers\RequestHelper;
 use App\Models\User;
 use App\TableSpecificData\UserRole;
-use App\Types\JsonSchemaUtils;
-use App\Utils\DebugUtils;
+use App\Utils\DebugLogger;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +32,7 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        DebugUtils::log("CreateNewUser - input: ", ['input' => $input]);
+        DebugLogger::log("CreateNewUser - input: ", ['input' => $input]);
         try {
             Validator::make($input, [
                 'name' => ['required', 'string', 'max:255'],
@@ -47,7 +44,7 @@ class CreateNewUser implements CreatesNewUsers
                     Rule::unique(User::class),
                 ],
                 'password' => $this->passwordRules(),
-                RegisterRequest::ROLE => ['string',Rule::in([RegisterRequest::TEACHER])]
+                RegisterRequest::ROLE => ['string', Rule::in([RegisterRequest::TEACHER])]
             ])->validate();
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
@@ -71,10 +68,10 @@ class CreateNewUser implements CreatesNewUsers
                         ->setMessage($error)
                 );
             }
-            if(($error = $errors->first(RegisterRequest::ROLE))){
+            if (($error = $errors->first(RegisterRequest::ROLE))) {
                 $data->setRole(
                     FieldError::create()
-                    ->setMessage($error)
+                        ->setMessage($error)
                 );
             }
 
@@ -92,7 +89,7 @@ class CreateNewUser implements CreatesNewUsers
             );
         }
         $role = $input[RegisterRequest::ROLE] ?? null;
-        DebugUtils::log("CreateNewUser - ROLE FROM INPUT!!! IS ", ['ROLE' => $role]);
+        DebugLogger::log("CreateNewUser - ROLE FROM INPUT!!! IS ", ['ROLE' => $role]);
         $role = match ($role) {
             RegisterRequest::TEACHER => UserRole::TEACHER,
             null => UserRole::NONE,

@@ -2,49 +2,74 @@
 
 namespace App\Types {
 
-    use Illuminate\Support\Facades\Log;
-    use Stringable;
+    use Illuminate\Support\Stringable;
 
-    abstract class EasyLogger implements MessageLogger
+    /**
+     * @template TChannel
+     */
+    class EasyLogger implements ValueLoggerInterface
     {
-        public function warning(string|Stringable $message, array $context = []): void
-        {
-            $this->log(LOG_WARNING,$message,$context);
+        /**
+         * @var ChannelLoggerInterface<TChannel>
+         */
+        private ChannelLoggerInterface $logger;
+        /**
+         * @var TChannel $channel
+         */
+        private mixed $channel;
+        
+        /**
+         * @param ChannelLoggerInterface<TChannel> $messageLoggerInterface
+         * @param TChannel $channel
+         */
+        public function __construct(ChannelLoggerInterface $messageLoggerInterface,mixed $channel = null){
+            $this->logger = $messageLoggerInterface;
+            $this->channel = $channel;
         }
 
-        public function info(string|Stringable $message, array $context = []): void
+        public function warning(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_INFO,$message,$context);
+            $this->logger->logToChannel(LOG_WARNING,$message,$value,$this->channel);
         }
 
-        public function debug(string|Stringable $message, array $context = []): void
+        public function info(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_DEBUG,$message,$context);
+            $this->logger->logToChannel(LOG_INFO,$message,$value,$this->channel);
         }
 
-        public function emergency(string|Stringable $message, array $context = []): void
+        public function debug(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_EMERG,$message,$context);
+            $this->logger->logToChannel(LOG_DEBUG,$message,$value,$this->channel);
         }
 
-        public function alert(string|Stringable $message, array $context = []): void
+        public function emergency(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_ALERT,$message,$context);
+            $this->logger->logToChannel(LOG_EMERG,$message,$value,$this->channel);
         }
 
-        public function critical(string|Stringable $message, array $context = []): void
+        public function alert(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_CRIT,$message,$context);
+            $this->logger->logToChannel(LOG_ALERT,$message,$value,$this->channel);
         }
 
-        public function error(string|Stringable $message, array $context = []): void
+        public function critical(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_ERR,$message,$context);
+            $this->logger->logToChannel(LOG_CRIT,$message,$value,$this->channel);
         }
 
-        public function notice(string|Stringable $message, array $context = []): void
+        public function error(string|Stringable $message, mixed $value = null): void
         {
-            $this->log(LOG_NOTICE,$message,$context);
+            $this->logger->logToChannel(LOG_ERR,$message,$value,$this->channel);
+        }
+
+        public function notice(string|Stringable $message, mixed $value = null): void
+        {
+            $this->logger->logToChannel(LOG_NOTICE,$message,$value,$this->channel);
+        }
+
+        public function log($level, string|Stringable $message, mixed $value = null): void
+        {
+            $this->logger->logToChannel($level,$message,$value,$this->channel);
         }
     }
 }

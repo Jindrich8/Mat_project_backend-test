@@ -4,11 +4,11 @@ namespace App\Helpers\Exercises\FixErrors {
 
     use App\Dtos\InternalTypes\FixErrorsContent;
     use App\Exceptions\InternalException;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLDynamicNodeBase;
-    use App\Types\XMLNodeBase;
-    use App\Types\CCreateExerciseHelperState as ParsingState;
+    use App\Types\XML\XMLChildren;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLDynamicNodeBase;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\CCreateExerciseHelperStateEnum as ParsingState;
 
     final class FixErrorsXMLCreateNode extends XMLDynamicNodeBase
     {

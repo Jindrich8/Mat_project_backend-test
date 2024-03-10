@@ -4,7 +4,7 @@ namespace App\Utils {
 
     use App\Exceptions\InternalException;
     use App\Exceptions\InvalidArgumentException;
-    use App\Types\TrimType;
+    use App\Types\TrimTypeEnum;
     use Generator;
     use Illuminate\Support\Str;
     use IntlBreakIterator;
@@ -208,14 +208,14 @@ namespace App\Utils {
             }
         }
 
-        public static function trimWhites(string $str, TrimType $mode, bool $includeLineBreak = true)
+        public static function trimWhites(string $str, TrimTypeEnum $mode, bool $includeLineBreak = true)
         {
             switch ($mode) {
-                case TrimType::TRIM_START:
+                case TrimTypeEnum::TRIM_START:
                     return ltrim($str, self::getTrimWsSet($includeLineBreak));
-                case TrimType::TRIM_END:
+                case TrimTypeEnum::TRIM_END:
                     return rtrim($str, self::getTrimWsSet($includeLineBreak));
-                case TrimType::TRIM_BOTH:
+                case TrimTypeEnum::TRIM_BOTH:
                     return trim($str, self::getTrimWsSet($includeLineBreak));
                 default:
                     throw new InvalidArgumentException(
@@ -225,7 +225,7 @@ namespace App\Utils {
                         context: [
                             'supportedModes' =>
                             [
-                                TrimType::TRIM_START->name, TrimType::TRIM_END->name, TrimType::TRIM_BOTH->name
+                                TrimTypeEnum::TRIM_START->name, TrimTypeEnum::TRIM_END->name, TrimTypeEnum::TRIM_BOTH->name
                             ],
                             'mode' => $mode->name
                         ]

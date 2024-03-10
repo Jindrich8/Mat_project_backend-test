@@ -10,7 +10,7 @@ use App\Helpers\ResponseHelper;
 use App\ModelConstants\TagConstants;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskClass;
-use App\Utils\DebugUtils;
+use App\Utils\DebugLogger;
 use App\Utils\DtoUtils;
 
 class TaskCreateInfoController extends Controller
@@ -41,7 +41,7 @@ class TaskCreateInfoController extends Controller
                     TaskClass::cases()
                 )
             );
-        DebugUtils::log("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
+        DebugLogger::log("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
         return $response;
     }
 }

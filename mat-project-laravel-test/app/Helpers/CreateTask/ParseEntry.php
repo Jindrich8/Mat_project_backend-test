@@ -12,17 +12,18 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\XMLSyntaxErrorException;
     use App\Exceptions\XMLUnsupportedConstructException;
     use App\Helpers\CreateTask\Document\Document;
-    use App\Types\BaseXMLParser;
-    use App\Types\LibXmlParser;
-    use App\Types\XMLNodeBase;
-    use App\Types\XMLContext;
-    use App\Types\XMLParserEvents;
-    use App\Types\XMLUnsupportedConstructType;
+    use App\Types\XML\BaseXMLParser;
+    use App\Types\XML\LibXmlParser;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\XML\XMLContext;
+    use App\Types\XML\XMLParserEventsInterface;
+    use App\Types\XML\XMLUnsupportedConstructTypeEnum;
     use App\Utils\DebugUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\DtoUtils;
     use Exception;
 
-    class ParseEntry implements XMLParserEvents
+    class ParseEntry implements XMLParserEventsInterface
     {
         private ?XMLNodeBase $node;
         private ?XMLContext $context;
@@ -77,7 +78,7 @@ namespace App\Helpers\CreateTask {
         public function elementValueHandler(BaseXMLParser $parser, string $data): void
         {
             if($this->node === null){
-//                if(StrUtils::trimWhites($data,TrimType::TRIM_BOTH)){
+//                if(StrUtils::trimWhites($data,TrimTypeEnum::TRIM_BOTH)){
 //                    // dump("WTF: $data");
 //                }
                 $parser->getPos($column,$line,$byteIndex);
@@ -91,15 +92,15 @@ namespace App\Helpers\CreateTask {
         /**
          * @throws XMLUnsupportedConstructException
          */
-        public function unsupportedConstructHandler(BaseXMLParser $parser, mixed $data, XMLUnsupportedConstructType $type): void
+        public function unsupportedConstructHandler(BaseXMLParser $parser, mixed $data, XMLUnsupportedConstructTypeEnum $type): void
         {
            $name = match($type){
-                XMLUnsupportedConstructType::EXTERNAL_ENTITY_REFERENCE => 'external entity reference',
-                XMLUnsupportedConstructType::NOTATION_DECLARATION => 'notation declaration',
-                XMLUnsupportedConstructType::PROCESSING_INSTRUCTION => 'processing instruction',
-                XMLUnsupportedConstructType::START_NAMESPACE_DECLARATION => 'start namespace declaration',
-                XMLUnsupportedConstructType::UNPARSED_ENTITY_DECLARATION => 'unparsed entity declaration',
-                XMLUnsupportedConstructType::UNKNOWN_CONSTRUCT => 'unknown construct'
+                XMLUnsupportedConstructTypeEnum::EXTERNAL_ENTITY_REFERENCE => 'external entity reference',
+                XMLUnsupportedConstructTypeEnum::NOTATION_DECLARATION => 'notation declaration',
+                XMLUnsupportedConstructTypeEnum::PROCESSING_INSTRUCTION => 'processing instruction',
+                XMLUnsupportedConstructTypeEnum::START_NAMESPACE_DECLARATION => 'start namespace declaration',
+                XMLUnsupportedConstructTypeEnum::UNPARSED_ENTITY_DECLARATION => 'unparsed entity declaration',
+                XMLUnsupportedConstructTypeEnum::UNKNOWN_CONSTRUCT => 'unknown construct'
             };
             $this->unsupportedConstruct($parser,$name);
         }
@@ -142,14 +143,14 @@ namespace App\Helpers\CreateTask {
             } catch (ApplicationException $e) {
                 // TODO: REMOVE THIS catch
                 $errorResponse = $e->getErrorResponse();
-                DebugUtils::log("APP ERROR",
+                DebugLogger::log("APP ERROR",
                 fn()=>DtoUtils::dtoToJson($errorResponse,otherJsonOptions:JSON_PRETTY_PRINT)
             );
                 $errorData = $errorResponse->error->details?->errorData;
                 if ($errorData) {
                     $byteIndex = is_array($errorData) ? ($errorData['byteIndex'] ?? $errorData['eByteIndex'] ?? false) : ($errorData->{'byteIndex'} ?? $errorData->{'eByteIndex'} ?? false);
                     if (is_int($byteIndex) && $byteIndex >= 0) {
-                        DebugUtils::log("CHAR AT BYTE INDEX",
+                        DebugLogger::log("CHAR AT BYTE INDEX",
                         fn()=>[
                             'char' => substr(implode("", $data), $byteIndex, 1),
                             'byteIndex' => $byteIndex
@@ -157,7 +158,7 @@ namespace App\Helpers\CreateTask {
                     }
                     $byteLength =  is_array($errorData) ? ($errorData['byteLength'] ?? false) : ($errorData->{'byteLength'} ?? false);
                     if(is_int($byteLength)){
-                        DebugUtils::log("STRING AT BYTE INDEX",
+                        DebugLogger::log("STRING AT BYTE INDEX",
                         fn()=>[
                             'str' => substr(implode("", $data), $byteIndex, $byteLength),
                             'byteIndex' => $byteIndex
@@ -166,7 +167,7 @@ namespace App\Helpers\CreateTask {
                 }
                 throw new Exception(previous: $e);
             } catch (InternalException $e) {
-                DebugUtils::log("INTERNAL ERROR",
+                DebugLogger::log("INTERNAL ERROR",
                 fn()=> DebugUtils::jsonEncode([
                     'message' => $e->getMessage(),
                     'code' => $e->getCode(),
@@ -174,7 +175,7 @@ namespace App\Helpers\CreateTask {
                 ]));
                 throw new Exception(previous: $e);
             } finally {
-                DebugUtils::log("Parser free");
+                DebugLogger::log("Parser free");
                 // Free parser
                 $parser?->free();
             }

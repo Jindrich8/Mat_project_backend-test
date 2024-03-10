@@ -9,7 +9,7 @@ namespace App\Helpers\Exercises\FixErrors {
     use App\Dtos\Defs\Types\Review\ExerciseReview;
     use App\Exceptions\InvalidEvaluateValueException;
     use App\Helpers\CEvaluateExercise;
-    use App\Utils\DebugUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\DtoUtils;
     use App\Utils\StrUtils;
     use Fisharebest\Algorithm\MyersDiff;
@@ -69,7 +69,7 @@ namespace App\Helpers\Exercises\FixErrors {
                 $calculated = $myers->calculate($value, $correctChars);
                 unset($myers);
             }
-            DebugUtils::log(self::class . " calculated", [
+            DebugLogger::log(self::class . " calculated", [
                 'correctText' => implode("", $correctChars),
                 'userText' => implode("", $value),
                 'calculated' => $calculated
@@ -119,7 +119,7 @@ namespace App\Helpers\Exercises\FixErrors {
                 }
             }
 
-            DebugUtils::log("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
+            DebugLogger::log("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
             $has = $this->defaultDistance - $distance;
             if ($has < 0) {
                 $has = 0;
@@ -131,7 +131,7 @@ namespace App\Helpers\Exercises\FixErrors {
             )
                 ->setDetails($response);
 
-            DebugUtils::log("exporting " . self::class . "", ['response' => $response]);
+            DebugLogger::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

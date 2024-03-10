@@ -4,8 +4,8 @@ namespace App\Helpers\Exercises\FixErrors {
 
     use App\Exceptions\XMLInvalidElementValueException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLNodeBaseWParentNode;
 
     /**
      * @extends XMLNodeBaseWParentNode<FixErrorsXMLCreateNode>

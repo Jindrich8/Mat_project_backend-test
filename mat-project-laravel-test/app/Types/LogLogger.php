@@ -3,76 +3,52 @@
 namespace App\Types {
 
     use Illuminate\Support\Facades\Log;
-    use Stringable;
+    use Illuminate\Support\Stringable as SupportStringable;
+    use Psr\Log\LoggerInterface;
 
-    class LogLogger implements MessageLogger
+    /**
+     * @extends EasyMessageLogger<LoggerInterface,string>
+     */
+    class LogLogger extends EasyMessageLogger
     {
-        public function warning(string|Stringable $message, array $context = []): void
-        {
-            Log::warning($message,$context);
+        private LoggerInterface $defaultLogger;
+
+        public function __construct(){
+            $this->defaultLogger = Log::driver();
         }
 
-        public function info(string|Stringable $message, array $context = []): void
+        protected function getChannel(mixed $channel): mixed
         {
-            Log::info($message,$context);
+            return Log::channel($channel);
         }
 
-        public function debug(string|Stringable $message, array $context = []): void
+        public function logToChannelWContext($level, string|SupportStringable $message, array $context = [], mixed $channel = null): void
         {
-            Log::debug($message,$context);
-        }
-
-        public function emergency(string|Stringable $message, array $context = []): void
-        {
-            Log::emergency($message,$context);
-        }
-
-        public function alert(string|Stringable $message, array $context = []): void
-        {
-            Log::alert($message,$context);
-        }
-
-        public function critical(string|Stringable $message, array $context = []): void
-        {
-            Log::critical($message,$context);
-        }
-
-        public function error(string|Stringable $message, array $context = []): void
-        {
-            Log::error($message,$context);
-        }
-
-        public function notice(string|Stringable $message, array $context = []): void
-        {
-            Log::notice($message,$context);
-        }
-
-        public function log($level, string|Stringable $message, array $context = []): void
-        {
+            $logger = $channel ?? $this->defaultLogger;
             switch($level){
                 case LOG_ERR:
-                    Log::error($message,$context);
+                    $logger->error($message,$context);
                     break;
                 case LOG_DEBUG:
-                    Log::debug($message,$context);
+                    $logger->debug($message,$context);
                     break;
                 case LOG_INFO:
-                    Log::info($message,$context);
+                    $logger->info($message,$context);
                     break;
                 case LOG_WARNING:
-                    Log::warning($message,$context);
+                    $logger->warning($message,$context);
                     break;
                 case LOG_EMERG:
-                    Log::emergency($message,$context);
+                    $logger->emergency($message,$context);
                     break;
                 case LOG_ALERT:
-                    Log::alert($message,$context);
+                    $logger->alert($message,$context);
                     break;
                 case LOG_CRIT:
-                    Log::critical($message,$context);
+                    $logger->critical($message,$context);
                     break;
                 default:
-                    Log::log($level,$message,$context);
+                    $logger->log($level,$message,$context);
                     break;
             }
         }

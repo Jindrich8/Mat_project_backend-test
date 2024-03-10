@@ -4,7 +4,7 @@ namespace App\Types {
 
     use App\Models\User;
 
-    class SimpleAuthProvider implements UserAuthProvider
+    class SimpleAuthProvider implements UserAuthProviderInterface
     {
         private ?User $user;
         public function __construct(?User $user)

@@ -4,7 +4,7 @@ namespace App\Types {
 
     use App\Dtos\InternalTypes\TaskSaveContent;
 
-    class SaveTask implements SavedTaskContentProvider
+    class SaveTask implements SavedTaskContentProviderInterface
     {
         public function __construct(
             public readonly int $taskVersion,

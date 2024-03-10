@@ -9,9 +9,9 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\Helpers\CreateTask\Document\DocumentContent;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLNodeBase;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
+    use App\Types\XML\XMLNodeBase;
+    use App\Types\XML\XMLChildren;
+    use App\Types\XML\XMLContextBase;
     use App\Utils\Utils;
 
     class GroupNode extends XMLNodeBase{

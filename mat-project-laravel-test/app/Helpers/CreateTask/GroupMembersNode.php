@@ -5,9 +5,9 @@ namespace App\Helpers\CreateTask {
     use App\Exceptions\InternalException;
     use App\Exceptions\XMLMissingRequiredElementsException;
     use App\MyConfigs\TaskSrcConfig;
-    use App\Types\XMLChildren;
-    use App\Types\XMLContextBase;
-    use App\Types\XMLNodeBaseWParentNode;
+    use App\Types\XML\XMLChildren;
+    use App\Types\XML\XMLContextBase;
+    use App\Types\XML\XMLNodeBaseWParentNode;
 
     class GroupMembersNode extends XMLNodeBaseWParentNode
     {

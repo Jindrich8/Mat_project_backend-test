@@ -2,13 +2,60 @@
 
 namespace App\Helpers\Database {
 
+    use App\Exceptions\InternalException;
     use App\Helpers\EnumHelper;
+    use App\Types\DBTypeEnum;
+    use App\Utils\DBUtils;
     use App\Utils\Utils;
     use BackedEnum;
+    use DB;
     use Illuminate\Database\Query\Builder;
 
     class DBHelper
     {
+
+        /**
+         * @param string[] $columns
+         * @param array<array<mixed>> $values
+         * @param callable():int[] $getIdsIfNotSupported
+         * @return int[]|null
+         */
+        public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values,callable $getIdsIfNotSupported,bool $unsetValuesArray = false): array
+        {
+            if(DBUtils::getDBType() === DBTypeEnum::POSTGRESQL){
+                return PgDB::insertAndGetIds($tableName,$primaryKeyName,$columns,$values,$unsetValuesArray);
+            }
+            else{
+                $valuesCount = count($values);
+                $columnsCount = count($columns);
+                $transformed = [];
+                for($i = 0;$i < $valuesCount;++$i){
+                    $value = &$values[$i];
+                    if(count($value) !== $columnsCount){
+                        throw new InternalException("The values array element arrays should have same length as columns array.",
+                        context:[
+                            'tableName' => $tableName,
+                        'primaryKeyName' => $primaryKeyName,
+                        'values' => $values
+                    ]);
+                    }
+                    $transformed[] = array_combine($columns,$value);
+                    if($unsetValuesArray){
+                        unset($values[$i]);
+                    }
+                }
+               $inserted = DB::table($tableName)
+                ->insert($transformed);
+                if(!$inserted){
+                    return null;
+                }
+                $ids = $getIdsIfNotSupported();
+                if(count($ids)!== $valuesCount){
+                    return null;
+                }
+                return $ids;
+            }
+        }
 
         /**
          * @template T of \BackedEnum

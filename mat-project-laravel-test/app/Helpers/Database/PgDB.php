@@ -3,7 +3,7 @@
 namespace App\Helpers\Database {
 
     use App\Exceptions\InternalException;
-    use App\Utils\DebugUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\Utils;
     use DB;
 
@@ -12,6 +12,7 @@ namespace App\Helpers\Database {
         /**
          * @param string[] $columns
          * @param array<array<mixed>> $values
+         * @return int[]|null
          */
         public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values,bool $unsetValuesArray = false): array
         {
@@ -40,7 +41,7 @@ namespace App\Helpers\Database {
                     unset($values[$i]);
                 }
             }
-            DebugUtils::log("bindings",$bindings);
+            DebugLogger::log("bindings",$bindings);
             $ids = DB::select(
                 $query,
                 bindings: $bindings,
@@ -50,15 +51,7 @@ namespace App\Helpers\Database {
                 $ids = $ids[array_key_first($ids)];
             }
             if(count($ids)!== $valuesCount){
-                throw new InternalException(
-                    message:"Number of returned ids should be equal to number of inserted rows.",
-                context:[
-                    'query' => $query,
-                    'tableName' => $tableName,
-                'primaryKeyName' => $primaryKeyName,
-                'values' => $values,
-                'unsetValuesArray'=>$unsetValuesArray
-            ]);
+               return null;
             }
             for($i = 0; $i < $valuesCount; ++$i){
                 $id = $ids[$i];
