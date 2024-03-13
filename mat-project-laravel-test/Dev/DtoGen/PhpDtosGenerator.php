@@ -270,14 +270,17 @@ namespace Dev\DtoGen {
                         } else {
                             $propNames[$baseName] = 1;
                         }
-                        $class->addConstant(new PhpConstant(Str::upper(Str::snake($name)), $name));
+                        $propertyConstantName = Str::upper(Str::snake($name));
+                        $class->addConstant(new PhpConstant($propertyConstantName, $name));
                         $isConstant = isset($value->const);
                         $const = $value->const;
                         if ($isConstant) {
+                            
+                            $class->addConstant(new PhpConstant($propertyConstantName.'_CONST',$const));
                             $constants[$name] = $const;
                             if (Utils::arrayHasKey($required,$name)) {
-                                $const = var_export($const,true);
-                                $createFuncBody .= "\n\$instance->$name = $const;";
+                                $exportedConst = var_export($const,true);
+                                $createFuncBody .= "\n\$instance->$name = $exportedConst;";
                             }
                         }
                     }
@@ -285,7 +288,7 @@ namespace Dev\DtoGen {
                      * @var array<string|int,mixed> $constants
                      */
 
-
+                    
                     if ($constants) {
                         echo "constants: ";
                         dump($constants);
