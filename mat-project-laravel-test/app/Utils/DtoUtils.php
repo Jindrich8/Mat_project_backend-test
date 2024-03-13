@@ -7,22 +7,45 @@ namespace App\Utils {
     use App\Helpers\Database\DBHelper;
     use App\Helpers\Database\DBJsonHelper;
     use App\Helpers\EnumHelper;
+    use App\Types\StopWatchTimer;
     use Exception;
     use Swaggest\JsonSchema\InvalidValue;
     use Swaggest\JsonSchema\Structure\ClassStructure;
     use Throwable;
     use BackedEnum;
+    use Swaggest\JsonSchema\Context;
 
     class DtoUtils
     {
+        private static ?Context $importDBDto = null;
+        public static function getImportDBDtoContext(): Context
+        {
+            if (!self::$importDBDto) {
+                self::$importDBDto = new Context();
+                self::$importDBDto->skipValidation = true;
+            }
+            return self::$importDBDto;
+        }
+
+        private static ?Context $exportDtoContext = null;
+
+        public static function getExportDtoContext(): Context
+        {
+            if (!self::$exportDtoContext) {
+                self::$exportDtoContext = new Context();
+                self::$exportDtoContext->skipValidation = true;
+            }
+            return self::$exportDtoContext;
+        }
 
         /**
          * @template T of \BackedEnum
          * @param class-string<T> $enum
          */
-        public static function accessAsOrderedEnumDto(mixed $record,string $prop,string $enum){
-           $case = DBHelper::accessAsEnum($record,$prop,$enum);
-           return self::createOrderedEnumDto($case);
+        public static function accessAsOrderedEnumDto(mixed $record, string $prop, string $enum)
+        {
+            $case = DBHelper::accessAsEnum($record, $prop, $enum);
+            return self::createOrderedEnumDto($case);
         }
 
         /**
@@ -30,14 +53,16 @@ namespace App\Utils {
          * @param T $case
          * @return ResponseOrderedEnumElement
          */
-        public static function createOrderedEnumDto(BackedEnum $case):ResponseOrderedEnumElement{
+        public static function createOrderedEnumDto(BackedEnum $case): ResponseOrderedEnumElement
+        {
             return ResponseOrderedEnumElement::create()
-            ->setName(EnumHelper::translate($case))
-            ->setOrderedId($case->value);
+                ->setName(EnumHelper::translate($case))
+                ->setOrderedId($case->value);
         }
 
-        public static function jsonEncodeOptionsForResponse():int{
-            return JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR;
+        public static function jsonEncodeOptionsForResponse(): int
+        {
+            return JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
         }
 
         /**
@@ -47,29 +72,84 @@ namespace App\Utils {
          * @return array|mixed
          * @throws Exception
          */
-        public static function prepareDtoForJsonResponse(ClassStructure $dto, string $field="", string $wrap=""){
+        public static function prepareDtoForJsonResponse(ClassStructure $dto, string $field = "", string $wrap = "")
+        {
             $exported = self::exportDto($dto);
-            if($field){
-                $exported = self::accessExportedField($exported,$field);
+            if ($field) {
+                $exported = self::accessExportedField($exported, $field);
             }
-            if($wrap){
+            if ($wrap) {
                 $exported = [$wrap => $exported];
             }
             return $exported;
         }
 
+
+        /**
+         * @param array{0:&array,1:ClassStructure|array}[] $stack
+         */
+        private static function transformValue(ClassStructure|array|string|int|bool|float|null $value, mixed &$dest, array &$stack)
+        {
+            if ($value && is_object($value)) {
+                $stack[] = [&$dest, $value];
+            } else if ($value && is_array($value)) {
+                $stack[] = [&$dest, $value];
+            } else {
+                $dest = $value;
+            }
+        }
+
+        private static function export(ClassStructure $dtoParam)
+        {
+            /**
+             * @var array{0:&array,1:ClassStructure|array}[] $stack
+             */
+            $stack = [];
+            $transformed = [];
+            $dest = &$transformed;
+            $dto = $dtoParam;
+            do {
+                if (is_object($dto)) {
+                    $mapping =  $dto->properties()->getDataKeyMap();
+                    foreach ($mapping as $propName => $dataPropName) {
+                        if (isset($dto->{$propName})) {
+                            /**
+                             * @var ClassStructure|array|string|int|bool|float $value
+                             */
+                            $value = $dto->{$propName};
+                            $dest[$dataPropName] = [];
+                            self::transformValue($value, $dest[$dataPropName], $stack);
+                        }
+                    }
+                } else {
+                    foreach ($dto as $value) {
+                        $dest[] = [];
+                        self::transformValue($value, $dest[array_key_last($dest)], $stack);
+                    }
+                }
+                if (!$stack) {
+                    break;
+                }
+                [&$dest, $dto] = $stack[array_key_last($stack)];
+                array_pop($stack);
+            } while (true);
+            return $transformed;
+        }
+
         /**
          * @throws Exception
          */
-        public static function exportDto(ClassStructure $dto):mixed{
-            try{
-            $exported = $dto::export($dto);
-            return $exported;
-            }
-            catch(Throwable $e){
-                throw new InternalException(context:[
+        public static function exportDto(ClassStructure $dto): mixed
+        {
+            DebugLogger::log("exportDto", $dto);
+            try {
+                return self::export($dto);
+                // $exported = $dto::export($dto,self::getExportDtoContext());
+                // return $exported;
+            } catch (Throwable $e) {
+                throw new InternalException(context: [
                     'dto' => $dto
-                ],previous:$e);
+                ], previous: $e);
             }
         }
 
@@ -84,29 +164,32 @@ namespace App\Utils {
          * @param string $field
          * @return ClassStructure
          */
-        public static function importDto(string $dto,string $json,string $table,string $column,mixed $id,string $wrapper = '',string $field = ''):ClassStructure{
+        public static function importDto(string $dto, string $json, string $table, string $column, mixed $id, string $wrapper = '', string $field = ''): ClassStructure
+        {
             $decoded = null;
-            try{
-               $decoded = DBJsonHelper::decode(
-                    json:$json,
-                    table:$table,
-                    column:$column,
-                    id:$id
+            try {
+                $decoded = DBJsonHelper::decode(
+                    json: $json,
+                    table: $table,
+                    column: $column,
+                    id: $id
                 );
-                if($field){
-                   $decoded =is_object($decoded) ? $decoded->{$field} : $decoded[$field];
+                if ($field) {
+                    $decoded = is_object($decoded) ? $decoded->{$field} : $decoded[$field];
                 }
-                if($wrapper){
+                if ($wrapper) {
                     $decoded = (object)[
                         $wrapper => $decoded
                     ];
                 }
-                return $dto::import($decoded);
-                }
-                catch(Throwable $e){
-                    throw new InternalException(
-                        message:"Failed to import '$dto'.",
-                        context:[
+                /**
+                 * @var ClassStructure $dto
+                 */
+                return $dto::import($decoded, self::getImportDBDtoContext());
+            } catch (Throwable $e) {
+                throw new InternalException(
+                    message: "Failed to import '$dto'.",
+                    context: [
                         'dto' => $dto,
                         'json' => $json,
                         'table' => $table,
@@ -115,41 +198,46 @@ namespace App\Utils {
                         'wrapper' => $wrapper,
                         'field' => $field,
                         'decoded' => $decoded
-                    ],previous:$e);
-                }
+                    ],
+                    previous: $e
+                );
+            }
         }
 
-          /**
-           * @throws Exception
+        /**
+         * @throws Exception
          */
-        public static function dtoToJson(ClassStructure $dto,string $field="",string $wrap="",int $otherJsonOptions = 0):string{
-           $exported = self::exportDto($dto);
-            if($field){
-                $exported = self::accessExportedField($exported,$field);
+        public static function dtoToJson(ClassStructure $dto, string $field = "", string $wrap = "", int $otherJsonOptions = 0): string
+        {
+            $exported = self::exportDto($dto);
+            if ($field) {
+                $exported = self::accessExportedField($exported, $field);
             }
-            if($wrap){
+            if ($wrap) {
                 $exported = [$wrap => $exported];
             }
-            return self::exportedDtoToJson($exported,$otherJsonOptions);
+            return self::exportedDtoToJson($exported, $otherJsonOptions);
         }
 
         /**
          * @throws \JsonException
          */
-        public static function exportedDtoToJson(mixed $exportedDto, int $otherJsonOptions = 0):string{
-            return json_encode($exportedDto,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR|$otherJsonOptions);
+        public static function exportedDtoToJson(mixed $exportedDto, int $otherJsonOptions = 0): string
+        {
+            return json_encode($exportedDto, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR | $otherJsonOptions);
         }
 
-        public static function accessExportedField(mixed $exported,string $field){
-            return $exported->{$field};
+        public static function accessExportedField(mixed $exported, string $field)
+        {
+            return is_object($exported) ? $exported->{$field} : $exported[$field];
         }
 
-        public static function tryToExportDto(ClassStructure $dto,mixed $default):mixed{
-            try{
-            return $dto->export($dto);
-            }
-            catch(Throwable $e){
-               return $default;
+        public static function tryToExportDto(ClassStructure $dto, mixed $default): mixed
+        {
+            try {
+                return $dto->export($dto);
+            } catch (Throwable $e) {
+                return $default;
             }
         }
     }
