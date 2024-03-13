@@ -140,7 +140,7 @@ namespace App\Helpers\CreateTask {
                     );
                     throw $e;
                 }
-            } catch (ApplicationException $e) {
+            } /* catch (ApplicationException $e) {
                 // TODO: REMOVE THIS catch
                 $errorResponse = $e->getErrorResponse();
                 DebugLogger::log("APP ERROR",
@@ -174,7 +174,7 @@ namespace App\Helpers\CreateTask {
                     'context' => $e->context()
                 ]));
                 throw new Exception(previous: $e);
-            } finally {
+            } */ finally {
                 DebugLogger::log("Parser free");
                 // Free parser
                 $parser?->free();

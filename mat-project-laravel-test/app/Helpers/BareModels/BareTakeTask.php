@@ -5,6 +5,7 @@ namespace App\Helpers\BareModels {
     use App\Helpers\Database\DBHelper;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
+    use App\ModelConstants\TaskSourceConstants;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDisplay;
     use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ namespace App\Helpers\BareModels {
         public function __construct(
             public readonly int $id,
             public readonly int $taskInfoId,
+            public readonly int $taskSourceId,
             public readonly string $name,
             public readonly string $description,
             public readonly TaskClass $minClass,
@@ -33,6 +35,7 @@ namespace App\Helpers\BareModels {
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskInfoTable,TaskInfoConstants::COL_TASK_SOURCE_ID),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS),
@@ -57,12 +60,13 @@ namespace App\Helpers\BareModels {
                     '=',
                     true
                 )
-                //->sharedLock()
+                ->sharedLock()
                 ->first();
             if ($task) {
                 $task = new self(
                     id: DBHelper::access($task, TaskConstants::COL_ID),
                     taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
+                    taskSourceId:DBHelper::access($task,TaskInfoConstants::COL_TASK_SOURCE_ID),
                     name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
                     orientation: TaskDisplay::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_ORIENTATION)),
                     minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),

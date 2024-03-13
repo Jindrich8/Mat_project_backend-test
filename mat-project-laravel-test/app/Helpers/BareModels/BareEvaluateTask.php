@@ -17,6 +17,7 @@ namespace App\Helpers\BareModels {
             public readonly string $name,
             public readonly string $description,
             public readonly int $taskInfoId,
+            public readonly int $taskSourceId,
             public readonly TaskDisplay $orientation,
             public readonly int $version,
             public readonly int $authorId,
@@ -35,6 +36,7 @@ namespace App\Helpers\BareModels {
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_TASK_SOURCE_ID),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
@@ -75,6 +77,7 @@ namespace App\Helpers\BareModels {
                 $task = new self(
                     id: DBHelper::access($task, TaskConstants::COL_ID),
                     taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
+                    taskSourceId:DBHelper::access($task,TaskInfoConstants::COL_TASK_SOURCE_ID),
                     orientation: TaskDisplay::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_ORIENTATION)),
                     version: DBHelper::access($task, TaskConstants::COL_VERSION),
                     authorId:DBHelper::access($task,TaskConstants::COL_USER_ID),

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->foreignId('task_info_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('task_source_id')->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('start');
             $table->unsignedTinyInteger('length');
             $table->autoTimestamps();

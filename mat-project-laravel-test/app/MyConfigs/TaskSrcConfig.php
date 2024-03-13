@@ -21,11 +21,6 @@ namespace App\MyConfigs {
 
         
         public readonly string $taskName;
-        public readonly ValidableString $taskNameAttr;
-        /**
-         * @var ValidableEnum<TaskDisplay> $taskOrientationAttr
-         */
-        public readonly ValidableEnum $taskOrientationAttr;
 
         public readonly ValidableString $taskDescription;
         public readonly string $taskContentName;
@@ -68,11 +63,6 @@ namespace App\MyConfigs {
     
             
             $this->taskName = 'document';
-            $this->taskNameAttr = new ValidableString('name',50,5,isElement:false);
-            $this->taskOrientationAttr = new ValidableEnum('orientation',[
-                'horizontal' => TaskDisplay::HORIZONTAL,
-                'vertical' => TaskDisplay::VERTICAL
-            ],TaskDisplay::HORIZONTAL);
     
             $this->taskDescription = new ValidableString('description',255,1);
             $this->taskContentName = 'content';

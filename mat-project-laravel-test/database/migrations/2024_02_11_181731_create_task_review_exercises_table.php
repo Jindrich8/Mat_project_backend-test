@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('task_review_exercises', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->foreignId('task_review_id');
+            $table->foreignId('task_review_id')->constrained();
             $table->fixedFloat4('score');
             $table->fixedFloat4('max_points');
             $table->json('data');

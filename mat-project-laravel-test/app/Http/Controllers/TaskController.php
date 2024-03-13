@@ -22,6 +22,9 @@ use App\Dtos\InternalTypes\TaskReviewExercisesContent;
 use App\Dtos\Defs\Endpoints\Task as TaskDto;
 use App\Dtos\Defs\Endpoints\Task\Evaluate\Errors\TaskChangedTaskEvaluateError;
 use App\Dtos\Defs\Endpoints\Task\Create;
+use App\Dtos\Defs\Endpoints\Task\Create\CreateRequestTask;
+use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetails;
+use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetailsErrorData;
 use App\Dtos\Defs\Endpoints\Task\Save;
 use App\Dtos\Defs\Endpoints\Task\Update;
 use App\Dtos\Defs\Endpoints\Task\Detail;
@@ -39,11 +42,15 @@ use App\Dtos\Defs\Endpoints\Task\Take\NewerServerSavedTaskInfo;
 use App\Dtos\Defs\Endpoints\Task\Take\OlderServerSavedTaskInfo;
 use App\Dtos\Defs\Endpoints\Task\Take\SavedTaskValues;
 use App\Dtos\Defs\Endpoints\Task\Take\TakeResponseTaskTaskDetail;
+use App\Dtos\Defs\Types\Errors\FieldError;
+use App\Dtos\Defs\Types\Errors\RangeError;
 use App\Dtos\Defs\Types\Task\TaskDetailInfoTaskReview;
 use App\Dtos\Defs\Types\Task\TaskPreviewInfoTaskReview;
 use App\Exceptions\ApplicationException;
 use App\Exceptions\AppModelNotFoundException;
+use App\Exceptions\EnumConversionException;
 use App\Exceptions\InternalException;
+use App\Exceptions\InvalidArgumentException as ExceptionsInvalidArgumentException;
 use App\Exceptions\InvalidEvaluateValueException;
 use App\Exceptions\UnsupportedVariantException;
 use App\Helpers\BareModels\BareDetailTask;
@@ -55,6 +62,7 @@ use App\Utils\DebugLogger;
 use App\Helpers\CreateTask\ParseEntry;
 use App\Helpers\Database\DBHelper;
 use App\Helpers\Database\UserHelper;
+use App\Helpers\DtoHelper;
 use App\Helpers\ExerciseHelper;
 use App\Helpers\RequestHelper;
 use App\Helpers\ResponseHelper;
@@ -64,12 +72,18 @@ use App\ModelConstants\TaskConstants;
 use App\ModelConstants\TaskInfoConstants;
 use App\ModelConstants\TaskReviewConstants;
 use App\ModelConstants\TaskReviewTemplateConstants;
+use App\ModelConstants\TaskSourceConstants;
 use App\Models\SavedTask;
+use App\Models\TaskInfo;
+use App\Models\TaskSource;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\TaskDisplay;
 use App\Types\EvaluateExercise;
+use App\Types\SimpleQueryWheresBuilder;
+use App\Types\StopWatchTimer;
 use App\Types\TakeExercise;
+use App\Types\TaskResTask;
 use App\Utils\DebugUtils;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
@@ -80,7 +94,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Swaggest\JsonSchema\InvalidValue;
+use Throwable;
 
 class TaskController extends Controller
 {
@@ -106,6 +122,7 @@ class TaskController extends Controller
             ->setName($task->name)
             ->setDescription($task->description)
             ->setVersion(ResponseHelper::translateIdForUser($task->version));
+
         $responseTask->setTaskDetail($detail)
             ->setDisplay(match ($task->orientation) {
                 TaskDisplay::HORIZONTAL => Take\TakeResponseTask::HORIZONTAL,
@@ -138,14 +155,14 @@ class TaskController extends Controller
             $savedValuesInfo = OlderServerSavedTaskInfo::create();
         }
         $responseTask->setSavedValuesInfo($savedValuesInfo);
-        $exercises = ExerciseHelper::takeTaskInfo(
-            taskInfoId: $task->taskInfoId,
+        $exercises = ExerciseHelper::takeTaskSource(
+            taskSourceId: $task->taskSourceId,
             savedTask: $useSavedTask ? $saveTask : null
         );
         $responseTask->entries = [];
         $taskEntries = &$responseTask->entries;
         TaskHelper::getTaskEntries(
-            taskInfoId: $task->taskInfoId,
+            taskSourceId: $task->taskInfoId,
             exercises: $exercises,
             exerciseToDto: function (TakeExercise $exercise) {
                 $exerciseDto =  Take\DefsExercise::create()
@@ -163,8 +180,6 @@ class TaskController extends Controller
             },
             entries: $taskEntries
         );
-        DebugLogger::debug("TakeTaskResponse: ", ['dto' => DtoUtils::exportDto(Take\TakeTaskResponse::create()
-            ->setTask($responseTask))]);
         return Take\TakeTaskResponse::create()
             ->setTask($responseTask);
     }
@@ -182,7 +197,7 @@ class TaskController extends Controller
     {
         $userId = UserHelper::getUserId();
         $requestData = RequestHelper::getDtoFromRequest(Save\SaveTaskRequest::class, $request);
-        $success = DB::table(SavedTask::getTableName())
+        $success = DB::table(SavedTaskConstants::TABLE_NAME)
             ->updateOrInsert(
                 attributes: [
                     SavedTaskConstants::COL_TASK_ID => $id,
@@ -221,14 +236,48 @@ class TaskController extends Controller
                 context: ['taskRes' => $taskRes, 'task' => $task]
             );
         }
-        $task->tagIds = array_map(
-            fn ($tagId) => RequestHelper::translateId($tagId),
-            $requestTask->tags
-        );
-        $task->difficulty = TaskDifficulty::fromThrow($requestTask->difficulty);
+
+        $task->name = $requestTask->name;
+        $task->display = match ($requestTask->display) {
+            CreateRequestTask::HORIZONTAL => TaskDisplay::HORIZONTAL,
+            CreateRequestTask::VERTICAL => TaskDisplay::VERTICAL,
+            default => throw new UnsupportedVariantException($task->display)
+        };
         $task->isPublic = $requestTask->isPublic;
-        $task->minClass = TaskClass::fromThrow($requestTask->classRange->min);
-        $task->maxClass = TaskClass::fromThrow($requestTask->classRange->max);
+
+        /**
+         * @var TaskCreateErrorDetailsErrorData|null $errorData
+         */
+        $errorData = null;
+        if (($error = TaskHelper::setTagsToTaskResTask($requestTask->tags, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setTags($error);
+        }
+        if (($error = TaskHelper::setDifficultyToTaskResTask($requestTask->difficulty, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setDifficulty($error);
+        }
+
+        if (($error = TaskHelper::setClassRangeToTaskResTask($requestTask->classRange, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setClassRange($error);
+        }
+
+        if ($errorData) {
+            throw new ApplicationException(
+                Response::HTTP_BAD_REQUEST,
+                ApplicationErrorInformation::create()
+                    ->setUserInfo(
+                        UserSpecificPartOfAnError::create()
+                            ->setMessage("Bad request.")
+                            ->setDescription("Please correct request fields.")
+                    )
+                    ->setDetails(
+                        TaskCreateErrorDetails::create()
+                            ->setErrorData($errorData)
+                    )
+            );
+        }
 
         $taskId = $taskRes->insert($requestData->task->source);
         return Create\TaskCreateResponse::create()
@@ -238,26 +287,153 @@ class TaskController extends Controller
     public function update(HttpRequest $request, int $id): Response
     {
         $requestData = RequestHelper::getDtoFromRequest(Update\TaskUpdateRequest::class, $request);
-        $parseEntry = new ParseEntry();
-        $taskRes = $parseEntry->parse([$requestData->task->source]);
-        $requestTask = &$requestData->task;
-        $task = &$taskRes->task;
-        if (!$task) {
-            throw new InternalException(
-                message: "Task should not be null, because it should be created while parsing task source.",
-                context: ['taskRes' => $taskRes, 'task' => $task]
+        $requestTask = $requestData->task;
+        /**
+         * @var ?TaskResTask $task
+         */
+        $task = null;
+        if (isset($requestData->task->source)) {
+            $parseEntry = new ParseEntry();
+            $taskRes = $parseEntry->parse([$requestData->task->source]);
+            $task = &$taskRes->task;
+            if (!$task) {
+                throw new InternalException(
+                    message: "Task should not be null, because it should be created while parsing task source.",
+                    context: ['taskRes' => $taskRes, 'task' => $task]
+                );
+            }
+        } else {
+            $task = new TaskResTask();
+        }
+
+        if (isset($requestTask->name)) {
+            $task->name = $requestTask->name;
+        }
+        if (isset($requestTask->display)) {
+            $task->display = match ($requestTask->display) {
+                CreateRequestTask::HORIZONTAL => TaskDisplay::HORIZONTAL,
+                CreateRequestTask::VERTICAL => TaskDisplay::VERTICAL,
+                default => throw new ExceptionsInvalidArgumentException(
+                    argumentName: 'requestTask->display',
+                    argumentValue: $requestTask->display
+                )
+            };
+        }
+
+        if (isset($requestTask->isPublic)) {
+            $task->isPublic = $requestTask->isPublic;
+        }
+
+        /**
+         * @var TaskCreateErrorDetailsErrorData|null $errorData
+         */
+        $errorData = null;
+        if (isset($requestTask->tags) 
+        && ($error = TaskHelper::setTagsToTaskResTask($requestTask->tags, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setTags($error);
+        }
+        if (isset($requestTask->difficulty) 
+        && ($error = TaskHelper::setDifficultyToTaskResTask($requestTask->difficulty, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setDifficulty($error);
+        }
+
+        if (isset($requestTask->classRange) 
+        && ($error = TaskHelper::setClassRangeToTaskResTask($requestTask->classRange, $task))) {
+            ($errorData ??= TaskCreateErrorDetailsErrorData::create())
+                ->setClassRange($error);
+        }
+
+        if ($errorData) {
+            throw new ApplicationException(
+                Response::HTTP_BAD_REQUEST,
+                ApplicationErrorInformation::create()
+                    ->setUserInfo(
+                        UserSpecificPartOfAnError::create()
+                            ->setMessage("Bad request.")
+                            ->setDescription("Please correct request fields.")
+                    )
+                    ->setDetails(
+                        TaskCreateErrorDetails::create()
+                            ->setErrorData($errorData)
+                    )
             );
         }
-        $task->tagIds = array_map(
-            fn ($tagId) => RequestHelper::translateId($tagId),
-            $requestTask->tags
-        );
-        $task->difficulty = TaskDifficulty::fromThrow($requestTask->difficulty);
-        $task->isPublic = $requestTask->isPublic;
-        $task->minClass = TaskClass::fromThrow($requestTask->classRange->min);
-        $task->maxClass = TaskClass::fromThrow($requestTask->classRange->max);
+        if (isset($requestTask->source)) {
+            $taskRes->update($id, $requestData->task->source);
+        } else {
+            $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
+                ->select([TaskConstants::COL_TASK_INFO_ID])
+                ->where(TaskConstants::COL_ID, '=', $id)
+                ->lockForUpdate()
+                ->value(TaskConstants::COL_TASK_INFO_ID);
 
-        $taskRes->update($id, $requestData->task->source);
+
+            $reviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
+                ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
+                ->exists();
+            $taskInfoBindings = [];
+            TaskHelper::addExistingTaskResTaskDataToTaskInfoBindings(
+                taskInfoBindings: $taskInfoBindings,
+                task: $task
+            );
+            if ($reviewTemplateExists) {
+                $insertColumns = [
+                    TaskInfoConstants::COL_NAME,
+                    TaskInfoConstants::COL_DESCRIPTION,
+                    TaskInfoConstants::COL_MIN_CLASS,
+                    TaskInfoConstants::COL_MAX_CLASS,
+                    TaskInfoConstants::COL_DIFFICULTY,
+                    TaskInfoConstants::COL_ORIENTATION,
+                    TaskInfoConstants::COL_TASK_SOURCE_ID
+                ];
+                $selectDictIsColumn = [];
+                foreach ($insertColumns as $insertColumn) {
+                    if (isset($taskInfoBindings[$insertColumn])) {
+                        $selectDictIsColumn[$taskInfoBindings[$insertColumn]] = false;
+                    } else {
+                        $selectDictIsColumn[$insertColumn] = true;
+                    }
+                }
+                $wheresBuilder = SimpleQueryWheresBuilder::construct()
+                    ->where(TaskInfoConstants::COL_ID, '=', $taskInfoId);
+
+                $success = DBHelper::insertFromSingleWConstants(
+                    tableName: TaskInfoConstants::TABLE_NAME,
+                    insertColumns: $insertColumns,
+                    selectDictIsColumn: $selectDictIsColumn,
+                    selectFromTableName: TaskInfoConstants::TABLE_NAME,
+                    wheresBuilder: $wheresBuilder
+                );
+                if (!$success) {
+                    throw new InternalException(
+                        message: "Could not insert task info using values from task info with id '$taskInfoId'.",
+                        context: [
+                            'taskInfoId' => $taskInfoId,
+                            'insertColumns' => $insertColumns,
+                            'selectDictIsColumn' => $selectDictIsColumn,
+                            'taskInfoBindings' => $taskInfoBindings,
+                            'wheresStr' => $wheresBuilder->getWheresStr()
+                        ]
+                    );
+                }
+            } else {
+                $success = DB::table(TaskInfoConstants::TABLE_NAME)
+                    ->where(TaskInfoConstants::COL_ID, '=', $taskInfoId)
+                    ->update($taskInfoBindings) === 1;
+                if (!$success) {
+                    throw new InternalException(
+                        message: "Could not update task info with id '$taskInfoId'.",
+                        context: [
+                            'taskInfoId' => $taskInfoId,
+                            'taskInfoBindings' => $taskInfoBindings
+                        ]
+                    );
+                }
+            }
+        }
+
         return response(status: Response::HTTP_NO_CONTENT);
     }
 
@@ -307,15 +483,15 @@ class TaskController extends Controller
                     default => throw new UnsupportedVariantException($task->orientation)
                 });
 
-            $exercises = ExerciseHelper::evaluateTaskInfo(
-                taskInfoId: $task->taskInfoId
+            $exercises = ExerciseHelper::evaluateTaskSource(
+                taskSourceId: $task->taskSourceId
             );
 
             $taskPoints = 0;
             $taskmax = 0;
             $taskEntries = &$responseTask->setEntries([])->entries;
             TaskHelper::getTaskEntries(
-                taskInfoId: $task->taskInfoId,
+                taskSourceId: $task->taskSourceId,
                 exercises: $exercises,
                 exerciseToDto: function (EvaluateExercise $exercise, int $i) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
                     DebugLogger::log("exerciseToDto - task evaluate");
@@ -327,7 +503,11 @@ class TaskController extends Controller
 
                     $exerciseValue = array_shift($requestData->exercises);
                     try {
-                        $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
+                        StopWatchTimer::run(
+                            "evaluateAndSetAsContentTo " . $exercise->type->translate(),
+                            fn () =>
+                            $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto)
+                        );
                     } catch (InvalidEvaluateValueException $e) {
                         throw new ApplicationException(
                             Response::HTTP_BAD_REQUEST,
@@ -451,7 +631,7 @@ class TaskController extends Controller
             $filters = $requestData->filters;
             if ($filters) {
                 if ($filters->tags) {
-                    $invalidTags = TaskHelper::filterTaskByTags($filters->tags, $builder,hasAll:true);
+                    $invalidTags = TaskHelper::filterTaskByTags($filters->tags, $builder, hasAll: true);
                     if ($invalidTags) {
                         ($filterErrorData ??= List\Errors\FilterErrorDetailsErrorData::create())
                             ->setTags(
@@ -548,20 +728,20 @@ class TaskController extends Controller
                     }
                 );
             }
-            Log::debug("TaskController - list - Executed query: '".$builder->toRawSql()."");
+            Log::debug("TaskController - list - Executed query: '" . $builder->toRawSql() . "");
             $paginator = $builder->orderBy(TaskConstants::COL_ID)
                 ->cursorPaginate(
                     perPage: $requestData->limit,
                     cursor: $requestData->cursor
                 );
-                $nextCursor = $paginator->nextCursor();
-                $prevCursor = $paginator->previousCursor();
-                if($nextCursor){
-                    $config->setNextCursor($nextCursor->encode());
-                }
-                if($prevCursor){
-                    $config->setPrevCursor($prevCursor->encode());
-                }
+            $nextCursor = $paginator->nextCursor();
+            $prevCursor = $paginator->previousCursor();
+            if ($nextCursor) {
+                $config->setNextCursor($nextCursor->encode());
+            }
+            if ($prevCursor) {
+                $config->setPrevCursor($prevCursor->encode());
+            }
 
             return $paginator->items();
         });
@@ -608,8 +788,8 @@ class TaskController extends Controller
             if ($taskReviewIdAndScore) {
                 $info->setTaskReview(
                     TaskPreviewInfoTaskReview::create()
-                    ->setId(ResponseHelper::translateIdForUser($taskReviewIdAndScore[0]))
-                    ->setScore($taskReviewIdAndScore[1])
+                        ->setId(ResponseHelper::translateIdForUser($taskReviewIdAndScore[0]))
+                        ->setScore($taskReviewIdAndScore[1])
                 );
             }
             return $info;
@@ -682,12 +862,12 @@ class TaskController extends Controller
             if ($taskReview !== null) {
                 $taskDetailInfo->setTaskReview(
                     TaskDetailInfoTaskReview::create()
-                    ->setId(ResponseHelper::translateIdForUser(
-                        DBHelper::access($taskReview,TaskReviewConstants::COL_ID)
-                    ))
-                    ->setScore(
-                        DBHelper::access($taskReview,TaskReviewConstants::COL_SCORE)
-                    )
+                        ->setId(ResponseHelper::translateIdForUser(
+                            DBHelper::access($taskReview, TaskReviewConstants::COL_ID)
+                        ))
+                        ->setScore(
+                            DBHelper::access($taskReview, TaskReviewConstants::COL_SCORE)
+                        )
                 );
             }
         }
@@ -699,18 +879,29 @@ class TaskController extends Controller
     public function delete(HttpRequest $request, int $taskId): Response
     {
         DB::transaction(function () use ($taskId) {
-            $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
-                ->select([TaskConstants::COL_TASK_INFO_ID])
+            $taskTable = TaskConstants::TABLE_NAME;
+            $taskInfoTable = TaskInfoConstants::TABLE_NAME;
+            $task = DB::table($taskTable)
+                ->select([
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskInfoTable,TaskInfoConstants::COL_TASK_SOURCE_ID)
+                    ])
+                ->join(
+                    TaskInfoConstants::TABLE_NAME,
+                    DBHelper::tableCol(TaskInfoConstants::TABLE_NAME,TaskInfoConstants::COL_ID),
+                    '=',
+                    DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_TASK_INFO_ID)
+                    )
                 ->where(TaskConstants::COL_ID, '=', $taskId)
-                ->value(TaskConstants::COL_TASK_INFO_ID);
-            if ($taskInfoId === null) {
-                throw new AppModelNotFoundException("Task", ['id' => $taskId]);
-            }
+                ->first() ?? throw new AppModelNotFoundException("Task",['id' => $taskId]);
+
+                $taskInfoId = DBHelper::access($task,TaskConstants::COL_TASK_INFO_ID);
+                $taskSourceId = DBHelper::access($task,TaskInfoConstants::COL_TASK_SOURCE_ID);
 
             $deleted = DB::table(TaskConstants::TABLE_NAME)
                 ->delete($taskId);
             if ($deleted === 0) {
-                // we have there some concurrent query, so we let it to do the rest
+                // There are some concurrent query, so let it to do the rest
                 return;
             }
 
@@ -722,10 +913,20 @@ class TaskController extends Controller
             if (!$taskReviewTemplateExists) {
                 DB::table(TaskInfoConstants::TABLE_NAME)
                     ->delete($taskInfoId);
-                // We do not need to delete groups, tags, or exercises,
-                // because all of them should be deleted by cascade
+
+                // Try to delete task source if it is not referenced elsewhere
+                try {
+                    DB::table(TaskSourceConstants::TABLE_NAME)
+                        ->delete($taskSourceId);
+                } catch (Throwable $e) {
+                }
+                // There is no need to delete groups, tags, or exercises,
+                // because all of them should be deleted by cascade if deletetion of the task source succeeds
             } else {
-                TaskHelper::deleteActualExercisesByTaskInfo($taskInfoId);
+                // Actual exercises are not needed if there is no task that would use them
+                // because for now task source cannot be used by more than one task, 
+                // so there is no need to check if there is not any other task that uses this task source
+                TaskHelper::deleteActualExercisesByTaskSource($taskSourceId);
             }
         });
         return response(status: Response::HTTP_NO_CONTENT);
@@ -794,8 +995,8 @@ class TaskController extends Controller
                 if ($filters->name) {
                     $builder->whereRaw(
                         DBHelper::tableCol(TaskInfoConstants::TABLE_NAME, TaskInfoConstants::COL_NAME)
-                            . " LIKE %?%",
-                        [$filters->name]
+                        . " LIKE ?",
+                        ["%{$filters->name}%"]
                     );
                 }
 

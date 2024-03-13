@@ -1,5 +1,6 @@
 <?php
 
+use App\ModelConstants\TaskInfoConstants;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,7 @@ return new class extends Migration
     {
         Schema::create(self::$table, function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->foreignId('task_info_id');
+            $table->foreignId('task_info_id')->constrained();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('version')->default(0);
             $table->text('source');

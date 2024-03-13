@@ -10,26 +10,28 @@ namespace App\Helpers {
     class DtoHelper
     {
         /**
-         * @param int &$min
-         * @param int &$max
-         * @param class-string<\IntBackedEnum> $enum
-         * @return RangeError|null
+         * @template TEnum of \IntBackedEnum
+         * @param int $min
+         * @param int $max
+         * @param class-string<TEnum> $enum
+         * @return RangeError|array{0:TEnum,1:TEnum}
          */
-        public static function validateEnumRange(int &$min, int &$max,string $enum):RangeError|null{
+        public static function validateEnumRange(int $min, int $max,string $enum):RangeError|array{
             $rangeError = null;
             /**
-             * @var \IntBackedEnum $minCase
+             * @var TEnum $minCase
              */
             $minCase = $enum::tryFrom($min);
              /**
-             * @var \IntBackedEnum $maxCase
+             * @var TEnum $maxCase
              */
             $maxCase = $enum::tryFrom($max);
             if ($minCase !== null && $maxCase !== null) {
-                if ($minCase->value > $maxCase->value) {
-                    $rangeError = RangeError::create()
-                        ->setError(RangeError::MIN_MAX_SWAPPED);
+                if ($minCase->value <= $maxCase->value) {
+                    return [$minCase, $maxCase];
                 }
+                $rangeError = RangeError::create()
+                    ->setError(RangeError::MIN_MAX_SWAPPED);
             } else {
                 $error = InvalidBoundsError::create();
                 if($minCase === null){

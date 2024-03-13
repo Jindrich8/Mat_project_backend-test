@@ -12,6 +12,7 @@ use App\Dtos\Defs\Exercises\FillInBlanks\TextInput;
 use App\Exceptions\InternalException;
 use App\Helpers\Database\DBHelper;
 use App\ModelConstants\FillInBlanksConstants;
+use App\Types\StopWatchTimer;
 use App\Utils\DtoUtils;
 use App\Utils\Utils;
 use DB;
@@ -39,6 +40,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
             ->whereIn($idName, $ids)
             ->get();
         while (($exercise = $exercises->pop()) !== null) {
+
             /**
              * @var int $exerciseId
              */
@@ -63,57 +65,61 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
         $exercises = self::fetchContents($ids);
         $takeExercises = [];
         reset($savedValues);
-        foreach ($exercises as $exerciseId => $content) {
-            $takeParts = [];
-            $savedValue = current($savedValues);
-            if($savedValue === false){
-                $savedValue = null;
+       
+            foreach ($exercises as $exerciseId => $content) {
+                $exerciseResp = FillInBlanksFillInBlanksTakeResponse::create()
+                    ->setContent([]);
+
+                $takeParts = &$exerciseResp->content;
+                $savedValue = current($savedValues);
+                if ($savedValue === false) {
+                    $savedValue = null;
+                }
+                $content = $content->content;
+                /**
+                 * @var InternalTypes\TextInput|InternalTypes\Combobox|string $part
+                 */
+                while (($part = array_shift($content)) !== null) {
+                    if (is_string($part)) {
+                        $takeParts[] = $part;
+                        continue;
+                    } else if ($part->type === InternalTypes\TextInput::TYPE_CONST) {
+                        $txtI = TextInput::create();
+                        if (is_string($savedValue)) {
+                            $txtI->setText($savedValue);
+                        }
+                        $takeParts[] = $txtI;
+                    } else if ($part->type === InternalTypes\Combobox::TYPE_CONST) {
+                        $cmb = Combobox::create()
+                            ->setValues($part->values);
+                        if (is_int($savedValue)) {
+                            $cmb->selectedIndex = $savedValue;
+                        }
+                        $takeParts[] = $cmb;
+                    } else {
+                        $partType = get_debug_type($part);
+                        throw new InternalException(
+                            "Unsupported content part type '$partType'.",
+                            context: [
+                                'partType' => $partType,
+                                'part' => $part,
+                                'content' => $content
+                            ]
+                        );
+                    }
+
+                    if ($savedValue !== null) {
+                        $savedValue = next($savedValues);
+                        if ($savedValue === false) {
+                            $savedValue = null;
+                        }
+                    }
+                }
+                unset($content);
+
+                $takeExercises[$exerciseId] = new TakeFillInBlanksExercise($exerciseResp);
             }
 
-            while (($part = Utils::arrayShift($content->content)) !== null) {
-                if ($part instanceof InternalTypes\TextInput) {
-                    $txtI = TextInput::create();
-                    if (is_string($savedValue)) {
-                        $txtI->setText($savedValue);
-                    }
-                    $takeParts[] = $txtI;
-                } else if ($part instanceof InternalTypes\Combobox) {
-                    $cmb = Combobox::create()
-                        ->setValues($part->values);
-                    if (is_int($savedValue)) {
-                        $cmb->selectedIndex = $savedValue;
-                    }
-                    $takeParts[] = $cmb;
-                } else if (is_string($part)) {
-                    $takeParts[] = $part;
-                    continue;
-                } else {
-                    $partType = get_debug_type($part);
-                    throw new InternalException(
-                        "Unsupported content part type '$partType'.",
-                        context: [
-                            'partType' => $partType,
-                            'part' => $part,
-                            'content' => $content
-                        ]
-                    );
-                }
-
-                if ($savedValue !== null) {
-                    $savedValue = next($savedValues);
-                    if($savedValue === false){
-                        $savedValue = null;
-                    }
-                }
-            }
-            unset($content);
-
-            $takeExercise =  new TakeFillInBlanksExercise(
-                FillInBlanksFillInBlanksTakeResponse::create()
-                    ->setContent($takeParts)
-            );
-            $takeExercises[$exerciseId] = $takeExercise;
-        }
         return $takeExercises;
     }
 
@@ -141,7 +147,7 @@ class FillInBlanksExerciseHelper implements CExerciseHelper
     public function delete(array $ids): void
     {
         DB::table(FillInBlanksConstants::TABLE_NAME)
-        ->whereIn(FillInBlanksConstants::COL_EXERCISEABLE_ID,$ids)
-        ->delete();
+            ->whereIn(FillInBlanksConstants::COL_EXERCISEABLE_ID, $ids)
+            ->delete();
     }
 }

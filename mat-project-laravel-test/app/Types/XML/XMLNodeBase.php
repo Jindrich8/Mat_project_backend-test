@@ -21,6 +21,7 @@ namespace App\Types\XML {
     use App\Utils\Utils;
     use App\Utils\DebugLogger;
     use App\Dtos\Defs\Errors\XML\DefsOr;
+    use App\Types\TrimTypeEnum;
 
     abstract class XMLNodeBase
     {
@@ -300,7 +301,7 @@ namespace App\Types\XML {
         }
 
         private static function getExpectedAttributes(
-            \App\Types\XMLAttributes $nodeAttributes,
+            XMLAttributes $nodeAttributes,
             array $usedRequiredAttributes = [],
             array $usedNonRequiredAttributes = []
             ){

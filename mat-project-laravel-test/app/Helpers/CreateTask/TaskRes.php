@@ -20,15 +20,17 @@ namespace App\Helpers\CreateTask {
     use App\ModelConstants\ResourceConstants;
     use App\ModelConstants\TagTaskInfoConstants;
     use App\ModelConstants\TaskConstants;
+    use App\ModelConstants\TaskInfoConstants;
     use App\ModelConstants\TaskReviewTemplateConstants;
     use App\Models\TaskInfo;
+    use App\Models\TaskSource;
     use App\Types\DBTypeEnum;
     use App\Types\TaskResTask;
     use App\Types\XML\XMLDynamicNodeBase;
     use App\Types\XML\XMLNodeBase;
     use App\Utils\DBUtils;
     use App\Utils\DebugLogger;
-    use DB;
+    use Illuminate\Support\Facades\DB;
 
     class TaskRes
     {
@@ -68,7 +70,7 @@ namespace App\Helpers\CreateTask {
         {
             $preGroupIndex = $this->currentGroupIndex;
             $this->currentGroupIndex = count($this->groupsAndResources);
-            $group = new BareGroup(start:$this->getExerciseCount());
+            $group = new BareGroup(start: $this->getExerciseCount());
             $this->groupsAndResources[] = [$group, []];
             // dump($this->groupsAndResources);
             return $preGroupIndex;
@@ -213,47 +215,90 @@ namespace App\Helpers\CreateTask {
             return $helper;
         }
 
-        private function insertTaskInfoAndContent(?int $taskInfoId = null):int{
-             // insert task info and tags
-             {
-                 $taskInfo = new TaskInfo();
-                 if($taskInfoId !== null){
-                    $taskInfo->id = $taskInfoId;
-                 }
-                 $taskInfo->name = $this->task->name;
-                 $taskInfo->description = $this->task->description;
-                 $taskInfo->orientation = $this->task->display;
-                 $taskInfo->difficulty = $this->task->difficulty;
-                 $taskInfo->min_class = $this->task->minClass;
-                 $taskInfo->max_class = $this->task->maxClass;
+        private function insertTaskInfoAndContent(?int $taskInfoId = null,?int $taskSourceId = null): int
+        {
 
-                 $success = $taskInfo->save();
-                 if (!$success) {
-                     throw new InternalException(
-                         "Could not insert taskInfo.",
-                         context: ['taskInfo' => $taskInfo]
-                     );
-                 }
-                 if ($this->task->tagIds) {
-                     $taskInfo->tags()->attach($this->task->tagIds);
-                 }
-                 $taskInfoId = $taskInfo->id;
-             }
+            // insert task source
+            if ($taskSourceId === null) {
+                $taskSource = new TaskSource();
+                $success = $taskSource->save();
+                if (!$success) {
+                    throw new InternalException(
+                        "Could not insert taskSource.",
+                        context: ['taskSource' => $taskSource]
+                    );
+                }
+                $taskSourceId = $taskSource->id;
+            }
 
-             DebugLogger::log("Task info successfully inserted",['taskInfoId' => $taskInfoId]);
-              // insert groups and resources
-              {
+            // insert task info and tags
+            {
+                $taskInfoBindings = [
+                    TaskInfoConstants::COL_TASK_SOURCE_ID => $taskSourceId
+                ];
+              TaskHelper::addExistingTaskResTaskDataToTaskInfoBindings(
+                taskInfoBindings:$taskInfoBindings,
+                task:$this->task
+            );
+                $updateTaskInfo = $taskInfoId !== null;
+                if($updateTaskInfo){
+                    $success = DB::table(TaskInfoConstants::TABLE_NAME)
+                    ->update($taskInfoBindings) === 1;
+                }
+                else{
+                    $newTaskInfoId = DB::table(TaskInfoConstants::TABLE_NAME)
+                    ->insertGetId($taskInfoBindings);
+                    if(($success = is_int($newTaskInfoId))){
+                        $taskInfoId = $newTaskInfoId;
+                    }
+                }
+                if (!$success || $taskInfoId === null) {
+                    throw new InternalException(
+                        "Could not insert or update taskInfo.",
+                        context: [
+                            'taskInfoId' => $taskInfoId,
+                            'taskInfoBindings' => $taskInfoBindings
+                            ]
+                    );
+                }
+                if (isset($this->task->tagIds)) {
+                    if ($updateTaskInfo) {
+                        DB::table(TagTaskInfoConstants::TABLE_NAME)
+                        ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
+                        ->delete();
+                    }
+                    $tagBindings = array_map(fn ($tagId) => [
+                        TagTaskInfoConstants::COL_TAG_ID => $tagId,
+                        TagTaskInfoConstants::COL_TASK_INFO_ID => $taskInfoId
+                    ], $this->task->tagIds);
+
+                    $success = DB::table(TagTaskInfoConstants::TABLE_NAME)
+                    ->insert($tagBindings);
+                    if (!$success) {
+                        throw new InternalException(
+                            "Could not insert tags!",
+                            context: [
+                                'tagBindings' => $tagBindings
+                            ]
+                        );
+                    }
+                }
+            }
+
+            DebugLogger::log("Task info successfully inserted", ['taskInfoId' => $taskInfoId]);
+            // insert groups and resources
+            {
 
                 $insertGroupsBindings = [];
                 foreach ($this->groupsAndResources as $groupAndResource) {
                     $group = &$groupAndResource[0];
-                    $insertGroupsBindings[] = [$taskInfoId, $group->start, $group->length];
+                    $insertGroupsBindings[] = [$taskSourceId, $group->start, $group->length];
                 }
 
 
                 if ($insertGroupsBindings) {
                     $groupBindingsColumns = [
-                        GroupConstants::COL_TASK_INFO_ID,
+                        GroupConstants::COL_TASK_SOURCE_ID,
                         GroupConstants::COL_START,
                         GroupConstants::COL_LENGTH
                     ];
@@ -261,22 +306,22 @@ namespace App\Helpers\CreateTask {
                         GroupConstants::TABLE_NAME,
                         GroupConstants::COL_ID,
                         columns: $groupBindingsColumns,
-                        getIdsIfNotSupported:fn()=>array_values(
+                        getIdsIfNotSupported: fn () => array_values(
                             DB::table(GroupConstants::TABLE_NAME)
-                        ->select(GroupConstants::COL_ID)
-                        ->where(GroupConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
-                        ->pluck(GroupConstants::COL_ID)->all()
-                    ),
+                                ->select(GroupConstants::COL_ID)
+                                ->where(GroupConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                                ->pluck(GroupConstants::COL_ID)->all()
+                        ),
                         values: $insertGroupsBindings,
                         unsetValuesArray: false
                     );
-                    if(!$groupIds){
-                        throw new InternalException("Could not insert groups.",[
-                            'groupBindings'=>$insertGroupsBindings,
-                            'groupBindingsColumns'=>$groupBindingsColumns
+                    if (!$groupIds) {
+                        throw new InternalException("Could not insert groups.", [
+                            'groupBindings' => $insertGroupsBindings,
+                            'groupBindingsColumns' => $groupBindingsColumns
                         ]);
                     }
-                    DebugLogger::log("Group ids",$groupIds);
+                    DebugLogger::log("Group ids", $groupIds);
 
                     // insert resources associated with groups
                     {
@@ -299,9 +344,9 @@ namespace App\Helpers\CreateTask {
                             );
                         }
                         if ($insertResourcesAssocData) {
-                            DebugLogger::log("Resources",$insertResourcesAssocData);
+                            DebugLogger::log("Resources", $insertResourcesAssocData);
                             $success = DB::table(ResourceConstants::TABLE_NAME)
-                            ->insert($insertResourcesAssocData);
+                                ->insert($insertResourcesAssocData);
                             // /**
                             //  * @var bool $success
                             //  */
@@ -322,61 +367,59 @@ namespace App\Helpers\CreateTask {
 
             // insert exercises
             {
-                $exerciseBindings = [];
-                {
-                foreach ($this->exerciseHelpers as $helperAndExercises) {
-                    $exercises = $helperAndExercises[1];
+                $exerciseBindings = []; {
+                    foreach ($this->exerciseHelpers as $helperAndExercises) {
+                        $exercises = $helperAndExercises[1];
 
-                    foreach($exercises as $exercise){
-                        $exerciseBindings[] = [
-                            $taskInfoId,
-                            $exercise->order,
-                            $exercise->instructions,
-                            $exercise->weight,
-                            $exercise->exerciseType->value
-                        ];
+                        foreach ($exercises as $exercise) {
+                            $exerciseBindings[] = [
+                                $taskSourceId,
+                                $exercise->order,
+                                $exercise->instructions,
+                                $exercise->weight,
+                                $exercise->exerciseType->value
+                            ];
+                        }
                     }
                 }
-            }
-                    if ($exerciseBindings) {
-                        $exerciseBindingsColumns = [
-                            ExerciseConstants::COL_TASK_INFO_ID,
-                            ExerciseConstants::COL_ORDER,
-                            ExerciseConstants::COL_INSTRUCTIONS,
-                            ExerciseConstants::COL_WEIGHT,
-                            ExerciseConstants::COL_EXERCISEABLE_TYPE
-                        ];
-                        DebugLogger::log("Exercise bindings",$exerciseBindings);
-                        $ids =  DBHelper::insertAndGetIds(
-                            ExerciseConstants::TABLE_NAME,
-                            ExerciseConstants::COL_ID,
-                            columns: $exerciseBindingsColumns,
-                            values: $exerciseBindings,
-                            getIdsIfNotSupported:fn()=>
-                            array_values(
-                                DB::table(ExerciseConstants::TABLE_NAME)
-                            ->select(ExerciseConstants::COL_ID)
-                            ->where(ExerciseConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
-                            ->pluck(ExerciseConstants::COL_ID)
-                            ->all()
+                if ($exerciseBindings) {
+                    $exerciseBindingsColumns = [
+                        ExerciseConstants::COL_TASK_SOURCE_ID,
+                        ExerciseConstants::COL_ORDER,
+                        ExerciseConstants::COL_INSTRUCTIONS,
+                        ExerciseConstants::COL_WEIGHT,
+                        ExerciseConstants::COL_EXERCISEABLE_TYPE
+                    ];
+                    DebugLogger::log("Exercise bindings", $exerciseBindings);
+                    $ids =  DBHelper::insertAndGetIds(
+                        ExerciseConstants::TABLE_NAME,
+                        ExerciseConstants::COL_ID,
+                        columns: $exerciseBindingsColumns,
+                        values: $exerciseBindings,
+                        getIdsIfNotSupported: fn () =>
+                        array_values(
+                            DB::table(ExerciseConstants::TABLE_NAME)
+                                ->select(ExerciseConstants::COL_ID)
+                                ->where(ExerciseConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                                ->pluck(ExerciseConstants::COL_ID)
+                                ->all()
                         ),
-                            unsetValuesArray: false
-                        );
-                        if(!$ids){
-                            throw new InternalException("Could not insert exercises",[
-                                'exerciseBindings' =>$exerciseBindings,
-                                'exerciseBindingsColumns' =>$exerciseBindingsColumns
-                            ]);
-                        }
-                        foreach($this->exerciseHelpers as $helperAndExercises){
-                            $helper = $helperAndExercises[0];
-                            $exerciseCount = count($helperAndExercises[1]);
-                            $helper->insertAll(array_slice($ids,0,$exerciseCount));
-                            $helper->reset();
-                            array_splice($ids,0,$exerciseCount);
-                        }
+                        unsetValuesArray: false
+                    );
+                    if (!$ids) {
+                        throw new InternalException("Could not insert exercises", [
+                            'exerciseBindings' => $exerciseBindings,
+                            'exerciseBindingsColumns' => $exerciseBindingsColumns
+                        ]);
                     }
-
+                    foreach ($this->exerciseHelpers as $helperAndExercises) {
+                        $helper = $helperAndExercises[0];
+                        $exerciseCount = count($helperAndExercises[1]);
+                        $helper->insertAll(array_slice($ids, 0, $exerciseCount));
+                        $helper->reset();
+                        array_splice($ids, 0, $exerciseCount);
+                    }
+                }
             }
             return $taskInfoId;
         }
@@ -390,21 +433,21 @@ namespace App\Helpers\CreateTask {
             /**
              * @var int $taskId
              */
-            $taskId = DB::transaction(function ()use($taskSource) {
-               $taskInfoId = $this->insertTaskInfoAndContent();
+            $taskId = DB::transaction(function () use ($taskSource) {
+                $taskInfoId = $this->insertTaskInfoAndContent();
                 $taskId = null;
                 // insert task
                 {
-                $task = new Task();
-                //TODO: change line below to Auth::getUser()->id;
-                $task->user_id = UserHelper::getUserId();
-                $task->task_info_id = $taskInfoId;
-                $task->is_public = $this->task->isPublic;
-                $task->source = $taskSource;
-                $task->saveOrFail();
-                $taskId = $task->id;
+                    $task = new Task();
+                    //TODO: change line below to Auth::getUser()->id;
+                    $task->user_id = UserHelper::getUserId();
+                    $task->task_info_id = $taskInfoId;
+                    $task->is_public = $this->task->isPublic;
+                    $task->source = $taskSource;
+                    $task->saveOrFail();
+                    $taskId = $task->id;
                 }
-                DebugLogger::log("Task successfully inserted",['taskId' => $taskId]);
+                DebugLogger::log("Task successfully inserted", ['taskId' => $taskId]);
 
                 return $taskId;
             });
@@ -415,60 +458,76 @@ namespace App\Helpers\CreateTask {
         /**
          * @throws \Throwable
          */
-        public function update(int $taskId, string $taskSource){
+        public function update(int $taskId, string $taskSource)
+        {
             $this->tryToGetHelper(addCurrentExercise: true);
-            DB::transaction(function () use($taskId,$taskSource) {
-               $taskUpdateQuery = DB::table(TaskConstants::TABLE_NAME)
-               ->where(TaskConstants::COL_ID,'=',$taskId);
+            DB::transaction(function () use ($taskId, $taskSource) {
+                $taskUpdateQuery = DB::table(TaskConstants::TABLE_NAME)
+                    ->where(TaskConstants::COL_ID, '=', $taskId);
+
                 $taskUpdateData = [
-                    TaskConstants::COL_IS_PUBLIC => $this->task->isPublic,
-                    TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION." + 1"),
+                    TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION . " + 1"),
                     TaskConstants::COL_SOURCE => $taskSource
                 ];
 
-                DebugLogger::log("Task successfully inserted",['taskId' => $taskId]);
-
-               $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
-                ->select([TaskConstants::COL_TASK_INFO_ID])
-                ->where(TaskConstants::COL_ID,'=',$taskId)
-                ->lockForUpdate()
-                ->value(TaskConstants::COL_TASK_INFO_ID);
-
-               $reviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
-                ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID,'=',$taskInfoId)
-                ->exists();
-                if($reviewTemplateExists){
-                   TaskHelper::deleteActualExercisesByTaskInfo($taskInfoId);
+                if(isset($this->task->isPublic)){
+                    $taskUpdateData[TaskConstants::COL_IS_PUBLIC] = $this->task->isPublic;
                 }
-                else{
-                        DB::table(GroupConstants::TABLE_NAME)
-                            ->where(GroupConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
-                            ->delete();
-                        // Resources should be deleted by cascade, so we do not need to delete them here
-                        DB::table(ExerciseConstants::TABLE_NAME)
-                            ->where(ExerciseConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
-                            ->delete();
-                        // We do not need to delete actual exercises, beacuse this should be done by delete cascade
-                        DB::table(TagTaskInfoConstants::TABLE_NAME)
-                            ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
-                            ->delete();
-                    }
+
+                $taskSource = new TaskSource();
+               $success = $taskSource->save();
+               if(!$success){
+                throw new InternalException(
+                    message:"Could not insert task source!",
+                context:['taskSource' => $taskSource]
+            );
+               }
+                $taskSourceId = $taskSource->id;
+
+                $taskInfoId = DB::table(TaskConstants::TABLE_NAME)
+                    ->select([TaskConstants::COL_TASK_INFO_ID])
+                    ->where(TaskConstants::COL_ID, '=', $taskId)
+                    ->lockForUpdate()
+                    ->value(TaskConstants::COL_TASK_INFO_ID);
+
+                $reviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
+                    ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
+                    ->exists();
+                if ($reviewTemplateExists) {
+                    TaskHelper::deleteActualExercisesByTaskSource($taskSourceId);
+                } else {
+                    DB::table(GroupConstants::TABLE_NAME)
+                        ->where(GroupConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                        ->delete();
+                    // Resources should be deleted by cascade, so we do not need to delete them here
+                    DB::table(ExerciseConstants::TABLE_NAME)
+                        ->where(ExerciseConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                        ->delete();
+                    // We do not need to delete actual exercises, beacuse this should be done by delete cascade
+                    DB::table(TagTaskInfoConstants::TABLE_NAME)
+                        ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
+                        ->delete();
+                }
 
                 // Here we are inserting new task info (by passing null as id) if review template exists,
                 // otherwise we will just update existing one
-                $newTaskInfoId = $this->insertTaskInfoAndContent($reviewTemplateExists ? null : $taskInfoId);
-                $taskUpdateData[TaskConstants::COL_TASK_INFO_ID]=$newTaskInfoId;
+                $newTaskInfoId = $this->insertTaskInfoAndContent(
+                    taskInfoId:$reviewTemplateExists ? null : $taskInfoId,
+                    taskSourceId:$taskSourceId
+                );
+                $taskUpdateData[TaskConstants::COL_TASK_INFO_ID] = $newTaskInfoId;
                 $updated = $taskUpdateQuery->update($taskUpdateData);
-                if($updated !== 1){
-                 throw new InternalException("Could not update task with id '$taskId'.",
-                 context:[
-                     'taskData'=>$taskUpdateData,
-                     'taskId'=>$taskId,
-                     'updated'=>$updated
-                 ]);
+                if ($updated !== 1) {
+                    throw new InternalException(
+                        "Could not update task with id '$taskId'.",
+                        context: [
+                            'taskData' => $taskUpdateData,
+                            'taskId' => $taskId,
+                            'updated' => $updated
+                        ]
+                    );
                 }
             });
-
         }
     }
 }

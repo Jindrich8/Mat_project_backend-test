@@ -36,6 +36,7 @@ namespace App\Helpers\Exercises\FillInBlanks {
             if (!($value instanceof FillInBlanksEvaluateRequest)) {
                 throw new InvalidEvaluateValueException();
             }
+            DebugLogger::debug("evaluateAndSetAsContentTo value: ",['value' => $value]);
             $points = 0;
             $data = $value;
             $uiI = 0;
@@ -48,8 +49,9 @@ namespace App\Helpers\Exercises\FillInBlanks {
             foreach ($this->content->content as $item) {
                 $responseItem = null;
                 if (!is_string($item)) {
+                    DebugLogger::debug("content: ".$item::class,$item);
                     $filled = $data->content[$uiI++] ?? null;
-                    if ($item instanceof TextInput) {
+                    if ($item->type === TextInput::TYPE_CONST) {
                         $responseItem = DefsTxtI::create()
                             ->setUserValue($filled);
                         if ($filled === null) {

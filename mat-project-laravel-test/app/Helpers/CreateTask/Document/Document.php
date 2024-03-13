@@ -2,11 +2,9 @@
 
 namespace App\Helpers\CreateTask\Document {
 
-    use App\Types\XML\XMLNodeBase;
     use App\Types\XML\XMLNodeBaseWParentNode;
     use App\MyConfigs\TaskSrcConfig;
     use App\Types\TaskResTask;
-    use App\Types\XML\XMLAttributes;
     use App\Types\XML\XMLChildren;
     use App\Types\XML\XMLContextBase;
 
@@ -31,32 +29,7 @@ namespace App\Helpers\CreateTask\Document {
             parent:null,
             name:$config->taskName,
             maxCount:1,
-            isValueNode:false,
-            attributes:XMLAttributes::construct()->addAttribute(
-                name:$config->taskNameAttr->name,
-                required:true,
-                parse:function(XMLNodeBase $node,string $attributeValue,XMLContextBase $context) {
-                    $attr = TaskSrcConfig::get()->taskNameAttr;
-                    if($error =$attr->validate($attributeValue)){
-                        $node->invalidAttributeValue($attr->name,$error,$context);
-                    }
-                $context->getTaskRes()->task->name = $attributeValue;
-            })->addAttribute(
-                name:$config->taskOrientationAttr->name,
-                required:true,
-                parse:function(XMLNodeBase $node,string $attributeValue,XMLContextBase $context)use($config) {
-                    $attr = TaskSrcConfig::get()->taskOrientationAttr;
-                   $orientation = $attr->validate($attributeValue);
-                   if(!$orientation){
-                      $node->invalidEnumAttributeValue(
-                        $attr->name,
-                        $attr->getAllowedEnumStringValues(),
-                      $context
-                  );
-              }
-                  $context->getTaskRes()->task->display = $orientation;
-          }
-        )
+            isValueNode:false
         );
        }
 

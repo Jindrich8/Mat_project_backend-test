@@ -18,6 +18,7 @@ return new class extends Migration
     {
         Schema::create(self::$table, function (Blueprint $table) {
             $table->id()->generatedAs()->always();
+            $table->foreignId('task_source_id')->constrained();
             $table->string('name',250)->unique();
             $table->unsignedTinyInteger('orientation');
             $table->string('description',2040);

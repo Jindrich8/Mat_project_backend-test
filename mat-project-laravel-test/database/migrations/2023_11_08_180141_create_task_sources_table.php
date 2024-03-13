@@ -11,15 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('exercises', function (Blueprint $table) {
+        Schema::create('task_sources', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
-            $table->unsignedTinyInteger('order');
-            $table->unsignedInteger('weight');
-            $table->string('exerciseable_type');
-            $table->text('instructions');
-            $table->foreignId('task_source_id')->constrained()->cascadeOnDelete();
             $table->autoTimestamps();
-            $table->index(['exerciseable_type','id']);
         });
     }
 
@@ -28,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('exercises');
+        Schema::dropIfExists('task_sources');
     }
 };

@@ -69,6 +69,7 @@ class TaskReviewController extends Controller
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable, TaskReviewTemplateConstants::COL_TASK_ID),
                 DBHelper::colFromTableAsCol($taskReviewTemplateTable, TaskReviewTemplateConstants::COL_TASK_INFO_ID),
                 DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
+                DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_TASK_SOURCE_ID),
                 DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
                 DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
                 DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
@@ -103,6 +104,10 @@ class TaskReviewController extends Controller
          * @var int $taskInfoId
          */
         $taskInfoId = DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_INFO_ID);
+        /**
+         * @var int $taskSourceId
+         */
+        $taskSourceId = DBHelper::access($review,TaskInfoConstants::COL_TASK_SOURCE_ID);
 
         $exercises = DtoUtils::importDto(
             dto: TaskReviewExercisesContent::class,
@@ -147,7 +152,7 @@ class TaskReviewController extends Controller
 
         $taskEntries = &$responseTask->setEntries([])->entries;
         TaskHelper::getTaskEntries(
-            taskInfoId: $taskInfoId,
+            taskSourceId: $taskSourceId,
             exercises: $exercises->content,
             entries: $taskEntries,
             groupToDto: function (array $resources) {

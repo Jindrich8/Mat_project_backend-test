@@ -16,9 +16,9 @@ namespace App\Utils {
           return StopWatchTimer::run("REQUEST '".$request->getUri()."'",
           function()use($request,$action,$args){
             try{
-                return ResponseHelper::success(
+                return ResponseHelper::success(StopWatchTimer::run("REQUEST LOGIC",fn()=>
                     $action($request, ...$args)
-                );
+                ));
             }
             catch(Throwable $e){
                 return ExceptionUtils::renderException($e,$request);

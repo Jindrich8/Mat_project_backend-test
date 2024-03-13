@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('task_review_templates', function (Blueprint $table) {
             $table->id()->generatedAs()->always();
             $table->foreignId('task_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('task_info_id');
+            $table->foreignId('task_info_id')->constrained();
             $table->foreignId('author_id')->references('id')->on('users')->nullable()->constrained()->nullOnDelete();
             $table->string('author_name');
             $table->autoTimestamps();

@@ -10,6 +10,7 @@ use App\Types\EvaluateExercise;
 use App\Types\TakeExercise;
 use App\ModelConstants\ExerciseConstants;
 use App\Types\SavedTaskContentProviderInterface;
+use App\Types\StopWatchTimer;
 use App\Utils\DebugLogger;
 use App\Utils\Utils;
 use Carbon\Carbon;
@@ -59,7 +60,7 @@ class ExerciseHelper
   /**
    * @template R
    * @template T
-   * @param int $taskInfoId
+   * @param int $taskSourceId
    * @param callable(CExerciseHelper,array<int,mixed>):array<int,T> $fetchConcreteOnes
    * @param callable(int $id,string|null $instructions,T $cExercise):R $toClass
    * @param ?Carbon $localySavedTaskUtcTimestamp
@@ -67,7 +68,7 @@ class ExerciseHelper
    * @return R[]
    * @throws UnsupportedVariantException
    */
-  public static function fetchRealExercises(int $taskInfoId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProviderInterface $savedTask = null, bool $shouldFetchInstructions = true): array
+  public static function fetchRealExercises(int $taskSourceId, callable $fetchConcreteOnes, callable $toClass, ?SavedTaskContentProviderInterface $savedTask = null, bool $shouldFetchInstructions = true): array
   {
 
     $exerciseIDName = ExerciseConstants::COL_ID;
@@ -77,7 +78,7 @@ class ExerciseHelper
     }
     $exercises = DB::table(ExerciseConstants::TABLE_NAME)
       ->select($columns)
-      ->where(ExerciseConstants::COL_TASK_INFO_ID, $taskInfoId)
+      ->where(ExerciseConstants::COL_TASK_SOURCE_ID, $taskSourceId)
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
@@ -98,13 +99,13 @@ class ExerciseHelper
        * @var int $exerciseId
        */
       $exerciseId = DBHelper::access($exercise, $exerciseIDName);
-      $savedExercise = $savedExercises ? Utils::arrayShift($savedExercises) : null;
+      $savedExercise = $savedExercises ? array_shift($savedExercises) : null;
       $mapByExerciseType = &$map[$exerciseType];
-      $mapByExerciseType[$exerciseId][]=$savedExercise;
+      $mapByExerciseType[$exerciseId]=$savedExercise;
     }
     $cExercises = [];
     foreach ($map as $exerciseType => $savedValuesByIds) {
-      DebugLogger::log("Ids and saved values for {$exerciseType} ", $savedValuesByIds);
+      //DebugLogger::log("Ids and saved values for {$exerciseType} ", $savedValuesByIds);
       $cExercises += $fetchConcreteOnes(
         ExerciseHelper::getHelper(ExerciseType::from($exerciseType)),
         $savedValuesByIds
@@ -115,7 +116,7 @@ class ExerciseHelper
      * @var array<int,array{id:int,instructions:string,impl:CTakeExercise,type:string}> $result
      */
     $result = [];
-    while (($exercise = Utils::arrayShift($exercises))) {
+    while (($exercise = array_shift($exercises))) {
       /**
        * @var int $exerciseId
        */
@@ -130,36 +131,36 @@ class ExerciseHelper
   }
 
   /**
-   * @param int $taskId
+   * @param int $taskSourceId
    * @param ?Carbon $localySavedTaskUtcTimestamp
    * @return TakeExercise[]
    * @throws UnsupportedVariantException
    */
-  public static function takeTaskInfo(int $taskInfoId, ?SavedTaskContentProviderInterface $savedTask): array
+  public static function takeTaskSource(int $taskSourceId, ?SavedTaskContentProviderInterface $savedTask): array
   {
 
-    return  ExerciseHelper::fetchRealExercises(
-      taskInfoId: $taskInfoId,
+    return StopWatchTimer::run("takeTaskSource",fn()=> ExerciseHelper::fetchRealExercises(
+      taskSourceId: $taskSourceId,
       /**
        * @param CExerciseHelper $helper
        * @param array<int,mixed> $savedValues indexed by exercise id
        * @return CTakeExercise[]
        */
-      fetchConcreteOnes: fn (CExerciseHelper $helper,array $savedValues) =>
-      $helper->fetchTake($savedValues),
+      fetchConcreteOnes: fn (CExerciseHelper $helper,array $savedValues) =>StopWatchTimer::run($helper::class." fetchTake",fn()=>
+      $helper->fetchTake($savedValues)),
 
       toClass: fn (int $id, ?string $instructions, CTakeExercise $impl) =>
       new TakeExercise($id, $instructions, $impl),
       savedTask:$savedTask,
       shouldFetchInstructions: true
-    );
+    ));
   }
 
   /**
-   * @param int $taskInfoId
+   * @param int $taskSourceId
    * @return EvaluateExercise[]
    */
-  public static function evaluateTaskInfo(int $taskInfoId): array
+  public static function evaluateTaskSource(int $taskSourceId): array
   {
     $exerciseIDName = ExerciseConstants::COL_ID;
     /**
@@ -172,7 +173,7 @@ class ExerciseHelper
       ExerciseConstants::COL_EXERCISEABLE_TYPE,
       ExerciseConstants::COL_INSTRUCTIONS
       ])
-      ->where(ExerciseConstants::COL_TASK_INFO_ID, $taskInfoId)
+      ->where(ExerciseConstants::COL_TASK_SOURCE_ID, $taskSourceId)
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();

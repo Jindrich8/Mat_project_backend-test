@@ -105,7 +105,7 @@ namespace App\Utils {
             }
             $maxOperator = '<';
             if ($maxIsInclusive) {
-                $maxIsInclusive .= '=';
+                $maxOperator .= '=';
             }
             if ($max < $min || (!$minIsInclusive || !$maxIsInclusive) && $min === $max) {
                 $maxMustBe = "greater than";

@@ -8,6 +8,7 @@ namespace App\Helpers {
     use App\Exceptions\ApplicationException;
     use App\Exceptions\ConversionException;
     use App\Exceptions\EnumConversionException;
+    use App\Types\StopWatchTimer;
     use App\Utils\JsonSchemaUtils;
     use App\Utils\DebugLogger;
     use App\Utils\StrUtils;
@@ -91,7 +92,7 @@ namespace App\Helpers {
             } catch (Exception | InvalidValue $e) {
                 report($e);
                 $message = "";
-                $path =[];
+                $path = [];
                 if ($e instanceof InvalidValue) {
                     $message = $e->error;
                     $path = JsonSchemaUtils::getPathProps($e->path);
@@ -99,7 +100,7 @@ namespace App\Helpers {
                     $message = $e->getMessage();
                 }
                 $message = JsonSchemaUtils::filterError($message);
-                $message = JsonSchemaUtils::formatError($message,$path);
+                $message = JsonSchemaUtils::formatError($message, $path);
                 throw new ApplicationException(
                     ResponseAlias::HTTP_BAD_REQUEST,
                     ApplicationErrorInformation::create()
@@ -122,11 +123,13 @@ namespace App\Helpers {
          */
         public static function getDtoFromRequest(string $dtoClass, Request $request): ClassStructure
         {
-            $requestData = $request->isMethod('GET') ?
-                self::getQuery($request)
-                : self::getData($request);
+            return StopWatchTimer::run('get dto from request', function () use ($dtoClass, $request) {
+                $requestData = $request->isMethod('GET') ?
+                    self::getQuery($request)
+                    : self::getData($request);
 
-            return self::requestDataToDto($dtoClass, $requestData);
+                return self::requestDataToDto($dtoClass, $requestData);
+            });
         }
 
 

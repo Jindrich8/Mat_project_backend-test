@@ -7,7 +7,7 @@ namespace App\Utils {
 
     class DebugLogger
     {
-        private static function logger():DebugLoggerInstance{
+        public static function logger():DebugLoggerInstance{
             return DebugLoggerInstance::instance();
         }
 

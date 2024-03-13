@@ -37,7 +37,7 @@ class TaskSeeder extends Seeder
         $sources = [
             //#region SOURCES
             <<<EOF
-                                        <document name="Doc12" orientation="vertical">
+                                        <document>
                                 <description>
                                 Doc description
                             </description>
@@ -85,7 +85,7 @@ class TaskSeeder extends Seeder
                             </document>
                     EOF,
             <<<EOF
-                                            <document name="Doc12" orientation="horizontal">
+                                            <document>
                                     <description>
                                         Doc description
                                     </description>
@@ -139,7 +139,7 @@ class TaskSeeder extends Seeder
                                 </document>
                             EOF,
             <<<EOF
-                            <document name="Doc12" orientation="vertical">
+                            <document>
                     <description>
                         Doc description
                     </description>
@@ -268,7 +268,7 @@ class TaskSeeder extends Seeder
             
             public function logToChannelWContext($level, string|SupportStringable $message, array $context = [], mixed $channel = null): void
             {
-                if ($level <= LOG_ERR) {
+                if ($level <= LOG_ERR || $channel === 'performance') {
                     $this->logger->logToChannel($level, $message, $context,$channel);
                 }
             }
@@ -291,14 +291,25 @@ class TaskSeeder extends Seeder
                             ->all();
                         $sourceI = rand(0, $sourceCount - 1);
                         $source = $sources[$sourceI];
-
-                        $source = Str::replace(<<<EOF
-                    <document name="Doc12"
-                    EOF, "<document name=\"" . fake()->userName() . "\"", $source);
+                        $unique = fake()->unique();
+                        $name = $unique->userName();
+                        $nameLen = 0;
+                        while(($nameLen = Str::length($name,'UTF-8')) < 5){
+                            $name.=$unique->userName();
+                        }
+                        if($nameLen >= 50){
+                        $name = Str::substr($name,0,49);
+                        }
                         $request =  $createRequest(
                             TaskCreateRequest::create()
                                 ->setTask(
                                     CreateRequestTask::create()
+                                    ->setName($name)
+                                    ->setDisplay(
+                                        rand(0,1) === 1 ? 
+                                    CreateRequestTask::HORIZONTAL 
+                                    : CreateRequestTask::VERTICAL
+                                    )
                                         ->setClassRange(
                                             RequestOrderedEnumRange::create()
                                                 ->setMin($classes[$minClass]->value)

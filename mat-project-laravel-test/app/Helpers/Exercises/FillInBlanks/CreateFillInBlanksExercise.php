@@ -85,7 +85,7 @@ class CreateFillInBlanksExercise implements CCreateExerciseHelper
                 FillInBlanksConstants::COL_CONTENT => DtoUtils::dtoToJson($content,FillInBlanksContent::CONTENT)
             ];
         }
-        $success = DB::table(FillInBlanks::getTableName())
+        $success = DB::table(FillInBlanksConstants::TABLE_NAME)
                                 ->insert($data);
        if(!$success){
         throw new InternalException(
