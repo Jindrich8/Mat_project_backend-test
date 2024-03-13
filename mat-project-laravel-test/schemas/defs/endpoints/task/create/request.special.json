@@ -8,6 +8,14 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "name":{
+                    "type":"string",
+                    "minLength":5,
+                    "maxLength": 50
+                },
+                "display":{
+                    "$ref":"@/defs/types/task_orientation.json"
+                },
                 "tags":{
                     "type":"array",
                     "minItems":1,
@@ -31,6 +39,8 @@
                 }
             },
             "required": [
+                "name",
+                "display",
                 "tags",
                 "difficulty",
                 "class_range",

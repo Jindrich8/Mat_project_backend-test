@@ -35,6 +35,12 @@
                     }
                 },
                 "task": {
+                    "create/errors":{
+                        "1": "form.json"
+                    },
+                    "update/errors":{
+                        "1": "form.json"
+                    },
                     "list/errors": {
                         "1": "form.json"
                     },

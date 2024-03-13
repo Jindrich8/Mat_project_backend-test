@@ -92,11 +92,7 @@
             "$ref":"@/defs/types/review/points.json"
           },
           "display": {
-            "type":"string",
-            "enum": [
-              "vertical",
-              "horizontal"
-            ]
+            "$ref":"@/defs/types/task_orientation.json"
           },
           "entries": {
             "type": "array",

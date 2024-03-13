@@ -5,6 +5,9 @@
     "type": "object",
     "anyOf": [
         {
+            "$ref":"./errors/**/*.json"
+        },
+        {
             "$ref":"@/defs/errors/access/UnauthenticatedOrUnauthorized.json"
         },
         {

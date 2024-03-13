@@ -68,11 +68,7 @@
           "format":"timestamp"
         },
         "display": {
-          "type":"string",
-          "enum": [
-            "vertical",
-            "horizontal"
-          ]
+          "$ref":"@/defs/types/task_orientation.json"
         },
         "entries": {
           "type": "array",

@@ -1,0 +1,33 @@
+{
+    "type": "object",
+    "title": "Task update error details",
+    "description": "Represents details about the task update error",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Task update error details error data",
+            "properties": {
+                "name": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "tags": {
+                    "$ref": "@/defs/types/errors/enum_array_error.json"
+                },
+                "difficulty": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                },
+                "class_range": {
+                    "$ref": "@/defs/types/errors/range_error.json"
+                }
+            }
+        }
+    },
+    "required": [
+        "code",
+        "errorData"
+    ]
+}
