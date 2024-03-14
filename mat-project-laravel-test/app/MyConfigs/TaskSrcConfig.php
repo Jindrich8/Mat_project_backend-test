@@ -65,7 +65,7 @@ namespace App\MyConfigs {
             $this->taskName = 'document';
     
             $this->taskDescription = new ValidableString('description',255,1);
-            $this->taskContentName = 'content';
+            $this->taskContentName = 'entries';
             
             
             $this->groupName = 'group';

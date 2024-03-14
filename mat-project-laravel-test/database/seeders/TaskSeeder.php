@@ -41,7 +41,7 @@ class TaskSeeder extends Seeder
                                 <description>
                                 Doc description
                             </description>
-                            <content>
+                            <entries>
                             <group>
                             <resources>
                                 <resource>
@@ -81,7 +81,7 @@ class TaskSeeder extends Seeder
                                                 Čern[ý/í] rybíz je moc dobrý. H[i/y]erogl[y/i]f[y/i] jsou těžké.
                                                 </content>
                                             </exercise>
-                            </content>
+                            </entries>
                             </document>
                     EOF,
             <<<EOF
@@ -89,7 +89,7 @@ class TaskSeeder extends Seeder
                                     <description>
                                         Doc description
                                     </description>
-                                    <content>
+                                    <entries>
                                     <exercise type="FillInBlanks" weight="12">
                                                     <instructions>Prostě doplňovačka</instructions>
                                                     <content>
@@ -135,7 +135,7 @@ class TaskSeeder extends Seeder
                                                 </exercise>
                                             </members>
                                         </group>
-                                    </content>
+                                    </entries>
                                 </document>
                             EOF,
             <<<EOF
@@ -143,7 +143,7 @@ class TaskSeeder extends Seeder
                     <description>
                         Doc description
                     </description>
-                    <content>
+                    <entries>
                     <exercise type="FillInBlanks" weight="12">
                                     <instructions>Prostě doplňovačka</instructions>
                                     <content>
@@ -222,7 +222,7 @@ class TaskSeeder extends Seeder
                                 </exercise>
                             </members>
                         </group>
-                    </content>
+                    </entries>
                 </document>
             EOF
             //#endregion SOURCES
