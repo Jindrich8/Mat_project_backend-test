@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type":"object",
+    "title":"List request options",
+    "additionalProperties": false,
+    "properties": {
+        "cursor":{
+            "type":["string","null"]
+        },
+        "limit":{
+            "type":"integer"
+        }
+    },
+    "required": ["cursor","limit"]
+}

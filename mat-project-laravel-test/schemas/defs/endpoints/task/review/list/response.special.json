@@ -30,6 +30,13 @@
                     "task_preview_info"
                 ]
             }
+        },
+        "config": {
+            "$ref": "@/defs/types/list_config.json"
         }
-    }
+    },
+    "required": [
+        "reviews",
+        "config"
+    ]
 }

@@ -12,6 +12,7 @@ namespace App\Helpers\BareModels {
     use Carbon\Carbon;
     use Illuminate\Database\Query\Builder;
     use DB;
+    use Illuminate\Support\Carbon as SupportCarbon;
 
     class BareTask
     {
@@ -34,14 +35,13 @@ namespace App\Helpers\BareModels {
 
         }
 
-        /**
-         *
-         */
+       
         public static function fromRecord(array|object $task){
+            $updatedAt = DBHelper::access($task,TaskConstants::COL_UPDATED_AT);
             return new self(
                 id:DBHelper::access($task,TaskConstants::COL_ID),
                 taskInfoId:DBHelper::access($task,TaskConstants::COL_TASK_INFO_ID),
-                name:DBHelper::access($task,TaskInfoConstants::COL_NAME),
+                name:DBHelper::access($task,TaskConstants::COL_NAME),
                 minClass:TaskClass::fromThrow(DBHelper::access($task,TaskInfoConstants::COL_MIN_CLASS)),
                 maxClass:TaskClass::fromThrow(DBHelper::access($task,TaskInfoConstants::COL_MAX_CLASS)),
                 difficulty:TaskDifficulty::fromThrow(DBHelper::access($task,TaskInfoConstants::COL_DIFFICULTY)),
@@ -50,10 +50,10 @@ namespace App\Helpers\BareModels {
                 isPublic:DBHelper::access($task,TaskConstants::COL_IS_PUBLIC),
                 version:DBHelper::access($task,TaskConstants::COL_VERSION),
                 userId:DBHelper::access($task,TaskConstants::COL_USER_ID),
-                createdAt:TimeStampUtils::parseIsoTimestampToUtc(DBHelper::access($task,TaskConstants::COL_CREATED_AT)),
-                updatedAt:TimeStampUtils::parseIsoTimestampToUtc(DBHelper::access($task,TaskConstants::COL_UPDATED_AT)),
-
+                createdAt:TimeStampUtils::createFromTimestampUtc(DBHelper::access($task,TaskConstants::COL_CREATED_AT)),
+                updatedAt:$updatedAt ? TimeStampUtils::createFromTimestampUtc($updatedAt) : null,
                );
+               
         }
 
         public static function tryFetchById(int $id):self|null{
@@ -66,8 +66,8 @@ namespace App\Helpers\BareModels {
             })->first(default:null);
         }
 
-        /**
-         * @param callable(Builder $builder):void $modifyQuery
+         /**
+         * @param callable(Builder $builder):(array|void|null) $modifyQuery
          */
         public static function tryFetch(callable $modifyQuery){
             $taskTable = TaskConstants::TABLE_NAME;
@@ -75,8 +75,8 @@ namespace App\Helpers\BareModels {
            $builder = DB::table($taskTable)->select(
                 [
                     DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_ID),
-                    DBHelper::colFromTableAsCol($taskInfoTable,TaskConstants::COL_TASK_INFO_ID),
-                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
+                    DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
@@ -95,8 +95,10 @@ namespace App\Helpers\BareModels {
                 '=',
                 DBHelper::tableCol($taskTable,TaskConstants::COL_TASK_INFO_ID)
                 );
-            $modifyQuery($builder);
-           $tasks = $builder->get();
+
+                $tasks = $modifyQuery($builder);
+               
+                $tasks = (is_array($tasks) ? collect($tasks) : $builder->get());
 
             return $tasks->map(fn($task)=>self::fromRecord($task));
         }

@@ -2,6 +2,14 @@
 
 namespace App\Helpers\CreateTask {
 
+    use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetails;
+    use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetailsErrorData;
+    use App\Dtos\Defs\Endpoints\Task\Update\Errors\TaskUpdateErrorDetails;
+    use App\Dtos\Defs\Endpoints\Task\Update\Errors\TaskUpdateErrorDetailsErrorData;
+    use App\Dtos\Defs\Types\Errors\FieldError;
+    use App\Dtos\Defs\Types\Errors\UserSpecificPartOfAnError;
+    use App\Dtos\Errors\ApplicationErrorInformation;
+    use App\Exceptions\ApplicationException;
     use App\Exceptions\InternalException;
     use App\Helpers\Database\PgDB;
     use App\Helpers\CCreateExerciseHelper;
@@ -22,15 +30,21 @@ namespace App\Helpers\CreateTask {
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
     use App\ModelConstants\TaskReviewTemplateConstants;
+    use App\ModelConstants\TaskSourceConstants;
     use App\Models\TaskInfo;
     use App\Models\TaskSource;
     use App\Types\DBTypeEnum;
+    use App\Types\StopWatchTimer;
     use App\Types\TaskResTask;
     use App\Types\XML\XMLDynamicNodeBase;
     use App\Types\XML\XMLNodeBase;
     use App\Utils\DBUtils;
     use App\Utils\DebugLogger;
+    use Illuminate\Database\UniqueConstraintViolationException;
+    use Illuminate\Http\Response;
     use Illuminate\Support\Facades\DB;
+    use PDO;
+    use PDOException;
 
     class TaskRes
     {
@@ -215,24 +229,23 @@ namespace App\Helpers\CreateTask {
             return $helper;
         }
 
-        private function insertTaskInfoAndContent(?int $taskInfoId = null,?int $taskSourceId = null): int
+        private function insertTaskInfoAndContent(?int $taskInfoId = null,?int $taskSourceId = null,bool $insertUsingOld = false): int
         {
 
             // insert task source
             if ($taskSourceId === null) {
-                $taskSource = new TaskSource();
-                $success = $taskSource->save();
-                if (!$success) {
+                $taskSourceId = DB::table(TaskSourceConstants::TABLE_NAME)
+                ->insertGetId([]);
+                if (!is_int($taskSourceId)) {
                     throw new InternalException(
-                        "Could not insert taskSource.",
-                        context: ['taskSource' => $taskSource]
+                        "Could not insert taskSource."
                     );
                 }
-                $taskSourceId = $taskSource->id;
             }
 
             // insert task info and tags
             {
+                $success = false;
                 $taskInfoBindings = [
                     TaskInfoConstants::COL_TASK_SOURCE_ID => $taskSourceId
                 ];
@@ -241,22 +254,28 @@ namespace App\Helpers\CreateTask {
                 task:$this->task
             );
                 $updateTaskInfo = $taskInfoId !== null;
-                if($updateTaskInfo){
+                if($updateTaskInfo && !$insertUsingOld){
                     $success = DB::table(TaskInfoConstants::TABLE_NAME)
+                    ->where(TaskInfoConstants::COL_ID,'=',$taskInfoId)
                     ->update($taskInfoBindings) === 1;
                 }
                 else{
-                    $newTaskInfoId = DB::table(TaskInfoConstants::TABLE_NAME)
-                    ->insertGetId($taskInfoBindings);
-                    if(($success = is_int($newTaskInfoId))){
-                        $taskInfoId = $newTaskInfoId;
-                    }
+                   $newTaskInfoId = $insertUsingOld && $taskInfoId !== null ? 
+                   TaskHelper::insertNewTaskInfoGetId($taskInfoBindings,$taskInfoId)
+                : DB::table(TaskInfoConstants::TABLE_NAME)
+                ->insertGetId($taskInfoBindings,TaskInfoConstants::COL_ID);
+
+                $taskInfoId = is_int($newTaskInfoId) ? $newTaskInfoId : null;
+                $success = $taskInfoId !== null;
                 }
                 if (!$success || $taskInfoId === null) {
                     throw new InternalException(
                         "Could not insert or update taskInfo.",
                         context: [
                             'taskInfoId' => $taskInfoId,
+                            'insertUsingOld' => $insertUsingOld,
+                            'success' => $success,
+                            'newTaskInfoId' => $newTaskInfoId,
                             'taskInfoBindings' => $taskInfoBindings
                             ]
                     );
@@ -434,18 +453,50 @@ namespace App\Helpers\CreateTask {
              * @var int $taskId
              */
             $taskId = DB::transaction(function () use ($taskSource) {
-                $taskInfoId = $this->insertTaskInfoAndContent();
+                $taskInfoId = StopWatchTimer::run("insertAskInfoAndContent",
+                $this->insertTaskInfoAndContent(...)
+            );
                 $taskId = null;
                 // insert task
                 {
-                    $task = new Task();
-                    //TODO: change line below to Auth::getUser()->id;
-                    $task->user_id = UserHelper::getUserId();
-                    $task->task_info_id = $taskInfoId;
-                    $task->is_public = $this->task->isPublic;
-                    $task->source = $taskSource;
-                    $task->saveOrFail();
-                    $taskId = $task->id;
+                    $taskBindings = [
+                        TaskConstants::COL_NAME => $this->task->name,
+                        TaskConstants::COL_USER_ID => UserHelper::getUserId(),
+                        TaskConstants::COL_TASK_INFO_ID => $taskInfoId,
+                        TaskConstants::COL_IS_PUBLIC => $this->task->isPublic,
+                        TaskConstants::COL_SOURCE => $taskSource
+                    ];
+                    try{
+                   $taskId = DB::table(TaskConstants::TABLE_NAME)
+                    ->insertGetId($taskBindings);
+                    }
+                    catch(UniqueConstraintViolationException $e){
+                        throw new ApplicationException(
+                            Response::HTTP_BAD_REQUEST,
+                            ApplicationErrorInformation::create()
+                            ->setUserInfo(
+                                UserSpecificPartOfAnError::create()
+                                ->setMessage("Task creation failed.")
+                                )
+                            ->setDetails(
+                                TaskCreateErrorDetails::create()
+                                ->setErrorData(
+                                    TaskCreateErrorDetailsErrorData::create()
+                                    ->setName(
+                                        FieldError::create()
+                                        ->setMessage("Name of the task must be unique.")
+                                    )
+                                )
+                            )
+                                    );
+                    }
+                    if(!is_int($taskId)){
+                        throw new InternalException(
+                            message:"Could not insert task",
+                        context:[
+                            'taskBindings'=>$taskBindings
+                        ]);
+                    }
                 }
                 DebugLogger::log("Task successfully inserted", ['taskId' => $taskId]);
 
@@ -469,6 +520,9 @@ namespace App\Helpers\CreateTask {
                     TaskConstants::COL_VERSION => DB::raw(TaskConstants::COL_VERSION . " + 1"),
                     TaskConstants::COL_SOURCE => $taskSource
                 ];
+                if(isset($this->task->name)){
+                    $taskUpdateData[TaskConstants::COL_NAME] = $this->task->name;
+                }
 
                 if(isset($this->task->isPublic)){
                     $taskUpdateData[TaskConstants::COL_IS_PUBLIC] = $this->task->isPublic;
@@ -512,11 +566,35 @@ namespace App\Helpers\CreateTask {
                 // Here we are inserting new task info (by passing null as id) if review template exists,
                 // otherwise we will just update existing one
                 $newTaskInfoId = $this->insertTaskInfoAndContent(
-                    taskInfoId:$reviewTemplateExists ? null : $taskInfoId,
-                    taskSourceId:$taskSourceId
+                    taskInfoId:$taskInfoId,
+                    taskSourceId:$taskSourceId,
+                    insertUsingOld:$reviewTemplateExists
                 );
                 $taskUpdateData[TaskConstants::COL_TASK_INFO_ID] = $newTaskInfoId;
+                $updated = null;
+                try{
                 $updated = $taskUpdateQuery->update($taskUpdateData);
+                }
+                catch(UniqueConstraintViolationException $e){
+                    throw new ApplicationException(
+                        Response::HTTP_BAD_REQUEST,
+                        ApplicationErrorInformation::create()
+                        ->setUserInfo(
+                            UserSpecificPartOfAnError::create()
+                            ->setMessage("Task modification failed.")
+                            )
+                        ->setDetails(
+                            TaskUpdateErrorDetails::create()
+                            ->setErrorData(
+                                TaskUpdateErrorDetailsErrorData::create()
+                                ->setName(
+                                    FieldError::create()
+                                    ->setMessage("Name of the task must be unique.")
+                                )
+                            )
+                        )
+                                );
+                }
                 if ($updated !== 1) {
                     throw new InternalException(
                         "Could not update task with id '$taskId'.",

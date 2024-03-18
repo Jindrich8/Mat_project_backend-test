@@ -9,6 +9,31 @@ namespace App\Helpers\Database {
 
     class PgDB extends DB
     {
+        private static bool $autoUpdatedAtTimestampFuncCreated = false;
+        private const AUTO_UPDATED_AT_TIMESTAMP_FUNC_NAME = 'update_updated_at_timestamp';
+
+        public static function autoUpdateUpdatedAtTimestampTrigger(string $tableName){
+            self::autoUpdateUpdatedAtTimestampFunc();
+            $funcName = self::AUTO_UPDATED_AT_TIMESTAMP_FUNC_NAME;
+            DB::statement("CREATE TRIGGER update_{$tableName}_updated_at
+            BEFORE UPDATE ON {$tableName} FOR EACH ROW
+        EXECUTE PROCEDURE {$funcName}();");
+        }
+
+        private static function autoUpdateUpdatedAtTimestampFunc()
+        {
+            if (!self::$autoUpdatedAtTimestampFuncCreated) {
+                $name = self::AUTO_UPDATED_AT_TIMESTAMP_FUNC_NAME;
+                DB::statement("CREATE OR REPLACE FUNCTION {$name}()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = now();
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql';");
+                self::$autoUpdatedAtTimestampFuncCreated = true;
+            }
+        }
         /**
          * @param string[] $columns
          * @param array<array<mixed>> $values

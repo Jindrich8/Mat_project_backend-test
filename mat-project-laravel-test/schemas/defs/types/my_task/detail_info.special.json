@@ -37,6 +37,13 @@
             "items": {
                 "$ref": "../response/enum_element.json"
             }
+        },
+        "orientation":{
+            "type":"string",
+            "enum":["horizontal","vertical"]
+        },
+        "is_public":{
+            "type":"boolean"
         }
     },  
     "required": [
@@ -47,6 +54,8 @@
         "modification_timestamp",
         "difficulty",
         "class_range",
-        "tags"
+        "tags",
+        "orientation",
+        "is_public"
     ]
 }

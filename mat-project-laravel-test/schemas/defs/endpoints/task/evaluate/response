@@ -1,0 +1,6 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Evaluate task response",
+    "description": "Represents evaluate task response.",
+    "$ref": "C:\\Users\\Jindra\\source\\repos\\JS\\Mat_project_backend-test\\mat-project-laravel-test\\schemas\\defs\\endpoints\\task\\review\\get\\response.json"
+}

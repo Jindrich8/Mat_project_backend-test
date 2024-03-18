@@ -12,18 +12,18 @@
                 "name": {
                     "type": "string"
                 },
-                "evaluation_timestamp_range":{
-                    "$ref":"@/defs/types/request/timestamp_range.json"
+                "evaluation_timestamp_range": {
+                    "$ref": "@/defs/types/request/timestamp_range.json"
                 },
-                "score_range":{
-                    "type":"object",
+                "score_range": {
+                    "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                        "min":{
-                            "$ref":"@/defs/types/review/score.json"
+                        "min": {
+                            "$ref": "@/defs/types/review/score.json"
                         },
-                        "max":{
-                            "$ref":"@/defs/types/review/score.json"
+                        "max": {
+                            "$ref": "@/defs/types/review/score.json"
                         }
                     }
                 },
@@ -71,10 +71,12 @@
                     "type"
                 ]
             }
+        },
+        "options": {
+            "$ref": "@/defs/types/list_request_options.json"
         }
     },
     "required": [
-        "filters",
-        "order_by"
+        "options"
     ]
 }

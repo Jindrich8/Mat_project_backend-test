@@ -18,14 +18,14 @@
                         "$ref": "@/defs/types/id.json"
                     }
                 },
-                "creation_timestamp_range":{
-                   "$ref":"@/defs/types/request/timestamp_range.json"
+                "creation_timestamp_range": {
+                    "$ref": "@/defs/types/request/timestamp_range.json"
                 },
-                "modification_timestamp_range":{
-                    "$ref":"@/defs/types/request/timestamp_range.json"
+                "modification_timestamp_range": {
+                    "$ref": "@/defs/types/request/timestamp_range.json"
                 },
                 "difficulty_range": {
-                    "$ref":"@/defs/types/request/ordered_enum_range.json"
+                    "$ref": "@/defs/types/request/ordered_enum_range.json"
                 },
                 "class_range": {
                     "$ref": "@/defs/types/request/ordered_enum_range.json"
@@ -62,6 +62,12 @@
                     "type"
                 ]
             }
+        },
+        "options": {
+            "$ref": "@/defs/types/list_request_options.json"
         }
-    }
+    },
+    "required": [
+        "options"
+    ]
 }

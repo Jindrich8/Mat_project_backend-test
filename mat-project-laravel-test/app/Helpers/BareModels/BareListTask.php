@@ -37,7 +37,7 @@ namespace App\Helpers\BareModels {
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
-                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
+                    DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DIFFICULTY),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS),
@@ -74,7 +74,7 @@ namespace App\Helpers\BareModels {
                new self(
                   id: DBHelper::access($task, TaskConstants::COL_ID),
                   taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
-                  name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
+                  name: DBHelper::access($task, TaskConstants::COL_NAME),
                   authorName:DBHelper::access($task,$authorNameCol),
                   authorId: DBHelper::access($task,TaskConstants::COL_USER_ID),
                   minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),

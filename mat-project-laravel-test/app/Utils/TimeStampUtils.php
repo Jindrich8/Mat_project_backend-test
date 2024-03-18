@@ -6,11 +6,25 @@ namespace App\Utils {
     use Carbon\Carbon;
     use DateTime;
     use DateTimeZone;
+    use Throwable;
 
     class TimeStampUtils
     {
+        public static function createFromTimestampUtc(string $timestamp){
+           $carbon = new Carbon($timestamp);
+           self::timestampToUtc($carbon);
+           return $carbon;
+        }
+
         public static function tryParseIsoTimestamp(string $timestamp):Carbon|null{
-           $carbon = Carbon::createFromFormat(DateTime::ATOM,$timestamp);
+            DebugLogger::log("tryParseIsoTimestamp: '$timestamp'");
+            $carbon = null;
+            try{
+           $carbon = new Carbon($timestamp,'UTC');// Carbon::createFromFormat(DateTime::ATOM,$timestamp,'UTC');
+            }
+            catch(Throwable $e){
+
+            }
            return $carbon ?: null;
         }
 

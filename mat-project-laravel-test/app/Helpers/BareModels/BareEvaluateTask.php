@@ -36,9 +36,9 @@ namespace App\Helpers\BareModels {
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_TASK_SOURCE_ID),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_ORIENTATION),
-                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_VERSION),
                     DBHelper::colFromTableAsCol($taskTable,TaskConstants::COL_USER_ID),
@@ -82,7 +82,7 @@ namespace App\Helpers\BareModels {
                     version: DBHelper::access($task, TaskConstants::COL_VERSION),
                     authorId:DBHelper::access($task,TaskConstants::COL_USER_ID),
                     authorName:DBHelper::access($task,$authorNameCol),
-                    name:DBHelper::access($task,TaskInfoConstants::COL_NAME),
+                    name:DBHelper::access($task,TaskConstants::COL_NAME),
                     description:DBHelper::access($task,TaskInfoConstants::COL_DESCRIPTION)
                 );
             }

@@ -7,20 +7,15 @@
         "tasks": {
             "type": "array",
             "items": {
-                "$ref":"@/defs/types/task/preview_info.json"
+                "$ref": "@/defs/types/task/preview_info.json"
             }
         },
-        "config":{
-            "type":"object",
-            "properties": {
-                "prev_cursor":{
-                    "type":"string"
-                },
-                "next_cursor":{
-                    "type":"string"
-                }
-            }
+        "config": {
+           "$ref":"@/defs/types/list_config.json"
         }
     },
-    "required": ["tasks", "config"]
+    "required": [
+        "tasks",
+        "config"
+    ]
 }

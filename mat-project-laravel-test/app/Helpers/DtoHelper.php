@@ -49,19 +49,25 @@ namespace App\Helpers {
          /**
          * @param string $minTimestamp
          * @param string $maxTimestamp
-         * @return RangeError|array{Carbon,Carbon}
+         * @return RangeError|array{?Carbon,?Carbon}
          */
-        public static function validateTimestampRange(string $minTimestamp, string $maxTimestamp):RangeError|array{
+        public static function validateTimestampRange(?string $minTimestamp, ?string $maxTimestamp):RangeError|array{
             $rangeError = null;
+            $min = null;
+            if($minTimestamp !== null){
             $min = TimeStampUtils::tryParseIsoTimestampToUtc($minTimestamp);
+            }
+            $max = null;
+            if($maxTimestamp !== null){
             $max = TimeStampUtils::tryParseIsoTimestampToUtc($maxTimestamp);
+            }
             if ($min && $max) {
                 if ($min->lte($max)) {
                     return [$min, $max];
                 }
                 $rangeError = RangeError::create()
                     ->setError(RangeError::MIN_MAX_SWAPPED);
-            } else {
+            } else if($minTimestamp !== null && $maxTimestamp !== null){
                 $error = InvalidBoundsError::create();
                 if(!$min){
                     $error->setInvalidMin();
@@ -71,6 +77,9 @@ namespace App\Helpers {
                 }
                 $rangeError = RangeError::create()
                     ->setError($error);
+            }
+            else{
+                return [$min, $max];
             }
             return $rangeError;
         }

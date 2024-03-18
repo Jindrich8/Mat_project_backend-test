@@ -22,7 +22,9 @@ namespace App\Utils {
         {
             if (!self::$importDBDto) {
                 self::$importDBDto = new Context();
-                self::$importDBDto->skipValidation = true;
+                // Validation must be done, because if validation is skipped and union is importing, 
+                // it is going to pick first type from union no matter of schema
+                //self::$importDBDto->skipValidation = true;
             }
             return self::$importDBDto;
         }
@@ -90,11 +92,17 @@ namespace App\Utils {
          */
         private static function transformValue(ClassStructure|array|string|int|bool|float|null $value, mixed &$dest, array &$stack)
         {
-            if ($value && is_object($value)) {
+            if($value === null){
+                DebugLogger::debug("transformValue - Value",$value);
+                $dest = $value;
+            } else if (is_object($value)) {
+                DebugLogger::debug("transformValue - Object",$value);
                 $stack[] = [&$dest, $value];
-            } else if ($value && is_array($value)) {
+            } else if (is_array($value)) {
+                DebugLogger::debug("transformValue - Array",$value);
                 $stack[] = [&$dest, $value];
             } else {
+                DebugLogger::debug("transformValue - Value",$value);
                 $dest = $value;
             }
         }
@@ -109,7 +117,9 @@ namespace App\Utils {
             $dest = &$transformed;
             $dto = $dtoParam;
             do {
+                DebugLogger::debug("exportDto - dto",$dto);
                 if (is_object($dto)) {
+                    
                     $mapping =  $dto->properties()->getDataKeyMap();
                     foreach ($mapping as $propName => $dataPropName) {
                         if (isset($dto->{$propName})) {
@@ -143,7 +153,9 @@ namespace App\Utils {
         {
             DebugLogger::log("exportDto", $dto);
             try {
-                return self::export($dto);
+                $exported = self::export($dto);
+                DebugLogger::log("exportedDto", $exported);
+                return $exported;
                 // $exported = $dto::export($dto,self::getExportDtoContext());
                 // return $exported;
             } catch (Throwable $e) {
@@ -162,7 +174,7 @@ namespace App\Utils {
          * @param mixed $id
          * @param string $wrapper
          * @param string $field
-         * @return ClassStructure
+         * @return T
          */
         public static function importDto(string $dto, string $json, string $table, string $column, mixed $id, string $wrapper = '', string $field = ''): ClassStructure
         {
@@ -185,7 +197,9 @@ namespace App\Utils {
                 /**
                  * @var ClassStructure $dto
                  */
-                return $dto::import($decoded, self::getImportDBDtoContext());
+                $imported = $dto::import($decoded, self::getImportDBDtoContext());
+                DebugLogger::debug("importDto: ",var_export($imported,true));
+                return $imported;
             } catch (Throwable $e) {
                 throw new InternalException(
                     message: "Failed to import '$dto'.",

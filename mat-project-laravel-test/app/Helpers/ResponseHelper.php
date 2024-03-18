@@ -2,6 +2,7 @@
 
 namespace App\Helpers {
 
+    use App\Utils\DebugLogger;
     use App\Utils\DebugUtils;
     use App\Utils\DtoUtils;
     use Illuminate\Contracts\Routing\ResponseFactory;
@@ -19,6 +20,7 @@ namespace App\Helpers {
         {
             if($data instanceof ClassStructure){
                 $data = DtoUtils::exportedDtoToJson(['data' => DtoUtils::exportDto($data)]);
+                DebugLogger::debug("Exported json: ",$data);
                 $data = response(
                     content: $data
                 );

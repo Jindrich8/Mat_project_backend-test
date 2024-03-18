@@ -7,6 +7,7 @@ namespace App\Helpers\Database {
     use App\Types\DBTypeEnum;
     use App\Types\SimpleQueryWheresBuilder;
     use App\Utils\DBUtils;
+    use App\Utils\DebugLogger;
     use App\Utils\Utils;
     use BackedEnum;
     use DB;
@@ -15,12 +16,46 @@ namespace App\Helpers\Database {
     class DBHelper
     {
 
+        public static function insertFromSameByIdSingleWConstantsGetId(string $tableName,array $insertColumns,array $values,string $primaryKeyName,string $primaryKeyValue):mixed{
+            $unmodifiedColumns = [];
+            foreach($insertColumns as $insertColumn){
+                if(!isset($values[$insertColumn])){
+                    $unmodifiedColumns[]=$insertColumn;
+                }
+            }
+
+            $unmodifiedValues = (array)DB::table($tableName)
+            ->select($unmodifiedColumns)
+            ->where($primaryKeyName, '=', $primaryKeyValue)
+            ->first() ?? throw new InternalException(
+                message:"Could not find row in '$tableName' with '$primaryKeyName' '$primaryKeyValue'.",
+        context:[
+            'tableName' => $tableName,
+            'primaryKeyName'=>$primaryKeyName,
+            'primaryKeyValue'=>$primaryKeyValue,
+            'unmodifiedColumns'=>$unmodifiedColumns
+        ]);
+
+            // Order of array + array is important, because:
+            // ,,for keys that exist in both arrays, the elements from the left-hand array will be used"
+            // https://www.php.net/manual/en/language.operators.array.php
+            $values += $unmodifiedValues;
+            unset($unmodifiedValues);
+            DebugLogger::debug(self::class."::insertFromSameByIdSingleWConstantsGetId",[
+                'tableName' => $tableName,
+                'values' => $values,
+                'primaryKeyName' => $primaryKeyName,
+            ]);
+            return DB::table($tableName)
+                ->insertGetId($values, $primaryKeyName);
+        }
+
           /**
          * @param string[] $insertColumns,
          * @param array<string,bool> $selectDictIsColumn
          */
-        public static function insertFromSingleWConstants(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,SimpleQueryWheresBuilder $wheresBuilder){
-            return self::insertFromWConstants(
+        private static function insertFromSingleWConstantsPG(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,SimpleQueryWheresBuilder $wheresBuilder){
+            return self::insertFromWConstantsPG(
                 tableName:$tableName,
                 insertColumns:$insertColumns,
                 selectDictIsColumn:$selectDictIsColumn,
@@ -33,7 +68,7 @@ namespace App\Helpers\Database {
          * @param string[] $insertColumns,
          * @param array<string,bool> $selectDictIsColumn
          */
-        public static function insertFromWConstants(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,?string $selectAfterFromExpr = null,array $selectAfterFromExprBindings = []){
+        private static function insertFromWConstantsPG(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,?string $selectAfterFromExpr = null,array $selectAfterFromExprBindings = []){
             $grammar = DB::getQueryGrammar();
 
             $tableName = $grammar->wrapTable($tableName);
@@ -65,6 +100,8 @@ namespace App\Helpers\Database {
             $exprs[]=$selectExpr;
 
            }
+
+           
             $query = "INSERT INTO $tableName ($insertColumnsStr) ("
             ."SELECT $selectColumnsStr FROM $selectFromTableName "
             .($selectAfterFromExpr ?: '')

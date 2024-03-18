@@ -35,8 +35,8 @@ namespace App\Helpers\BareModels {
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
+                    DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable,TaskInfoConstants::COL_TASK_SOURCE_ID),
-                    DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_NAME),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MIN_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_MAX_CLASS),
                     DBHelper::colFromTableAsCol($taskInfoTable, TaskInfoConstants::COL_DESCRIPTION),
@@ -67,7 +67,7 @@ namespace App\Helpers\BareModels {
                     id: DBHelper::access($task, TaskConstants::COL_ID),
                     taskInfoId: DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID),
                     taskSourceId:DBHelper::access($task,TaskInfoConstants::COL_TASK_SOURCE_ID),
-                    name: DBHelper::access($task, TaskInfoConstants::COL_NAME),
+                    name: DBHelper::access($task, TaskConstants::COL_NAME),
                     orientation: TaskDisplay::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_ORIENTATION)),
                     minClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MIN_CLASS)),
                     maxClass: TaskClass::fromThrow(DBHelper::access($task, TaskInfoConstants::COL_MAX_CLASS)),

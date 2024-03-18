@@ -19,7 +19,7 @@
                     }
                 },
                 "difficulty_range": {
-                    "$ref":"@/defs/types/request/ordered_enum_range.json"
+                    "$ref": "@/defs/types/request/ordered_enum_range.json"
                 },
                 "class_range": {
                     "$ref": "@/defs/types/request/ordered_enum_range.json"
@@ -55,15 +55,11 @@
                 ]
             }
         },
-        "cursor":{
-            "type":["string","null"]
-        },
-        "limit":{
-            "type":"number"
+        "options": {
+            "$ref": "@/defs/types/list_request_options.json"
         }
     },
     "required": [
-        "cursor",
-        "limit"
+        "options"
     ]
 }

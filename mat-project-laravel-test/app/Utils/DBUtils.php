@@ -3,10 +3,12 @@
 namespace App\Utils {
 
     use App\Exceptions\InternalException;
+    use App\Helpers\Database\PgDB;
     use App\Types\DBTypeEnum;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Str;
     use BackedEnum;
+    use Throwable;
 
     class DBUtils
     {
@@ -142,6 +144,36 @@ namespace App\Utils {
                     ]
                 );
             }
+        }
+
+        public static function ensureAutoUpdateUpdatedAtTimestamp(string $tableName):void{
+            try{
+            DB::table($tableName)
+            ->select(['updated_at'])
+            ->limit(1)
+            ->first();
+            }
+            catch(Throwable $e){
+                throw new InternalException(
+                    message:"There is no 'updated_at' column on table '$tableName'.",
+                context:[
+                    'exception' => $e,
+                    'tableName' => $tableName
+                ]);
+            }
+
+           $db = self::getDBType();
+           if($db === DBTypeEnum::POSTGRESQL){
+            PgDB::autoUpdateUpdatedAtTimestampTrigger($tableName);
+           }
+           else if($db !== DBTypeEnum::MYSQL){
+            throw new InternalException(
+                message:"Auto updated_at timestamp no supported for this database",
+                context:[
+                    'db' => $db
+                ]
+            );
+           }
         }
 
     }

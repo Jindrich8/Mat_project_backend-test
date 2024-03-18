@@ -59,6 +59,13 @@ Route::middleware(['auth:sanctum', MiddlewareAuthorize::class . ':' . UserRole::
         TaskController::construct()
             ->myDetail($request, RequestHelper::translateId($id))
     );
+
+    RouteUtils::get(
+        '/task/{id}/source',
+        fn(Request $request, string $id) =>
+        TaskController::construct()
+        ->source($request,RequestHelper::translateId($id))
+    );
 });
 #endregion Teacher
 
@@ -92,7 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->get($request, RequestHelper::translateId($id))
     );
 
-    RouteUtils::get(
+    RouteUtils::delete(
         '/review/{id}/delete',
         fn (Request $request, string $id) =>
         TaskReviewController::construct()

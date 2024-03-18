@@ -10,16 +10,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private static string $table = 'task_infos';
+    private const TABLE = 'task_infos';
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create(self::$table, function (Blueprint $table) {
+        Schema::create(self::TABLE, function (Blueprint $table) {
             $table->id()->generatedAs()->always();
             $table->foreignId('task_source_id')->constrained();
-            $table->string('name',250)->unique();
             $table->unsignedTinyInteger('orientation');
             $table->string('description',2040);
             $table->unsignedTinyInteger('difficulty');
@@ -27,11 +26,11 @@ return new class extends Migration
             $table->unsignedTinyInteger('max_class');
             $table->autoTimestamps();
         });
-        DBUtils::addIntEnumConstraint(self::$table,'orientation',TaskDisplay::class);
-        DBUtils::addIntEnumConstraint(self::$table,'difficulty',TaskDifficulty::class);
+        DBUtils::addIntEnumConstraint(self::TABLE,'orientation',TaskDisplay::class);
+        DBUtils::addIntEnumConstraint(self::TABLE,'difficulty',TaskDifficulty::class);
         
         DBUtils::addCheckConstraint(
-            table:self::$table,
+            table:self::TABLE,
             condition:"min_class >= 0 AND max_class < ".count(TaskClass::cases())." AND max_class >= min_class"
         );
     }
@@ -42,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(self::$table);
+        Schema::dropIfExists(self::TABLE);
     }
 };

@@ -7,8 +7,15 @@
         "tasks": {
             "type": "array",
             "items": {
-                "$ref":"@/defs/types/my_task/preview_info.json"
+                "$ref": "@/defs/types/my_task/preview_info.json"
             }
+        },
+        "config": {
+            "$ref": "@/defs/types/list_config.json"
         }
-    }
+    },
+    "required": [
+        "tasks",
+        "config"
+    ]
 }

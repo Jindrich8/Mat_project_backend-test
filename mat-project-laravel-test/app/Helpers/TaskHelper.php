@@ -31,6 +31,7 @@ namespace App\Helpers {
     use App\Types\SaveTask;
     use App\Types\StopWatchTimer;
     use App\Types\TaskResTask;
+    use App\Utils\DebugLogger;
     use App\Utils\DtoUtils;
     use App\Utils\TimeStampUtils;
     use App\Utils\Utils;
@@ -444,24 +445,44 @@ namespace App\Helpers {
 
         public static function addExistingTaskResTaskDataToTaskInfoBindings(array &$taskInfoBindings, TaskResTask $task)
         {
-            if (isset($task->name)) {
-                $taskInfoBindings[TaskInfoConstants::COL_NAME] = $task->name;
-            }
             if (isset($task->description)) {
                 $taskInfoBindings[TaskInfoConstants::COL_DESCRIPTION] = $task->description;
             }
             if (isset($task->display)) {
-                $taskInfoBindings[TaskInfoConstants::COL_ORIENTATION] = $task->display;
+                $taskInfoBindings[TaskInfoConstants::COL_ORIENTATION] = $task->display->value;
             }
             if (isset($task->difficulty)) {
-                $taskInfoBindings[TaskInfoConstants::COL_DIFFICULTY] = $task->difficulty;
+                $taskInfoBindings[TaskInfoConstants::COL_DIFFICULTY] = $task->difficulty->value;
             }
             if (isset($task->minClass)) {
-                $taskInfoBindings[TaskInfoConstants::COL_MIN_CLASS] = $task->minClass;
+                $taskInfoBindings[TaskInfoConstants::COL_MIN_CLASS] = $task->minClass->value;
             }
             if (isset($task->maxClass)) {
-                $taskInfoBindings[TaskInfoConstants::COL_MAX_CLASS] = $task->maxClass;
+                $taskInfoBindings[TaskInfoConstants::COL_MAX_CLASS] = $task->maxClass->value;
             }
+        }
+
+        public static function insertNewTaskInfoGetId(array $taskInfoBindings,int $taskInfoId){
+            $insertColumns = [
+                TaskInfoConstants::COL_DESCRIPTION,
+                TaskInfoConstants::COL_MIN_CLASS,
+                TaskInfoConstants::COL_MAX_CLASS,
+                TaskInfoConstants::COL_DIFFICULTY,
+                TaskInfoConstants::COL_ORIENTATION,
+                TaskInfoConstants::COL_TASK_SOURCE_ID
+            ];
+            DebugLogger::debug(self::class."::insertNewTaskInfoGetId",[
+                'taskInfoBindings' => $taskInfoBindings,
+                'taskInfoId' => $taskInfoId
+            ] );
+           $newTaskInfoId = DBHelper::insertFromSameByIdSingleWConstantsGetId(
+                tableName:TaskInfoConstants::TABLE_NAME,
+           insertColumns:$insertColumns,
+           values:$taskInfoBindings,
+           primaryKeyName:TaskInfoConstants::COL_ID,
+           primaryKeyValue:$taskInfoId
+            );
+            return $newTaskInfoId;
         }
 
         /**
@@ -597,23 +618,51 @@ namespace App\Helpers {
             return $rangeErrorOrEnums;
         }
 
-        public static function filterByModificationTimestamp(TimestampRange $range, Builder $builder): RangeError|null
+        public static function filterByModificationTimestamp(TimestampRange $range, Builder $builder,bool $withPrefix = false): RangeError|null
         {
             $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
             if (is_array($rangeOrError)) {
+                $updatedAt = TaskConstants::COL_UPDATED_AT;
+                $createdAt = TaskConstants::COL_CREATED_AT;
+                if($withPrefix){
+                    $updatedAt = DBHelper::tableCol(TaskConstants::TABLE_NAME,$updatedAt);
+                    $createdAt = DBHelper::tableCol(TaskConstants::TABLE_NAME,$createdAt);
+                }
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
+                if($minTimestamp && $maxTimestamp){
                 $builder->whereBetween(
-                    DB::raw('COALESCE(' . TaskConstants::COL_UPDATED_AT . ',' . TaskConstants::COL_CREATED_AT . ')'),
+                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
                     [$minTimestamp, $maxTimestamp]
                 );
+            }
+            else if($minTimestamp){
+                $builder->where(
+                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
+                    '>=',
+                    $minTimestamp
+                );
+            }
+            else if($maxTimestamp){
+                $builder->where(
+                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
+                    '<=',
+                    $maxTimestamp
+                );
+            }
                 $rangeOrError = null;
             }
             return $rangeOrError;
         }
 
-        public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder): RangeError|null
+        public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder,bool $withPrefix = false): RangeError|null
         {
-            return self::filterByTimestampColumn($range, $builder, column: TaskConstants::COL_CREATED_AT);
+            return self::filterByTimestampColumn(
+                $range, 
+                $builder, 
+                column: $withPrefix ? 
+                DBHelper::tableCol(TaskConstants::TABLE_NAME,TaskConstants::COL_CREATED_AT)
+                 : TaskConstants::COL_CREATED_AT
+                );
         }
 
         public static function filterByTimestampColumn(TimestampRange $range, Builder $builder, string $column): ?RangeError
@@ -621,6 +670,7 @@ namespace App\Helpers {
             $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
+                if($minTimestamp && $maxTimestamp){
                 $builder->whereBetween(
                     $column,
                     [
@@ -628,6 +678,13 @@ namespace App\Helpers {
                         TimeStampUtils::timestampToString($maxTimestamp)
                     ]
                 );
+            }
+            else if($minTimestamp){
+                $builder->where($column,'>=',TimeStampUtils::timestampToString($minTimestamp));
+            }
+            else if($maxTimestamp){
+                $builder->where($column,'<=',TimeStampUtils::timestampToString($maxTimestamp));
+            }
                 $rangeOrError = null;
             }
             return $rangeOrError;

@@ -25,11 +25,12 @@ class Utils
          */
         $mapped = [];
         foreach ($array as $key => $value) {
+            DebugLogger::debug("arrayMapWKey",[$key,$value]);
             /**
              * @var RKey $rKey
              * @var R $rValue
              */
-            [$rKey, $rValue] = $map($value, $key);
+            [$rKey, $rValue] = $map($key,$value);
             $mapped[$rKey] = $rValue;
         }
         return $mapped;
