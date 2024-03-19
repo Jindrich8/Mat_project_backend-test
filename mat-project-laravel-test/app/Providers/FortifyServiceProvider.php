@@ -132,7 +132,7 @@ class FortifyServiceProvider extends ServiceProvider
         );
 
         ResetPassword::createUrlUsing(function(mixed $notifiable,string $token){
-            return env("FRONTEND_URL","APP_URL")."/reset-passwor/$token?email=".$notifiable->getEmailForPasswordReset();
+            return config("frontend.url")."/reset-passwor/$token?email=".$notifiable->getEmailForPasswordReset();
         });
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);

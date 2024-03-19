@@ -14,7 +14,10 @@ namespace App\Utils {
     {
         public static function getDBType(): ?DBTypeEnum
         {
-            $type = DBTypeEnum::tryFrom(DB::connection()->getDriverName() ?? env('DB_CONNECTION'));
+            $type = DBTypeEnum::tryFrom(
+                DB::connection()->getDriverName() 
+                ?? config("database.default")
+            );
             return $type;
         }
 
