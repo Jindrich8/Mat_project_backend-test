@@ -448,7 +448,7 @@ class TaskReviewController extends Controller
                 } else if (isset($scoreRange->min)) {
                     $builder->where($column, '>=', $scoreRange->min / 100);
                 } else if (isset($scoreRange->max)) {
-                    $builder->where($column, '<=', $scoreRange->min / 100);
+                    $builder->where($column, '<=', $scoreRange->max / 100);
                 }
             }
 
