@@ -40,7 +40,7 @@ class FailedPasswordResetResponse implements FailedPasswordResetResponseContract
      */
     public function toResponse($request)
     {
-        DebugLogger::debug(self::class.'::toResponse', $request);
+        //DebugLogger::debug(self::class.'::toResponse', $request);
         $error = trans($this->status);
         if (!is_string($error)) {
             $error = "Invalid email address.";

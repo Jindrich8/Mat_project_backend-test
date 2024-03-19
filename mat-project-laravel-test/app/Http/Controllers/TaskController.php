@@ -185,7 +185,7 @@ class TaskController extends Controller
             },
             entries: $taskEntries
         );
-        DebugLogger::debug("responseTaskTask: ",$responseTask);
+        //DebugLogger::debug("responseTaskTask: ",$responseTask);
         return Take\TakeTaskResponse::create()
             ->setTask($responseTask);
     }
