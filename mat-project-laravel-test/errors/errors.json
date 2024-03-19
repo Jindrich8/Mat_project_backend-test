@@ -24,6 +24,16 @@
                 }
             },
             "endpoints": {
+                "resetPassword": {
+                    "errors":{
+                        "1":"form.json"
+                    }
+                },
+                "forgotPassword":{
+                    "errors":{
+                        "1":"form.json"
+                    }
+                },
                 "login": {
                     "errors": {
                         "1": "form.json"

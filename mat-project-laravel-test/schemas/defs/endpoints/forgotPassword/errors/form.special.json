@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "title": "Forgot password error details",
+    "description": "Represents details about the forgot password error",
+    "properties": {
+        "code": {
+            "const": null,
+            "type": "integer"
+        },
+        "errorData": {
+            "type": "object",
+            "title": "Forgot password error details error data",
+            "properties": {
+                "email": {
+                    "$ref": "@/defs/types/errors/field_error.json"
+                }
+            }
+        }
+    },
+    "required": [
+        "code",
+        "errorData"
+    ]
+}

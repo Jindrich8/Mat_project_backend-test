@@ -6,10 +6,15 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\FailedPasswordResetLinkRequestResponse;
+use App\Http\Responses\FailedPasswordResetResponse;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\LogoutResponse;
+use App\Http\Responses\PasswordResetResponse;
+use App\Http\Responses\SuccessfulPasswordResetLinkRequestResponse;
 use App\Models\User;
 use App\Utils\DebugLogger;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -28,70 +33,70 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
-        {
-            public function toResponse($request)
-            {
-               return (new LogoutResponse)->toResponse($request);
-            }
-        });
+        // $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
+        // {
+        //     public function toResponse($request)
+        //     {
+        //        return (new LogoutResponse)->toResponse($request);
+        //     }
+        // });
 
-        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
-        {
-            public function toResponse($request)
-            {
-                return (new LoginResponse())->toResponse($request);
-            }
-        });
-        $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
-        {
-            public function toResponse($request)
-            {
-                return (new LoginResponse())->toResponse($request);
-            }
-        });
+        // $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
+        // {
+        //     public function toResponse($request)
+        //     {
+        //         return (new LoginResponse())->toResponse($request);
+        //     }
+        // });
+        // $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
+        // {
+        //     public function toResponse($request)
+        //     {
+        //         return (new LoginResponse())->toResponse($request);
+        //     }
+        // });
 
-        $this->app->singleton(
-            \Laravel\Fortify\Http\Responses\LoginResponse::class,
-            \App\Http\Responses\LoginResponse::class
-        );
-        $this->app->singleton(
-            \Laravel\Fortify\Contracts\LogoutResponse::class,
-            \App\Http\Responses\LogoutResponse::class
-        );
-        $this->app->singleton(
-            \Laravel\Fortify\Contracts\RegisterResponse::class,
-            \App\Http\Responses\RegisterResponse::class
-        );
+        // $this->app->singleton(
+        //     \Laravel\Fortify\Http\Responses\LoginResponse::class,
+        //     \App\Http\Responses\LoginResponse::class
+        // );
+        // $this->app->singleton(
+        //     \Laravel\Fortify\Contracts\LogoutResponse::class,
+        //     \App\Http\Responses\LogoutResponse::class
+        // );
+        // $this->app->singleton(
+        //     \Laravel\Fortify\Contracts\RegisterResponse::class,
+        //     \App\Http\Responses\RegisterResponse::class
+        // );
     }
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
-        {
-            public function toResponse($request)
-            {
-                return (new LogoutResponse)->toResponse($request);
-            }
-        });
+     {
+    //     $this->app->instance(LogoutResponseContract::class, new class implements LogoutResponseContract
+    //     {
+    //         public function toResponse($request)
+    //         {
+    //             return (new LogoutResponse)->toResponse($request);
+    //         }
+    //     });
 
-        $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
-        {
-            public function toResponse($request)
-            {
-                return (new LoginResponse())->toResponse($request);
-            }
-        });
-        $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
-        {
-            public function toResponse($request)
-            {
-                return (new LoginResponse())->toResponse($request);
-            }
-        });
+    //     $this->app->instance(LoginResponseContract::class, new class implements LoginResponseContract
+    //     {
+    //         public function toResponse($request)
+    //         {
+    //             return (new LoginResponse())->toResponse($request);
+    //         }
+    //     });
+    //     $this->app->instance(LoginViewResponse::class, new class implements LoginViewResponse
+    //     {
+    //         public function toResponse($request)
+    //         {
+    //             return (new LoginResponse())->toResponse($request);
+    //         }
+    //     });
 
         $this->app->singleton(
             \Laravel\Fortify\Http\Responses\LoginResponse::class,
@@ -106,7 +111,29 @@ class FortifyServiceProvider extends ServiceProvider
             \App\Http\Responses\RegisterResponse::class
         );
 
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse::class,
+            SuccessfulPasswordResetLinkRequestResponse::class
+        );
 
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse::class,
+            FailedPasswordResetLinkRequestResponse::class
+        );
+
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\PasswordResetResponse::class,
+            PasswordResetResponse::class
+        );
+
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\FailedPasswordResetResponse::class,
+            FailedPasswordResetResponse::class
+        );
+
+        ResetPassword::createUrlUsing(function(mixed $notifiable,string $token){
+            return env("FRONTEND_URL","APP_URL")."/reset-passwor/$token?email=".$notifiable->getEmailForPasswordReset();
+        });
         Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
