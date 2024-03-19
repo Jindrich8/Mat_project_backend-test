@@ -19,8 +19,6 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request)
     {
        $user = UserHelper::getUser();
-       DebugLogger::log("LoginResponse");
-        DebugLogger::log("LoginResponse");
        return ResponseHelper::success(
         LoginLoginResponse::create()
        ->setName($user->name)

@@ -82,7 +82,6 @@ class ExerciseHelper
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
-    DebugLogger::log("Exercises: ", $exercises);
     $savedExercises = $savedTask?->getContent()->exercises ?? [];
     /**
      * @var array<string,array<int,mixed>> $map array of exercise type to array of exercise id to saved value or null
@@ -105,7 +104,6 @@ class ExerciseHelper
     }
     $cExercises = [];
     foreach ($map as $exerciseType => $savedValuesByIds) {
-      //DebugLogger::log("Ids and saved values for {$exerciseType} ", $savedValuesByIds);
       $cExercises += $fetchConcreteOnes(
         ExerciseHelper::getHelper(ExerciseType::from($exerciseType)),
         $savedValuesByIds
@@ -177,7 +175,6 @@ class ExerciseHelper
       ->orderBy(ExerciseConstants::COL_ORDER)
       ->get()
       ->all();
-    DebugLogger::log("Exercises: ", $exercises);
     /**
      * @var array<string,array{int[],mixed[]}> $map
      */
@@ -198,7 +195,6 @@ class ExerciseHelper
      * @var array<string,array{int[],mixed[]}> $map
      */
     foreach ($map as $exerciseType => $ids) {
-      DebugLogger::log("Ids for {$exerciseType} ", $ids);
       $cExercises +=
         ExerciseHelper::getHelper(ExerciseType::fromThrow($exerciseType))
         ->fetchEvaluate($ids);

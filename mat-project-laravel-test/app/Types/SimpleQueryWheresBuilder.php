@@ -34,9 +34,28 @@ namespace App\Types {
             $this->builder->where($column, $operator, $value, $boolean);
         }
 
+         /**
+     * Add a "where in" clause to the query.
+     *
+     * @param  \Illuminate\Contracts\Database\Query\Expression|string  $column
+     * @param  mixed  $values
+     * @param  string  $boolean
+     * @param  bool  $not
+     * @return $this
+     */
+        public function whereIn($column, $values, $boolean = 'and', $not = false)
+        {
+            $this->builder->whereIn($column, $values, $boolean,$not);
+            return $this;
+        }
+
         public function getWheresStr()
         {
             return DB::getQueryGrammar()->compileWheres($this->builder);
+        }
+
+        public function getBindings(){
+            return $this->builder->getBindings();
         }
     }
 }

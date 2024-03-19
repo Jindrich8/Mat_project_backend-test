@@ -25,6 +25,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('min_class');
             $table->unsignedTinyInteger('max_class');
             $table->autoTimestamps();
+            $table->index(['min_class','max_class']);
         });
         DBUtils::addIntEnumConstraint(self::TABLE,'orientation',TaskDisplay::class);
         DBUtils::addIntEnumConstraint(self::TABLE,'difficulty',TaskDifficulty::class);

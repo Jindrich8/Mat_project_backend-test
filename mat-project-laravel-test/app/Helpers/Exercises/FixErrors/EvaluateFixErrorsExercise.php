@@ -69,11 +69,6 @@ namespace App\Helpers\Exercises\FixErrors {
                 $calculated = $myers->calculate($value, $correctChars);
                 unset($myers);
             }
-            DebugLogger::log(self::class . " calculated", [
-                'correctText' => implode("", $correctChars),
-                'userText' => implode("", $value),
-                'calculated' => $calculated
-            ]);
             if ($calculated) {
                 $str = "";
                 $action = $calculated[0][1];
@@ -119,7 +114,6 @@ namespace App\Helpers\Exercises\FixErrors {
                 }
             }
 
-            DebugLogger::log("Evaluate FixErrors", ['distance' => $distance, 'defaultDistance' => $this->defaultDistance, 'ops' => $ops]);
             $has = $this->defaultDistance - $distance;
             if ($has < 0) {
                 $has = 0;
@@ -131,7 +125,6 @@ namespace App\Helpers\Exercises\FixErrors {
             )
                 ->setDetails($response);
 
-            DebugLogger::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

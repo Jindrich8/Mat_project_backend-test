@@ -13,6 +13,8 @@ use App\Models\User;
 use App\TableSpecificData\TaskClass;
 use App\TableSpecificData\TaskDifficulty;
 use App\TableSpecificData\UserRole;
+use App\Types\DebugLoggerInstance;
+use App\Types\EasyLogger;
 use App\Types\EasyMessageLogger;
 use App\Types\LogLogger;
 use App\Types\SimpleAuthProvider;
@@ -263,13 +265,13 @@ class TaskSeeder extends Seeder
 
             protected function getChannel(mixed $channel): mixed
             {
-                return $this->logger->channel($channel);
+                return null;
             }
             
             public function logToChannelWContext($level, string|SupportStringable $message, array $context = [], mixed $channel = null): void
             {
-                if ($level <= LOG_ERR || $channel === 'performance') {
-                    $this->logger->logToChannel($level, $message, $context,$channel);
+                if($channel){
+                    $this->logger->logToChannelWContext($level, $message, $context,$channel);
                 }
             }
         };
@@ -278,7 +280,9 @@ class TaskSeeder extends Seeder
                 new SimpleAuthProvider(User::whereRole(UserRole::TEACHER->value)->get()->random()),
                 function () use ($sourceCount, $sources, $createRequest) {
                     $classes = TaskClass::cases();
+                    $difficulties = TaskDifficulty::cases();
                     $tags = Tag::all();
+                    $difficultyCount = count($difficulties);
                     $classCount = count($classes);
                     $tagCount = count($tags);
 
@@ -289,6 +293,7 @@ class TaskSeeder extends Seeder
 
                         $randomTags = collect($tags->random(rand(1, $tagCount - 1)))->map(fn (Tag $tag) => $tag->id . '')
                             ->all();
+                        $difficultyI = rand(0,$difficultyCount-1);
                         $sourceI = rand(0, $sourceCount - 1);
                         $source = $sources[$sourceI];
                         $unique = fake()->unique();
@@ -315,8 +320,8 @@ class TaskSeeder extends Seeder
                                                 ->setMin($classes[$minClass]->value)
                                                 ->setMax($classes[$maxClass]->value)
                                         )
-                                        ->setDifficulty(TaskDifficulty::MEDIUM->value)
-                                        ->setIsPublic(true)
+                                        ->setDifficulty($difficulties[$difficultyI]->value)
+                                        ->setIsPublic(rand(0,4) < 3)
                                         ->setTags($randomTags)
                                         ->setSource($source)
                                 )

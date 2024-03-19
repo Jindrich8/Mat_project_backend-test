@@ -41,76 +41,11 @@ namespace App\Helpers\Database {
             // https://www.php.net/manual/en/language.operators.array.php
             $values += $unmodifiedValues;
             unset($unmodifiedValues);
-            DebugLogger::debug(self::class."::insertFromSameByIdSingleWConstantsGetId",[
-                'tableName' => $tableName,
-                'values' => $values,
-                'primaryKeyName' => $primaryKeyName,
-            ]);
             return DB::table($tableName)
                 ->insertGetId($values, $primaryKeyName);
         }
 
-          /**
-         * @param string[] $insertColumns,
-         * @param array<string,bool> $selectDictIsColumn
-         */
-        private static function insertFromSingleWConstantsPG(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,SimpleQueryWheresBuilder $wheresBuilder){
-            return self::insertFromWConstantsPG(
-                tableName:$tableName,
-                insertColumns:$insertColumns,
-                selectDictIsColumn:$selectDictIsColumn,
-                selectFromTableName:$selectFromTableName,
-                selectAfterFromExpr:" WHERE ".$wheresBuilder->getWheresStr()
-            );
-        }
-
-        /**
-         * @param string[] $insertColumns,
-         * @param array<string,bool> $selectDictIsColumn
-         */
-        private static function insertFromWConstantsPG(string $tableName,array $insertColumns,array $selectDictIsColumn,string $selectFromTableName,?string $selectAfterFromExpr = null,array $selectAfterFromExprBindings = []){
-            $grammar = DB::getQueryGrammar();
-
-            $tableName = $grammar->wrapTable($tableName);
-            $selectFromTableName = $grammar->wrapTable($selectFromTableName);
-
-           $insertColumnsStr = $grammar->columnize($insertColumns);
-
-           $selectColumnsStr = "";
-           $bindings = [];
-           $isColumn = $selectDictIsColumn[array_key_first($selectDictIsColumn)];
-           $exprs = [];
-           foreach($selectDictIsColumn as $selectExpr => $selectExprIsColumn){
-            if($isColumn !== $selectExprIsColumn){
-                if($exprs){
-                    if($selectColumnsStr){
-                        $selectColumnsStr.=',';
-                    }
-                    if($isColumn){
-                        $selectColumnsStr.=$grammar->columnize($exprs);
-                    }
-                    else{
-                        $selectColumnsStr.=$grammar->parameterize($exprs);
-                        $bindings[]=$exprs;
-                    }
-                }
-                $isColumn = $selectExprIsColumn;
-                $exprs =[];
-            }
-            $exprs[]=$selectExpr;
-
-           }
-
-           
-            $query = "INSERT INTO $tableName ($insertColumnsStr) ("
-            ."SELECT $selectColumnsStr FROM $selectFromTableName "
-            .($selectAfterFromExpr ?: '')
-            .");";
-
-            array_push($bindings,$selectAfterFromExprBindings);
-            
-            return DB::insert($query,$bindings);
-        }
+       
 
         /**
          * @param string[] $columns

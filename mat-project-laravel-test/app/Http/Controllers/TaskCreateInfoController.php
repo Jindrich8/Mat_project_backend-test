@@ -41,7 +41,6 @@ class TaskCreateInfoController extends Controller
                     TaskClass::cases()
                 )
             );
-        DebugLogger::log("getCreateInfo: ", ['tags' => var_export($response->tags, true)]);
         return $response;
     }
 }

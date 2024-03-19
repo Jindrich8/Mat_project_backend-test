@@ -93,16 +93,12 @@ namespace App\Utils {
         private static function transformValue(ClassStructure|array|string|int|bool|float|null $value, mixed &$dest, array &$stack)
         {
             if($value === null){
-                DebugLogger::debug("transformValue - Value",$value);
                 $dest = $value;
             } else if (is_object($value)) {
-                DebugLogger::debug("transformValue - Object",$value);
                 $stack[] = [&$dest, $value];
             } else if (is_array($value)) {
-                DebugLogger::debug("transformValue - Array",$value);
                 $stack[] = [&$dest, $value];
             } else {
-                DebugLogger::debug("transformValue - Value",$value);
                 $dest = $value;
             }
         }
@@ -117,9 +113,7 @@ namespace App\Utils {
             $dest = &$transformed;
             $dto = $dtoParam;
             do {
-                DebugLogger::debug("exportDto - dto",$dto);
                 if (is_object($dto)) {
-                    
                     $mapping =  $dto->properties()->getDataKeyMap();
                     foreach ($mapping as $propName => $dataPropName) {
                         if (isset($dto->{$propName})) {
@@ -151,13 +145,9 @@ namespace App\Utils {
          */
         public static function exportDto(ClassStructure $dto): mixed
         {
-            DebugLogger::log("exportDto", $dto);
             try {
                 $exported = self::export($dto);
-                DebugLogger::log("exportedDto", $exported);
                 return $exported;
-                // $exported = $dto::export($dto,self::getExportDtoContext());
-                // return $exported;
             } catch (Throwable $e) {
                 throw new InternalException(context: [
                     'dto' => $dto
@@ -198,7 +188,7 @@ namespace App\Utils {
                  * @var ClassStructure $dto
                  */
                 $imported = $dto::import($decoded, self::getImportDBDtoContext());
-                DebugLogger::debug("importDto: ",var_export($imported,true));
+                //DebugLogger::debug("importDto: ",var_export($imported,true));
                 return $imported;
             } catch (Throwable $e) {
                 throw new InternalException(

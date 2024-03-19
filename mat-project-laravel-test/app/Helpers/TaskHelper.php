@@ -124,7 +124,7 @@ namespace App\Helpers {
                         ResourceConstants::COL_GROUP_ID,
                         ResourceConstants::COL_CONTENT
                     ])
-                    ->whereIn(ResourceConstants::COL_GROUP_ID, $groups->keys())
+                    ->whereIn(ResourceConstants::COL_GROUP_ID, array_values($groups->keys()->all()))
                     ->get();
             });
             /**
@@ -471,10 +471,6 @@ namespace App\Helpers {
                 TaskInfoConstants::COL_ORIENTATION,
                 TaskInfoConstants::COL_TASK_SOURCE_ID
             ];
-            DebugLogger::debug(self::class."::insertNewTaskInfoGetId",[
-                'taskInfoBindings' => $taskInfoBindings,
-                'taskInfoId' => $taskInfoId
-            ] );
            $newTaskInfoId = DBHelper::insertFromSameByIdSingleWConstantsGetId(
                 tableName:TaskInfoConstants::TABLE_NAME,
            insertColumns:$insertColumns,

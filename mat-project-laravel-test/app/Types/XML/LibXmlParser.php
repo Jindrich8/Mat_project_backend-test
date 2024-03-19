@@ -156,14 +156,14 @@ namespace App\Types\XML {
         private function elementStartHandler(XMLParser $parser, string $name, array $attributes): void
         {
             $this->updateEntryType(XMLParserEntryTypeEnum::ELEMENT_START);
-            DebugLogger::log("ELEMENT START - $name");
+           // DebugLogger::log("ELEMENT START - $name");
             $this->events->elementStartHandler($this, $name, $attributes);
             $this->updatePos();
         }
 
         private function elementEndHandler(XMLParser $parser, string $name): void
         {
-            DebugLogger::log("ELEMENT END - $name");
+           // DebugLogger::log("ELEMENT END - $name");
             $this->updateEntryType(XMLParserEntryTypeEnum::ELEMENT_END);
             $this->events->elementEndHandler($this, $name);
             $this->updatePos();
@@ -323,9 +323,9 @@ namespace App\Types\XML {
         }
 
         private function printValidPosInfo(){
-            $pos = $this->lastValidPos;
-            $ch = $this->getCharAtByteIndex($pos[2],emptyIfError:true);
-            DebugLogger::log("ValidPosInfo","($ch)" . $pos[0].", " . $pos[1].", " . $pos[2]);
+            // $pos = $this->lastValidPos;
+            // $ch = $this->getCharAtByteIndex($pos[2],emptyIfError:true);
+            //DebugLogger::log("ValidPosInfo","($ch)" . $pos[0].", " . $pos[1].", " . $pos[2]);
         }
 
         private function updatePos()
@@ -343,10 +343,10 @@ namespace App\Types\XML {
             );
             $entryTypeName = $this->nextEntryType?->name ?? "NULL";
             $isByteIndexValid = $this->isByteIndexValid($this->nextEntryType, $byteIndex);
-            $char = $this->getCharAtByteIndex($byteIndex,emptyIfError:true);
-            DebugLogger::log("({$entryTypeName}) :$line, $column, $byteIndex BYTE INDEX IS VALID ($char): '",
-            ($isByteIndexValid ? "true" : "false")
-        );
+        //     $char = $this->getCharAtByteIndex($byteIndex,emptyIfError:true);
+        //     DebugLogger::log("({$entryTypeName}) :$line, $column, $byteIndex BYTE INDEX IS VALID ($char): '",
+        //     ($isByteIndexValid ? "true" : "false")
+        // );
             if ($isByteIndexValid) {
                 $this->setValidPosition(
                     column: $column,
@@ -414,12 +414,12 @@ namespace App\Types\XML {
 
         private function computeByteIndex()
         {
-            DebugLogger::log("COMPUTING BYTE INDEX for ", $this->entryType->name);
+            //DebugLogger::log("COMPUTING BYTE INDEX for ", $this->entryType->name);
 
             $this->getLastValidPosition($validCol, $validLine, $validByteIndex);
             $this->getCurrentPosition($column, $line);
-            DebugLogger::log("last valid position",":$validLine, $validCol' - byte index: '$validByteIndex'");
-            DebugLogger::log("Position",":$line, :$column");
+           // DebugLogger::log("last valid position",":$validLine, $validCol' - byte index: '$validByteIndex'");
+            //DebugLogger::log("Position",":$line, :$column");
 
             $byteIndex = $validByteIndex;
 

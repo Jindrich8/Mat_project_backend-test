@@ -340,7 +340,6 @@ namespace App\Helpers\CreateTask {
                             'groupBindingsColumns' => $groupBindingsColumns
                         ]);
                     }
-                    DebugLogger::log("Group ids", $groupIds);
 
                     // insert resources associated with groups
                     {
@@ -363,7 +362,6 @@ namespace App\Helpers\CreateTask {
                             );
                         }
                         if ($insertResourcesAssocData) {
-                            DebugLogger::log("Resources", $insertResourcesAssocData);
                             $success = DB::table(ResourceConstants::TABLE_NAME)
                                 ->insert($insertResourcesAssocData);
                             // /**
@@ -409,7 +407,6 @@ namespace App\Helpers\CreateTask {
                         ExerciseConstants::COL_WEIGHT,
                         ExerciseConstants::COL_EXERCISEABLE_TYPE
                     ];
-                    DebugLogger::log("Exercise bindings", $exerciseBindings);
                     $ids =  DBHelper::insertAndGetIds(
                         ExerciseConstants::TABLE_NAME,
                         ExerciseConstants::COL_ID,

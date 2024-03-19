@@ -66,7 +66,6 @@ namespace App\Helpers\Database {
                     unset($values[$i]);
                 }
             }
-            DebugLogger::log("bindings",$bindings);
             $ids = DB::select(
                 $query,
                 bindings: $bindings,

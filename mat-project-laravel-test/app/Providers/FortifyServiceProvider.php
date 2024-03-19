@@ -32,8 +32,6 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                DebugLogger::log("LogoutResponse::toResponse");
-                DebugLogger::log("LogoutResponse::toResponse");
                return (new LogoutResponse)->toResponse($request);
             }
         });
@@ -76,8 +74,6 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                DebugLogger::log("LogoutResponse::toResponse");
-                DebugLogger::log("LogoutResponse::toResponse");
                 return (new LogoutResponse)->toResponse($request);
             }
         });

@@ -53,7 +53,7 @@ namespace App\Utils {
         public static function renderException(Throwable $e, Request $request) {
             DebugLogger::log("Rendering  '" . get_debug_type($e) . "'", $e);
             if($e instanceof ApplicationException){
-                DebugLogger::log("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
+               // DebugLogger::debug("ApplicationException",[DtoUtils::exportDto($e->getErrorResponse())]);
                 return $e->render($request);
             }
             if ($e instanceof AuthenticationException) {
@@ -88,7 +88,7 @@ namespace App\Utils {
 
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 $errors = $e->validator->errors();
-                DebugLogger::log("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
+             //   DebugLogger::debug("Handler ValidationException: ", ['route' => $request->route(),'errors'=>$errors->all()]);
                 $uri = $request->route()?->uri;
                 if ($uri === 'api/login') {
                     $data = LoginErrorDetailsErrorData::create();

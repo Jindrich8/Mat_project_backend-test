@@ -84,7 +84,6 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     ->setMax($uiI)
             )
                 ->setDetails($response);
-            DebugLogger::log("exporting " . self::class . "", ['response' => $response]);
             DtoUtils::exportDto($response);
         }
     }

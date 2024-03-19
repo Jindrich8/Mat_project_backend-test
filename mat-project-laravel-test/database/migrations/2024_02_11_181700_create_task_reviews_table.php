@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamp('evaluated_at');
             $table->autoTimestamps();
             $table->unique(['user_id','task_review_template_id']);
+            $table->index(['score']);
         });
 
         DBUtils::addPercentDecimalConstraint('task_reviews','score');

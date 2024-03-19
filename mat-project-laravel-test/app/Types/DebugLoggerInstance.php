@@ -33,15 +33,13 @@ namespace App\Types {
 
         public function logToChannelWContext($level, string|Stringable $message, mixed $value = null, mixed $channel = null): void
         {
-            if (PHP_SAPI === 'cli') {
-                if ($this->dump) {
+            if (PHP_SAPI === 'cli' && $this->dump) {
                     $print = "\n";
                     if ($channel) {
                         $print .= Str::upper($channel) . ": ";
                     }
                     echo $print . $message;
                     dump($value);
-                }
             } else {
                 $this->logger->channel($channel)->log($level, $message, $value);
             }

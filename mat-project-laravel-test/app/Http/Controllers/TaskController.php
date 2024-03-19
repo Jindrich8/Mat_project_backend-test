@@ -167,7 +167,7 @@ class TaskController extends Controller
         $responseTask->entries = [];
         $taskEntries = &$responseTask->entries;
         TaskHelper::getTaskEntries(
-            taskSourceId: $task->taskInfoId,
+            taskSourceId: $task->taskSourceId,
             exercises: $exercises,
             exerciseToDto: function (TakeExercise $exercise) {
                 $exerciseDto =  Take\DefsExercise::create()
@@ -185,6 +185,7 @@ class TaskController extends Controller
             },
             entries: $taskEntries
         );
+        DebugLogger::debug("responseTaskTask: ",$responseTask);
         return Take\TakeTaskResponse::create()
             ->setTask($responseTask);
     }
@@ -580,7 +581,6 @@ class TaskController extends Controller
                  */
                 $evaluatedExercises = [];
                 $task = $do($evaluatedExercises, $responseTask);
-                DebugLogger::log('TaskEvaluate - evaluated exercises: ', ['exercises' => $evaluatedExercises]);
                 $templateId = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                     ->select([TaskReviewTemplateConstants::COL_ID])
                     ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $task->taskInfoId)
@@ -636,7 +636,7 @@ class TaskController extends Controller
         $requestData = RequestHelper::getDtoFromRequest(List\ListTasksRequest::class, $request);
         $config = ListConfig::create();
 
-        $bareTasks = BareListTask::tryFetchPublic(function (Builder $builder) use ($requestData, $config) {
+        $bareTasks = StopWatchTimer::run("Fetch tasks",fn()=>BareListTask::tryFetchPublic(function (Builder $builder) use ($requestData, $config) {
             /**
              * @var List\Errors\FilterErrorDetailsErrorData|null $error
              */
@@ -742,7 +742,6 @@ class TaskController extends Controller
                     }
                 );
             }
-            Log::debug("TaskController - list - Executed query: '" . $builder->toRawSql() . "");
             $paginator = $builder->orderBy(TaskConstants::COL_ID)
                 ->cursorPaginate(
                     perPage: $requestData->options->limit,
@@ -758,7 +757,7 @@ class TaskController extends Controller
             }
 
             return $paginator->items();
-        });
+        }));
 
 
 
@@ -768,10 +767,11 @@ class TaskController extends Controller
         }
         $taskInfoIds = array_keys($taskInfoIds);
         $tagsByTaskInfoId = TaskHelper::getTagsByTaskInfoId($taskInfoIds);
-        $taskReviewIdAndScoreByTaskInfoId =  UserHelper::tryGetUserId() === null ? [] : TaskHelper::getTaskReviewIdsAndScoreByTaskInfoId($taskInfoIds);
+        $taskReviewIdAndScoreByTaskInfoId =  UserHelper::tryGetUserId() === null ? []
+         : TaskHelper::getTaskReviewIdsAndScoreByTaskInfoId($taskInfoIds);
         unset($taskInfoIds);
 
-        $tasks = $bareTasks->map(function (BareListTask $task, $key) use (&$tagsByTaskInfoId, $taskReviewIdAndScoreByTaskInfoId): TaskPreviewInfo {
+        $tasks = StopWatchTimer::run("Map tasks",fn()=> $bareTasks->map(function (BareListTask $task, $key) use (&$tagsByTaskInfoId, $taskReviewIdAndScoreByTaskInfoId): TaskPreviewInfo {
             $info = TaskPreviewInfo::create()
                 ->setId(ResponseHelper::translateIdForUser($task->id))
                 ->setName($task->name)
@@ -807,7 +807,7 @@ class TaskController extends Controller
                 );
             }
             return $info;
-        })->all();
+        })->all());
 
         return List\ListTasksResponse::create()
             ->setTasks($tasks)
@@ -1086,7 +1086,6 @@ class TaskController extends Controller
                         )
                 );
             }
-            DebugLogger::debug(self::class.'::myList - orderBy array',$requestData->orderBy);
             if($requestData->orderBy){
             $transformOrderBy = function (array $orderBy) {
                 /**

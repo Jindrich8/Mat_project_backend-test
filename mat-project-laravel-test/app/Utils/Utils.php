@@ -25,7 +25,7 @@ class Utils
          */
         $mapped = [];
         foreach ($array as $key => $value) {
-            DebugLogger::debug("arrayMapWKey",[$key,$value]);
+            //DebugLogger::debug("arrayMapWKey",[$key,$value]);
             /**
              * @var RKey $rKey
              * @var R $rValue

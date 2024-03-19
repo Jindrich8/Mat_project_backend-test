@@ -86,7 +86,6 @@ namespace App\Helpers {
         public static function requestDataToDto(string $dtoClass, mixed $data): ClassStructure
         {
             try {
-                DebugLogger::debug("requestToDto: '$dtoClass'", ["data" => var_export($data, true)]);
                 $dto = $dtoClass::import($data);
                 return $dto;
             } catch (Exception | InvalidValue $e) {
@@ -139,9 +138,7 @@ namespace App\Helpers {
         public static function getData(Request $request): mixed
         {
             $validated = self::validateAndExtractRequestData($request);
-            DebugLogger::debug("getData: ", ["validated" => var_export($validated, true)]);
             $res = Utils::recursiveAssocArrayToStdClass($validated, canChange: true);
-            DebugLogger::debug("getData: (assoc => stdClass): ", ["res" => var_export($res, true)]);
             return $res ?: new stdClass;
         }
 
@@ -154,7 +151,7 @@ namespace App\Helpers {
 
             $validated = self::validateAndExtractRequestData($query);
             unset($query);
-            Log::debug("getQuery: ", ["validated" => var_export($validated, true)]);
+           // Log::debug("getQuery: ", ["validated" => var_export($validated, true)]);
             $res = Utils::recursiveAssocArrayToStdClass(
                 arr: $validated,
                 canChange: true,
@@ -166,7 +163,7 @@ namespace App\Helpers {
                     )
                     : $value
             );
-            Log::debug("getQuery: (assoc => stdClass): ", ["res" => var_export($res, true)]);
+           // Log::debug("getQuery: (assoc => stdClass): ", ["res" => var_export($res, true)]);
             return $res ?: new stdClass;
         }
     }

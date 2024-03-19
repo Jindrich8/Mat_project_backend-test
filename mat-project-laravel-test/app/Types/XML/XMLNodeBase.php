@@ -172,10 +172,6 @@ namespace App\Types\XML {
                     byteOffset: $byteOffset
                 );
 
-            DebugLogger::log("appendValuePart", [
-                'value' => $value,
-                'newValue' => $newValue
-            ]);
             $this->appendValue($newValue, $newContext);
         }
 
@@ -210,7 +206,7 @@ namespace App\Types\XML {
         {
             $child = $this->children->tryGetChild($name);
             if ($child === false) {
-                DebugLogger::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS", $this);
+               DebugLogger::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS", $this);
                 $this->invalidElement($getParserPosition, elementName: $name);
             }
             return $child;
@@ -236,7 +232,7 @@ namespace App\Types\XML {
             if (++$this->count > $this->maxCount) {
                 $this->tooManyElements($context, $this->maxCount);
             }
-            DebugLogger::log("Add count - '".$this->getParentName()."'->'{$this->name}'",['count' => $this->count]);
+           // DebugLogger::log("Add count - '".$this->getParentName()."'->'{$this->name}'",['count' => $this->count]);
             $this->handleAttributes($attributes, $context);
             // dump("validateStart - {$this->name}");
             $this->elementStartPos ??= new XMLValidParserPosition();

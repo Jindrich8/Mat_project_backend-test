@@ -32,7 +32,6 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        DebugLogger::log("CreateNewUser - input: ", ['input' => $input]);
         try {
             Validator::make($input, [
                 'name' => ['required', 'string', 'max:255'],
@@ -89,7 +88,6 @@ class CreateNewUser implements CreatesNewUsers
             );
         }
         $role = $input[RegisterRequest::ROLE] ?? null;
-        DebugLogger::log("CreateNewUser - ROLE FROM INPUT!!! IS ", ['ROLE' => $role]);
         $role = match ($role) {
             RegisterRequest::TEACHER => UserRole::TEACHER,
             null => UserRole::NONE,

@@ -27,7 +27,7 @@ namespace App\Utils {
 
         public static function printStackTrace(){
             $e = new Exception();
-           DebugLogger::log("Trace",$e->getTraceAsString());
+           DebugLogger::debug("Trace",$e->getTraceAsString());
         }
         public static function jsonEncode(mixed $value):string{
             return json_encode($value,JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
