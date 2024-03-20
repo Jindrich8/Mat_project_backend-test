@@ -28,6 +28,7 @@ namespace App\Helpers {
     use App\ModelConstants\TaskReviewTemplateConstants;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDifficulty;
+    use App\TableSpecificData\UserRole;
     use App\Types\SaveTask;
     use App\Types\StopWatchTimer;
     use App\Types\TaskResTask;
@@ -85,6 +86,36 @@ namespace App\Helpers {
                 $res[$taskInfoId] = [$reviewId, $score];
             }
             return $res;
+        }
+
+        public static function addWhereTaskIsPublic(Builder $builder){
+            $builder->where(
+                DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_IS_PUBLIC),
+                '=',
+                true
+            );
+        }
+        
+
+        public static function addWhereIsPublicOrOwnsTask(Builder $builder){
+                $builder->where(function(Builder $query){
+                    $user = UserHelper::tryGetUser();
+                $isTeacher = $user && $user->role === UserRole::TEACHER->value;
+                    $query->where(
+                        DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_IS_PUBLIC),
+                        '=',
+                        true
+                    );
+                    if($isTeacher){
+                        $query->where(
+                            DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_USER_ID),
+                            '=',
+                            $user->id,
+                            'or'
+                        );
+                    }
+                });
+                
         }
 
         /**

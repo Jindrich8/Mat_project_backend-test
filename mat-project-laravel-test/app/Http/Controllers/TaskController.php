@@ -1174,6 +1174,7 @@ class TaskController extends Controller
             $info = MyTaskPreviewInfo::create()
                 ->setId(ResponseHelper::translateIdForUser($task->id))
                 ->setName($task->name)
+                ->setIsPublic($task->isPublic)
                 ->setCreationTimestamp(TimeStampUtils::timestampToString($task->createdAt));
             if (($updatedAt = $task->updatedAt)) {
                 $info->setModificationTimestamp(TimeStampUtils::timestampToString($updatedAt));

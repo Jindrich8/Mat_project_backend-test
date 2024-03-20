@@ -3,11 +3,15 @@
 namespace App\Helpers\BareModels {
 
     use App\Helpers\Database\DBHelper;
+    use App\Helpers\Database\UserHelper;
+    use App\Helpers\TaskHelper;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
     use App\ModelConstants\TaskSourceConstants;
+    use App\Models\User;
     use App\TableSpecificData\TaskClass;
     use App\TableSpecificData\TaskDisplay;
+    use App\TableSpecificData\UserRole;
     use Illuminate\Support\Facades\DB;
 
     class BareTakeTask
@@ -31,7 +35,7 @@ namespace App\Helpers\BareModels {
             $taskTable = TaskConstants::TABLE_NAME;
             $taskInfoTable = TaskInfoConstants::TABLE_NAME;
 
-            $task = DB::table($taskTable)->select(
+            $builder = DB::table($taskTable)->select(
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
@@ -54,12 +58,10 @@ namespace App\Helpers\BareModels {
                     DBHelper::tableCol($taskTable, TaskConstants::COL_ID),
                     '=',
                     $taskId
-                )
-                ->where(
-                    DBHelper::tableCol($taskTable, TaskConstants::COL_IS_PUBLIC),
-                    '=',
-                    true
-                )
+                );
+                TaskHelper::addWhereIsPublicOrOwnsTask($builder);
+
+              $task =  $builder
                 ->sharedLock()
                 ->first();
             if ($task) {

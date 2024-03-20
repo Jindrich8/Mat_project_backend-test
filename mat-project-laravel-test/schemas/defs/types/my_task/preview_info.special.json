@@ -28,6 +28,9 @@
             "items": {
                 "$ref": "../response/enum_element.json"
             }
+        },
+        "is_public":{
+            "type":"boolean"
         }
     },
     "required": [
@@ -36,6 +39,7 @@
         "creation_timestamp",
         "difficulty",
         "class_range",
-        "tags"
+        "tags",
+        "is_public"
     ]
 }

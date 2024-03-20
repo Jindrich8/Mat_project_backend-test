@@ -3,6 +3,7 @@
 namespace App\Helpers\BareModels {
 
     use App\Helpers\Database\DBHelper;
+    use App\Helpers\TaskHelper;
     use App\ModelConstants\TaskConstants;
     use App\ModelConstants\TaskInfoConstants;
     use App\ModelConstants\UserConstants;
@@ -32,7 +33,7 @@ namespace App\Helpers\BareModels {
 
             $userTable = UserConstants::TABLE_NAME;
             $authorNameCol = 'authorName';
-            $task = DB::table($taskTable)->select(
+            $builder = DB::table($taskTable)->select(
                 [
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_ID),
                     DBHelper::colFromTableAsCol($taskTable, TaskConstants::COL_TASK_INFO_ID),
@@ -65,13 +66,10 @@ namespace App\Helpers\BareModels {
                     DBHelper::tableCol($taskTable, TaskConstants::COL_ID),
                     '=',
                     $taskId
-                )
-                ->where(
-                    DBHelper::tableCol($taskTable, TaskConstants::COL_IS_PUBLIC),
-                    '=',
-                    true
-                )
-                ->sharedLock()
+                );
+                TaskHelper::addWhereIsPublicOrOwnsTask($builder);
+
+                $task = $builder->sharedLock()
                 ->first();
             if ($task) {
                 $task = new self(

@@ -104,10 +104,6 @@ class TaskReviewController extends Controller
             ->first()
             ?? throw new AppModelNotFoundException('Review', ['id' => $id]);
         /**
-         * @var int $taskInfoId
-         */
-        $taskInfoId = DBHelper::access($review, TaskReviewTemplateConstants::COL_TASK_INFO_ID);
-        /**
          * @var int $taskSourceId
          */
         $taskSourceId = DBHelper::access($review, TaskInfoConstants::COL_TASK_SOURCE_ID);
