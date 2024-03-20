@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('task_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('task_info_id')->constrained();
             $table->string('task_name',250);
-            $table->foreignId('author_id')->references('id')->on('users')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('author_id')->nullable()->references('id')->on('users')->constrained()->nullOnDelete();
             $table->string('author_name');
             $table->autoTimestamps();
         });

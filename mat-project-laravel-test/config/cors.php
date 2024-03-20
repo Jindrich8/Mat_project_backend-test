@@ -20,7 +20,19 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['localhost','http://localhost:5173','http://localhost:5173/','http://localhost:5173/*','https://localhost:5173','https://localhost:5173/*'],
+    'allowed_origins' => [
+        'localhost',
+        ...(function(){
+            $arr = [];
+            $frontendUrls = explode(',',env("FRONTEND_URL"));
+            foreach($frontendUrls as $url){
+                $arr[]=$url;
+                $arr[]=$url.'/';
+                $arr[]=$url.'/*';
+            }
+            return $arr;
+        })()
+    ],
 
     'allowed_origins_patterns' => [],
 
