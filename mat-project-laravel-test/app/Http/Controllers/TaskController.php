@@ -79,6 +79,7 @@ use App\Types\TakeExercise;
 use App\Types\TaskResTask;
 use App\Utils\DtoUtils;
 use App\Utils\TimeStampUtils;
+use Carbon\Carbon;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request as HttpRequest;
@@ -135,13 +136,13 @@ class TaskController extends Controller
                 default => throw new UnsupportedVariantException($task->orientation)
             });
 
-        DebugLogger::log("timestamp", $requestData->localySavedTask?->timestamp ?? null);
+        //DebugLogger::log("timestamp", $requestData->localySavedTask?->timestamp ?? null);
         // dump($requestData->localySavedTask?->timestamp);
         $localySavedTaskTimeStamp = $requestData->localySavedTask ?
             TimeStampUtils::tryParseIsoTimestampToUtc($requestData->localySavedTask->timestamp)
             : null;
 
-        DebugLogger::log("localySavedTaskTimeStamp", $localySavedTaskTimeStamp);
+        //DebugLogger::log("localySavedTaskTimeStamp", $localySavedTaskTimeStamp);
         $saveTask = TaskHelper::getSavedTask(
             taskId: $taskId,
             localySavedTaskUtcTimestamp: $localySavedTaskTimeStamp
@@ -392,7 +393,13 @@ class TaskController extends Controller
                     ->value(TaskConstants::COL_TASK_INFO_ID)
                     ?? throw new AppModelNotFoundException("Task",['id' => $id]);
                 
-
+                    if (isset($task->tagIds)) {
+                        TaskHelper::insertOrReplaceTags(
+                            taskInfoId:$taskInfoId,
+                            tagIds:$task->tagIds,
+                            replace:true
+                        );
+                    }
 
                 $reviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                     ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
@@ -433,10 +440,13 @@ class TaskController extends Controller
                         );
                     }
                 }
-
-                $success = DB::table(TaskConstants::TABLE_NAME)
+                $success = TaskHelper::insertOrUpdateTaskWUniqueName(
+                    fn()=>DB::table(TaskConstants::TABLE_NAME)
                     ->where(TaskConstants::COL_ID, '=', $id)
-                    ->update($taskBindings) === 1;
+                    ->update($taskBindings) === 1,
+                    insert:false,
+                    name:$taskBindings[TaskConstants::COL_NAME] ?? null
+                );
                 if (!$success) {
                     throw new InternalException(
                         message: "Could not update task with id '$id'.",
@@ -456,6 +466,9 @@ class TaskController extends Controller
         $userId = UserHelper::tryGetUserId();
         $requestData = RequestHelper::getDtoFromRequest(Evaluate\EvaluateTaskRequest::class, $request);
         $responseTask = EvaluateResponseTask::create();
+        $evaluatedAt = Carbon::now();
+        TimeStampUtils::timestampToUtc($evaluatedAt);
+
         /**
          * @param ExerciseReview[]|null $evaluatedExercises
          * @param EvaluateResponseTask &$responseTask
@@ -466,14 +479,10 @@ class TaskController extends Controller
          * @throws AppModelNotFoundException
          * @throws ApplicationException
          */
-        $do = function (array|null &$evaluatedExercises, &$responseTask) use ($id, $userId, $requestData) {
+        $do = function (array|null &$evaluatedExercises, &$responseTask) use ($id, $evaluatedAt, $requestData) {
             $task = BareEvaluateTask::tryFetchPublic($id)
                 ?? throw new AppModelNotFoundException('Task', ['id' => $id]);
             if ($task->version !== RequestHelper::translateId($requestData->version)) {
-                Log::debug("Task version has changed: ", [
-                    'requestVersion' => $requestData->version,
-                    'taskVersion' => $task->version
-                ]);
                 throw new ApplicationException(
                     userStatus: Response::HTTP_CONFLICT,
                     userResponse: ApplicationErrorInformation::create()
@@ -490,7 +499,7 @@ class TaskController extends Controller
             $responseTask->setId(ResponseHelper::translateIdForUser($task->id))
                 ->setName($task->name)
                 ->setDescription($task->description)
-                ->setEvaluationTimestamp(TimeStampUtils::timestampNowUtcString())
+                ->setEvaluationTimestamp(TimeStampUtils::timestampToString($evaluatedAt))
                 ->setDisplay(match ($task->orientation) {
                     TaskDisplay::HORIZONTAL => EvaluateResponseTask::HORIZONTAL,
                     TaskDisplay::VERTICAL => EvaluateResponseTask::VERTICAL,
@@ -508,7 +517,7 @@ class TaskController extends Controller
                 taskSourceId: $task->taskSourceId,
                 exercises: $exercises,
                 exerciseToDto: function (EvaluateExercise $exercise, int $i) use ($requestData, &$taskPoints, &$taskmax, &$evaluatedExercises) {
-                    DebugLogger::log("exerciseToDto - task evaluate");
+                    //DebugLogger::log("exerciseToDto - task evaluate");
                     $exerciseDto = ExerciseReview::create()
                         ->setInstructions(
                             ReviewExerciseInstructions::create()
@@ -517,11 +526,7 @@ class TaskController extends Controller
 
                     $exerciseValue = array_shift($requestData->exercises);
                     try {
-                        StopWatchTimer::run(
-                            "evaluateAndSetAsContentTo " . $exercise->type->translate(),
-                            fn () =>
-                            $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto)
-                        );
+                            $exercise->impl->evaluateAndSetAsContentTo($exerciseValue, $exerciseDto);
                     } catch (InvalidEvaluateValueException $e) {
                         throw new ApplicationException(
                             Response::HTTP_BAD_REQUEST,
@@ -543,7 +548,7 @@ class TaskController extends Controller
                     $taskPoints += $exerciseDto->points->has;
                     $taskmax += $exerciseDto->points->max;
                     if ($evaluatedExercises !== null) {
-                        DebugLogger::log("push evaluated exercise to evaluated exercises");
+                        //DebugLogger::log("push evaluated exercise to evaluated exercises");
                         $evaluatedExercises[] = $exerciseDto;
                     }
                     return $exerciseDto;
@@ -575,7 +580,7 @@ class TaskController extends Controller
             $evaluatedExercises = [];
             $do($evaluatedExercises, $responseTask);
         } else {
-            DB::transaction(function () use ($do, $userId, $responseTask) {
+            DB::transaction(function () use ($do, $userId, $responseTask,$evaluatedAt) {
                 /**
                  * @var ExerciseReview[] $evaluatedExercises
                  */
@@ -602,7 +607,7 @@ class TaskController extends Controller
                     ->setContent($evaluatedExercises);
                 $taskReviewData = [
                     TaskReviewConstants::COL_USER_ID => $userId,
-                    TaskReviewConstants::COL_EVALUATED_AT => $responseTask->evaluationTimestamp,
+                    TaskReviewConstants::COL_EVALUATED_AT => $evaluatedAt,
                     TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID => $templateId,
                     TaskReviewConstants::COL_MAX_POINTS => $responseTask->points->max,
                     TaskReviewConstants::COL_SCORE => $responseTask->points->has / $responseTask->points->max,
@@ -636,7 +641,7 @@ class TaskController extends Controller
         $requestData = RequestHelper::getDtoFromRequest(List\ListTasksRequest::class, $request);
         $config = ListConfig::create();
 
-        $bareTasks = StopWatchTimer::run("Fetch tasks",fn()=>BareListTask::tryFetchPublic(function (Builder $builder) use ($requestData, $config) {
+        $bareTasks = BareListTask::tryFetchPublic(function (Builder $builder) use ($requestData, $config) {
             /**
              * @var List\Errors\FilterErrorDetailsErrorData|null $error
              */
@@ -757,7 +762,7 @@ class TaskController extends Controller
             }
 
             return $paginator->items();
-        }));
+        });
 
 
 
@@ -771,7 +776,7 @@ class TaskController extends Controller
          : TaskHelper::getTaskReviewIdsAndScoreByTaskInfoId($taskInfoIds);
         unset($taskInfoIds);
 
-        $tasks = StopWatchTimer::run("Map tasks",fn()=> $bareTasks->map(function (BareListTask $task, $key) use (&$tagsByTaskInfoId, $taskReviewIdAndScoreByTaskInfoId): TaskPreviewInfo {
+        $tasks = $bareTasks->map(function (BareListTask $task, $key) use (&$tagsByTaskInfoId, $taskReviewIdAndScoreByTaskInfoId): TaskPreviewInfo {
             $info = TaskPreviewInfo::create()
                 ->setId(ResponseHelper::translateIdForUser($task->id))
                 ->setName($task->name)
@@ -807,7 +812,7 @@ class TaskController extends Controller
                 );
             }
             return $info;
-        })->all());
+        })->all();
 
         return List\ListTasksResponse::create()
             ->setTasks($tasks)

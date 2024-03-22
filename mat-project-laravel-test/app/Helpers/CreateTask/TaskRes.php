@@ -281,26 +281,11 @@ namespace App\Helpers\CreateTask {
                     );
                 }
                 if (isset($this->task->tagIds)) {
-                    if ($updateTaskInfo) {
-                        DB::table(TagTaskInfoConstants::TABLE_NAME)
-                        ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
-                        ->delete();
-                    }
-                    $tagBindings = array_map(fn ($tagId) => [
-                        TagTaskInfoConstants::COL_TAG_ID => $tagId,
-                        TagTaskInfoConstants::COL_TASK_INFO_ID => $taskInfoId
-                    ], $this->task->tagIds);
-
-                    $success = DB::table(TagTaskInfoConstants::TABLE_NAME)
-                    ->insert($tagBindings);
-                    if (!$success) {
-                        throw new InternalException(
-                            "Could not insert tags!",
-                            context: [
-                                'tagBindings' => $tagBindings
-                            ]
-                        );
-                    }
+                    TaskHelper::insertOrReplaceTags(
+                        taskInfoId:$taskInfoId,
+                        tagIds:$this->task->tagIds,
+                        replace:$updateTaskInfo
+                    );
                 }
             }
 
@@ -329,6 +314,8 @@ namespace App\Helpers\CreateTask {
                             DB::table(GroupConstants::TABLE_NAME)
                                 ->select(GroupConstants::COL_ID)
                                 ->where(GroupConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                                ->orderBy(GroupConstants::COL_START,'asc')
+                                ->orderBy(GroupConstants::COL_LENGTH,'desc')
                                 ->pluck(GroupConstants::COL_ID)->all()
                         ),
                         values: $insertGroupsBindings,
@@ -384,10 +371,12 @@ namespace App\Helpers\CreateTask {
 
             // insert exercises
             {
+                $exerciseTypesOrder = [];
                 $exerciseBindings = []; {
                     foreach ($this->exerciseHelpers as $helperAndExercises) {
                         $exercises = $helperAndExercises[1];
-
+                        if($exercises){
+                        $exerciseTypesOrder[]=$exercises[0]->exerciseType->value;
                         foreach ($exercises as $exercise) {
                             $exerciseBindings[] = [
                                 $taskSourceId,
@@ -397,6 +386,7 @@ namespace App\Helpers\CreateTask {
                                 $exercise->exerciseType->value
                             ];
                         }
+                    }
                     }
                 }
                 if ($exerciseBindings) {
@@ -412,14 +402,27 @@ namespace App\Helpers\CreateTask {
                         ExerciseConstants::COL_ID,
                         columns: $exerciseBindingsColumns,
                         values: $exerciseBindings,
-                        getIdsIfNotSupported: fn () =>
-                        array_values(
-                            DB::table(ExerciseConstants::TABLE_NAME)
-                                ->select(ExerciseConstants::COL_ID)
-                                ->where(ExerciseConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
-                                ->pluck(ExerciseConstants::COL_ID)
-                                ->all()
-                        ),
+                        getIdsIfNotSupported: function () use($taskSourceId,$exerciseTypesOrder){
+
+                            $idRecs = DB::table(ExerciseConstants::TABLE_NAME)
+                            ->select([ExerciseConstants::COL_ID,ExerciseConstants::COL_EXERCISEABLE_TYPE])
+                            ->where(ExerciseConstants::COL_TASK_SOURCE_ID, '=', $taskSourceId)
+                            ->orderBy(ExerciseConstants::COL_ORDER,'asc')
+                            ->get();
+
+                            $idsByType = [];
+                            foreach($idRecs as $idRec){
+                                $type = DBHelper::access($idRec,ExerciseConstants::COL_EXERCISEABLE_TYPE);
+                                $id = DBHelper::access($idRec,ExerciseConstants::COL_ID);
+                                $idsByType[$type][]=$id;
+                            }
+                            $idsRes = [];
+                            foreach($exerciseTypesOrder as $exerciseType){
+                                array_push($idsRes,...$idsByType[$exerciseType]);
+                            }
+                            return $idsRes;
+                        }
+                        ,
                         unsetValuesArray: false
                     );
                     if (!$ids) {
@@ -463,30 +466,13 @@ namespace App\Helpers\CreateTask {
                         TaskConstants::COL_IS_PUBLIC => $this->task->isPublic,
                         TaskConstants::COL_SOURCE => $taskSource
                     ];
-                    try{
-                   $taskId = DB::table(TaskConstants::TABLE_NAME)
-                    ->insertGetId($taskBindings);
-                    }
-                    catch(UniqueConstraintViolationException $e){
-                        throw new ApplicationException(
-                            Response::HTTP_BAD_REQUEST,
-                            ApplicationErrorInformation::create()
-                            ->setUserInfo(
-                                UserSpecificPartOfAnError::create()
-                                ->setMessage("Task creation failed.")
-                                )
-                            ->setDetails(
-                                TaskCreateErrorDetails::create()
-                                ->setErrorData(
-                                    TaskCreateErrorDetailsErrorData::create()
-                                    ->setName(
-                                        FieldError::create()
-                                        ->setMessage("Name of the task must be unique.")
-                                    )
-                                )
-                            )
-                                    );
-                    }
+                    $taskId = TaskHelper::insertOrUpdateTaskWUniqueName(
+                        fn()=>DB::table(TaskConstants::TABLE_NAME)
+                        ->insertGetId($taskBindings),
+                        insert:true,
+                        name:$this->task->name
+                    );
+                    
                     if(!is_int($taskId)){
                         throw new InternalException(
                             message:"Could not insert task",

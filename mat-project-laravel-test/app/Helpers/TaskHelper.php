@@ -2,6 +2,10 @@
 
 namespace App\Helpers {
 
+    use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetails;
+    use App\Dtos\Defs\Endpoints\Task\Create\Errors\TaskCreateErrorDetailsErrorData;
+    use App\Dtos\Defs\Endpoints\Task\Update\Errors\TaskUpdateErrorDetails;
+    use App\Dtos\Defs\Endpoints\Task\Update\Errors\TaskUpdateErrorDetailsErrorData;
     use App\Dtos\Defs\Errors\GeneralErrorDetails;
     use App\Dtos\Defs\Types\Errors\EnumArrayError;
     use App\Dtos\Defs\Types\Errors\FieldError;
@@ -39,12 +43,87 @@ namespace App\Helpers {
     use Carbon\Carbon;
     use Illuminate\Auth\AuthenticationException;
     use Illuminate\Database\Query\Builder;
+    use Illuminate\Database\UniqueConstraintViolationException;
     use Illuminate\Http\Response;
     use Illuminate\Support\Facades\DB;
     use Swaggest\JsonSchema\Structure\ClassStructure;
 
     class TaskHelper
     {
+        /**
+         * @template T
+         * @param callable():T $insertOrUpdate
+         * @return T
+         */
+        public static function insertOrUpdateTaskWUniqueName(callable $insertOrUpdate,bool $insert, ?string $name = null)
+        {
+            try {
+               return $insertOrUpdate();
+            } catch (UniqueConstraintViolationException $e) {
+                $message = "";
+                $details = null;
+                $nameFieldError =  FieldError::create()
+                ->setMessage("Name of the task must be unique.");
+                if($insert){
+                    $message = "Task creation failed.";
+                    $details = TaskCreateErrorDetails::create()
+                    ->setErrorData(
+                        TaskCreateErrorDetailsErrorData::create()
+                        ->setName($nameFieldError)
+                    );
+                }
+                else{
+                    $message = "Task modification failed.";
+                    $details = TaskUpdateErrorDetails::create()
+                    ->setErrorData(
+                        TaskUpdateErrorDetailsErrorData::create()
+                            ->setName(
+                                FieldError::create()
+                                    ->setMessage("Name of the task must be unique.")
+                            )
+                            );
+                }
+                throw new ApplicationException(
+                    Response::HTTP_BAD_REQUEST,
+                    ApplicationErrorInformation::create()
+                        ->setUserInfo(
+                            UserSpecificPartOfAnError::create()
+                                ->setMessage($message)
+                        )
+                        ->setDetails($details)
+                );
+            }
+        }
+
+        /**
+         * @param int[] $tagIds
+         */
+        public static function insertOrReplaceTags(int $taskInfoId, array $tagIds, bool $replace)
+        {
+            if ($replace) {
+                DB::table(TagTaskInfoConstants::TABLE_NAME)
+                    ->where(TagTaskInfoConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
+                    ->delete();
+            }
+            if ($tagIds) {
+                $tagBindings = array_map(fn ($tagId) => [
+                    TagTaskInfoConstants::COL_TAG_ID => $tagId,
+                    TagTaskInfoConstants::COL_TASK_INFO_ID => $taskInfoId
+                ], $tagIds);
+
+                $success = DB::table(TagTaskInfoConstants::TABLE_NAME)
+                    ->insert($tagBindings);
+                if (!$success) {
+                    throw new InternalException(
+                        "Could not insert tags!",
+                        context: [
+                            'tagBindings' => $tagBindings
+                        ]
+                    );
+                }
+            }
+        }
+
 
         /**
          * @param int[] $taskInfoIds
@@ -88,34 +167,35 @@ namespace App\Helpers {
             return $res;
         }
 
-        public static function addWhereTaskIsPublic(Builder $builder){
+        public static function addWhereTaskIsPublic(Builder $builder)
+        {
             $builder->where(
                 DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_IS_PUBLIC),
                 '=',
                 true
             );
         }
-        
 
-        public static function addWhereIsPublicOrOwnsTask(Builder $builder){
-                $builder->where(function(Builder $query){
-                    $user = UserHelper::tryGetUser();
+
+        public static function addWhereIsPublicOrOwnsTask(Builder $builder)
+        {
+            $builder->where(function (Builder $query) {
+                $user = UserHelper::tryGetUser();
                 $isTeacher = $user && $user->role === UserRole::TEACHER->value;
+                $query->where(
+                    DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_IS_PUBLIC),
+                    '=',
+                    true
+                );
+                if ($isTeacher) {
                     $query->where(
-                        DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_IS_PUBLIC),
+                        DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_USER_ID),
                         '=',
-                        true
+                        $user->id,
+                        'or'
                     );
-                    if($isTeacher){
-                        $query->where(
-                            DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_USER_ID),
-                            '=',
-                            $user->id,
-                            'or'
-                        );
-                    }
-                });
-                
+                }
+            });
         }
 
         /**
@@ -189,9 +269,9 @@ namespace App\Helpers {
                 $exercisesCount = count($exercises);
                 $exerciseEnd = $exercisesCount;
                 $nextGroup = $groups->shift();
-                $nextGroupColStart = $nextGroup ? 
-                DBHelper::access($nextGroup, GroupConstants::COL_START)
-                : null;
+                $nextGroupColStart = $nextGroup ?
+                    DBHelper::access($nextGroup, GroupConstants::COL_START)
+                    : null;
 
 
                 for ($exI = 0; ($exercise = array_shift($exercises)) !== null; ++$exI) {
@@ -348,7 +428,8 @@ namespace App\Helpers {
             $tagTaskInfoTable = TagTaskInfoConstants::TABLE_NAME;
             $tagTable = TagConstants::TABLE_NAME;
             $tagNameCol = 'name';
-            foreach (DB::table($tagTaskInfoTable)
+
+            $dbTags = DB::table($tagTaskInfoTable)
                 ->select([
                     DBHelper::colFromTableAsCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TAG_ID),
                     DBHelper::colFromTableAsCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TASK_INFO_ID),
@@ -374,7 +455,12 @@ namespace App\Helpers {
                     DBHelper::tableCol($tagTaskInfoTable, TagTaskInfoConstants::COL_TASK_INFO_ID),
                     $taskInfoIds
                 )
-                ->get() as $tag) {
+                ->get();
+            DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
+                'dbTags' => $dbTags,
+                'taskInfoIds' => $taskInfoIds
+            ]);
+            foreach ($dbTags as $tag) {
                 /**
                  * @var int $taskInfoId
                  */
@@ -390,6 +476,10 @@ namespace App\Helpers {
                 ];
                 $tagsByTaskId[$taskInfoId][] = $tagData;
             }
+            DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
+                'tagsByTaskInfoId' => $tagsByTaskId,
+                'taskInfoIds' => $taskInfoIds
+            ]);
             return $tagsByTaskId;
         }
 
@@ -443,6 +533,7 @@ namespace App\Helpers {
         public static function setTagsToTaskResTask(array $tags, TaskResTask $task): EnumArrayError|null
         {
             $error = null;
+            $translatedTags = null;
             if (($invalidTags = self::validateTaskTags($tags, $translatedTags))) {
                 $error =   EnumArrayError::create()
                     ->setMessage("Invalid ids specified.");
@@ -493,7 +584,8 @@ namespace App\Helpers {
             }
         }
 
-        public static function insertNewTaskInfoGetId(array $taskInfoBindings,int $taskInfoId){
+        public static function insertNewTaskInfoGetId(array $taskInfoBindings, int $taskInfoId)
+        {
             $insertColumns = [
                 TaskInfoConstants::COL_DESCRIPTION,
                 TaskInfoConstants::COL_MIN_CLASS,
@@ -502,12 +594,12 @@ namespace App\Helpers {
                 TaskInfoConstants::COL_ORIENTATION,
                 TaskInfoConstants::COL_TASK_SOURCE_ID
             ];
-           $newTaskInfoId = DBHelper::insertFromSameByIdSingleWConstantsGetId(
-                tableName:TaskInfoConstants::TABLE_NAME,
-           insertColumns:$insertColumns,
-           values:$taskInfoBindings,
-           primaryKeyName:TaskInfoConstants::COL_ID,
-           primaryKeyValue:$taskInfoId
+            $newTaskInfoId = DBHelper::insertFromSameByIdSingleWConstantsGetId(
+                tableName: TaskInfoConstants::TABLE_NAME,
+                insertColumns: $insertColumns,
+                values: $taskInfoBindings,
+                primaryKeyName: TaskInfoConstants::COL_ID,
+                primaryKeyValue: $taskInfoId
             );
             return $newTaskInfoId;
         }
@@ -559,12 +651,12 @@ namespace App\Helpers {
                     });
                 } else {
                     // Get task info ids that have all specified tags
-                    $builder->whereIn($taskInfoIdColName, function (Builder $query)use($translatedTags){
+                    $builder->whereIn($taskInfoIdColName, function (Builder $query) use ($translatedTags) {
                         $query->select([TagTaskInfoConstants::COL_TASK_INFO_ID])
-                        ->from(TagTaskInfoConstants::TABLE_NAME)
-                        ->whereIn(TagTaskInfoConstants::COL_TAG_ID, $translatedTags)
-                        ->groupBy(TagTaskInfoConstants::COL_TASK_INFO_ID)
-                        ->havingRaw("COUNT(*) >= ?",[count($translatedTags)]);
+                            ->from(TagTaskInfoConstants::TABLE_NAME)
+                            ->whereIn(TagTaskInfoConstants::COL_TAG_ID, $translatedTags)
+                            ->groupBy(TagTaskInfoConstants::COL_TASK_INFO_ID)
+                            ->havingRaw("COUNT(*) >= ?", [count($translatedTags)]);
                     });
                 }
             }
@@ -645,51 +737,49 @@ namespace App\Helpers {
             return $rangeErrorOrEnums;
         }
 
-        public static function filterByModificationTimestamp(TimestampRange $range, Builder $builder,bool $withPrefix = false): RangeError|null
+        public static function filterByModificationTimestamp(TimestampRange $range, Builder $builder, bool $withPrefix = false): RangeError|null
         {
             $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
             if (is_array($rangeOrError)) {
                 $updatedAt = TaskConstants::COL_UPDATED_AT;
                 $createdAt = TaskConstants::COL_CREATED_AT;
-                if($withPrefix){
-                    $updatedAt = DBHelper::tableCol(TaskConstants::TABLE_NAME,$updatedAt);
-                    $createdAt = DBHelper::tableCol(TaskConstants::TABLE_NAME,$createdAt);
+                if ($withPrefix) {
+                    $updatedAt = DBHelper::tableCol(TaskConstants::TABLE_NAME, $updatedAt);
+                    $createdAt = DBHelper::tableCol(TaskConstants::TABLE_NAME, $createdAt);
                 }
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
-                if($minTimestamp && $maxTimestamp){
-                $builder->whereBetween(
-                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
-                    [$minTimestamp, $maxTimestamp]
-                );
-            }
-            else if($minTimestamp){
-                $builder->where(
-                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
-                    '>=',
-                    $minTimestamp
-                );
-            }
-            else if($maxTimestamp){
-                $builder->where(
-                    DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
-                    '<=',
-                    $maxTimestamp
-                );
-            }
+                if ($minTimestamp && $maxTimestamp) {
+                    $builder->whereBetween(
+                        DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
+                        [$minTimestamp, $maxTimestamp]
+                    );
+                } else if ($minTimestamp) {
+                    $builder->where(
+                        DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
+                        '>=',
+                        $minTimestamp
+                    );
+                } else if ($maxTimestamp) {
+                    $builder->where(
+                        DB::raw('COALESCE(' . $updatedAt . ',' . $createdAt . ')'),
+                        '<=',
+                        $maxTimestamp
+                    );
+                }
                 $rangeOrError = null;
             }
             return $rangeOrError;
         }
 
-        public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder,bool $withPrefix = false): RangeError|null
+        public static function filterByCreationTimestamp(TimestampRange $range, Builder $builder, bool $withPrefix = false): RangeError|null
         {
             return self::filterByTimestampColumn(
-                $range, 
-                $builder, 
-                column: $withPrefix ? 
-                DBHelper::tableCol(TaskConstants::TABLE_NAME,TaskConstants::COL_CREATED_AT)
-                 : TaskConstants::COL_CREATED_AT
-                );
+                $range,
+                $builder,
+                column: $withPrefix ?
+                    DBHelper::tableCol(TaskConstants::TABLE_NAME, TaskConstants::COL_CREATED_AT)
+                    : TaskConstants::COL_CREATED_AT
+            );
         }
 
         public static function filterByTimestampColumn(TimestampRange $range, Builder $builder, string $column): ?RangeError
@@ -697,21 +787,19 @@ namespace App\Helpers {
             $rangeOrError = DtoHelper::validateTimestampRange($range->min, $range->max);
             if (is_array($rangeOrError)) {
                 [$minTimestamp, $maxTimestamp] = $rangeOrError;
-                if($minTimestamp && $maxTimestamp){
-                $builder->whereBetween(
-                    $column,
-                    [
-                        TimeStampUtils::timestampToString($minTimestamp),
-                        TimeStampUtils::timestampToString($maxTimestamp)
-                    ]
-                );
-            }
-            else if($minTimestamp){
-                $builder->where($column,'>=',TimeStampUtils::timestampToString($minTimestamp));
-            }
-            else if($maxTimestamp){
-                $builder->where($column,'<=',TimeStampUtils::timestampToString($maxTimestamp));
-            }
+                if ($minTimestamp && $maxTimestamp) {
+                    $builder->whereBetween(
+                        $column,
+                        [
+                            TimeStampUtils::timestampToString($minTimestamp),
+                            TimeStampUtils::timestampToString($maxTimestamp)
+                        ]
+                    );
+                } else if ($minTimestamp) {
+                    $builder->where($column, '>=', TimeStampUtils::timestampToString($minTimestamp));
+                } else if ($maxTimestamp) {
+                    $builder->where($column, '<=', TimeStampUtils::timestampToString($maxTimestamp));
+                }
                 $rangeOrError = null;
             }
             return $rangeOrError;
