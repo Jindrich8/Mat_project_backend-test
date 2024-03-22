@@ -26,9 +26,9 @@ class AppServiceProvider extends ServiceProvider
    */
   public function boot(): void
   {
-  //   DB::listen(function ($query) {
-  //     DebugLogger::performance($query->time,'ms',"QUERY",['query' => $query->sql]);
-  // });
+    DB::listen(function ($query) {
+      DebugLogger::performance($query->time,'ms',"QUERY",['query' => $query->sql]);
+  });
 
     //
     Blueprint::macro(

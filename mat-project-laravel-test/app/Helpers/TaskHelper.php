@@ -456,10 +456,10 @@ namespace App\Helpers {
                     $taskInfoIds
                 )
                 ->get();
-            DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
-                'dbTags' => $dbTags,
-                'taskInfoIds' => $taskInfoIds
-            ]);
+            // DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
+            //     'dbTags' => $dbTags,
+            //     'taskInfoIds' => $taskInfoIds
+            // ]);
             foreach ($dbTags as $tag) {
                 /**
                  * @var int $taskInfoId
@@ -476,10 +476,10 @@ namespace App\Helpers {
                 ];
                 $tagsByTaskId[$taskInfoId][] = $tagData;
             }
-            DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
-                'tagsByTaskInfoId' => $tagsByTaskId,
-                'taskInfoIds' => $taskInfoIds
-            ]);
+            // DebugLogger::log(self::class . "::getTagsByTaskInfoId", [
+            //     'tagsByTaskInfoId' => $tagsByTaskId,
+            //     'taskInfoIds' => $taskInfoIds
+            // ]);
             return $tagsByTaskId;
         }
 
