@@ -55,7 +55,7 @@ namespace App\Helpers\Database {
          */
         public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values,callable $getIdsIfNotSupported,bool $unsetValuesArray = false): array
         {
-            if(false && DBUtils::getDBType() === DBTypeEnum::POSTGRESQL){
+            if(DBUtils::getDBType() === DBTypeEnum::POSTGRESQL){
                 return PgDB::insertAndGetIds($tableName,$primaryKeyName,$columns,$values,$unsetValuesArray);
             }
             else{
