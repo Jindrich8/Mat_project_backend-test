@@ -392,14 +392,6 @@ class TaskController extends Controller
                     ->lockForUpdate()
                     ->value(TaskConstants::COL_TASK_INFO_ID)
                     ?? throw new AppModelNotFoundException("Task",['id' => $id]);
-                
-                    if (isset($task->tagIds)) {
-                        TaskHelper::insertOrReplaceTags(
-                            taskInfoId:$taskInfoId,
-                            tagIds:$task->tagIds,
-                            replace:true
-                        );
-                    }
 
                 $reviewTemplateExists = DB::table(TaskReviewTemplateConstants::TABLE_NAME)
                     ->where(TaskReviewTemplateConstants::COL_TASK_INFO_ID, '=', $taskInfoId)
@@ -440,6 +432,13 @@ class TaskController extends Controller
                         );
                     }
                 }
+                $currentTaskInfoId = $taskBindings[TaskConstants::COL_TASK_INFO_ID] ?? $taskInfoId;
+                TaskHelper::insertOrReplaceTags(
+                    taskInfoId:$currentTaskInfoId,
+                    tagIds:$task->tagIds,
+                    replace:$currentTaskInfoId === $taskInfoId
+                );
+
                 $success = TaskHelper::insertOrUpdateTaskWUniqueName(
                     fn()=>DB::table(TaskConstants::TABLE_NAME)
                     ->where(TaskConstants::COL_ID, '=', $id)
@@ -898,6 +897,7 @@ class TaskController extends Controller
     public function delete(HttpRequest $request, int $taskId): Response
     {
         DB::transaction(function () use ($taskId) {
+            $userId = UserHelper::getUserId();
             $taskTable = TaskConstants::TABLE_NAME;
             $taskInfoTable = TaskInfoConstants::TABLE_NAME;
             $task = DB::table($taskTable)
@@ -916,14 +916,27 @@ class TaskController extends Controller
                      '=',
                       $taskId
                       )
+                ->where(
+                    DBHelper::tableCol($taskTable,TaskConstants::COL_USER_ID),
+                    '=',
+                    $userId
+                )
                 ->first() ?? throw new AppModelNotFoundException("Task", ['id' => $taskId]);
-
+                  //  DebugLogger::log("Task with id $taskId found!");
             $taskInfoId = DBHelper::access($task, TaskConstants::COL_TASK_INFO_ID);
             $taskSourceId = DBHelper::access($task, TaskInfoConstants::COL_TASK_SOURCE_ID);
 
             $deleted = DB::table(TaskConstants::TABLE_NAME)
-                ->delete($taskId);
+            ->where(TaskConstants::COL_ID,'=',$taskId)
+            ->where(
+                TaskConstants::COL_USER_ID,
+                '=',
+                $userId
+            )
+                ->delete();
+               // DebugLogger::log("Delete task with taskId $taskId and userId $userId deleted",['res'=>$deleted]);
             if ($deleted === 0) {
+                //DebugLogger::log("Task delete '{$taskId}' - returns 0");
                 // There are some concurrent query, so let it to do the rest
                 return;
             }
