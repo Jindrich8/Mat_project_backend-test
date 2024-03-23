@@ -204,7 +204,7 @@ namespace App\Types\XML {
          */
         public function getChild(string $name, GetXMLParserPositionInterface $getParserPosition): XMLNodeBase
         {
-            $child = $this->children->tryGetChild($name);
+            $child = $this->children?->tryGetChild($name) ?? false;
             if ($child === false) {
                DebugLogger::log("CHILD '$name' NOT FOUND IN {$this->name} - THIS", $this);
                 $this->invalidElement($getParserPosition, elementName: $name);
