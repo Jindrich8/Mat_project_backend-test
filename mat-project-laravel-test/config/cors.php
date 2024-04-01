@@ -40,7 +40,7 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 3600,
 
     // TODO: CHANGE THIS TO TRUE
     'supports_credentials' => true,

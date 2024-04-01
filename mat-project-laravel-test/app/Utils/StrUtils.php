@@ -15,6 +15,30 @@ namespace App\Utils {
         private const TRIM_WHITES_NO_LINE_BREAK = " \r\t\v\0";
         private const TRIM_WHITES = " \n\r\t\v\0";
 
+         /**
+         * @template T
+         * @param string $str
+         * @param T $default
+         * @return int|float|T
+         */
+        public static function tryParseNumber(string $str,mixed $default = null):mixed {
+            return self::tryParseInt($str,null) ?? self::tryParseFloat($str,$default);
+        }
+
+        /**
+         * @template T
+         * @param string $str
+         * @param T $default
+         * @return int|T
+         */
+        public static function tryParseInt(string $str,mixed $default = null):mixed{
+            $filtered = filter_var($str,FILTER_VALIDATE_INT);
+            if($filtered === false){
+            $filtered = $default;
+            }
+            return $filtered;
+        }
+
         /**
          * @template T
          * @param string $str

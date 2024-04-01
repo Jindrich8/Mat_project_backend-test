@@ -159,7 +159,7 @@ namespace App\Helpers {
                     (
                         $value[0] === "'" ?
                         substr($value, 1) :
-                        StrUtils::tryParseFloat($value, $value)
+                        StrUtils::tryParseNumber($value, $value)
                     )
                     : $value
             );
