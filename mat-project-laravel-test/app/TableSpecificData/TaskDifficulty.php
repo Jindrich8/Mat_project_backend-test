@@ -3,8 +3,12 @@
 namespace App\TableSpecificData;
 
 use App\Types\DBTranslationEnumTrait;
+use App\Types\TranslableBackedEnum;
 
-enum TaskDifficulty: int
+/**
+ * @implements TranslableBackedEnum<TaskDifficulty>
+ */
+enum TaskDifficulty: int implements TranslableBackedEnum
 {
     /**
      * @use DBTranslationEnumTrait<int>
@@ -13,4 +17,14 @@ enum TaskDifficulty: int
     case EASY = 0;
     case MEDIUM = 1;
     case HARD = 2;
+
+    public function translateCase():string
+    {
+        return match($this){
+            self::EASY => 'Lehká',
+            self::MEDIUM => 'Střední',
+            self::HARD => 'Těžká',
+            default => $this->name
+        };
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Helpers {
 
     use App\Exceptions\EnumConversionException;
+    use App\Types\TranslableBackedEnum;
     use BackedEnum;
 
     class EnumHelper
@@ -24,7 +25,7 @@ namespace App\Helpers {
          * @return string
          */
           public static function translate(BackedEnum $case){
-            return $case->name;
+            return $case instanceof TranslableBackedEnum ? $case->translateCase() : $case->name;
         }
 
         /**
