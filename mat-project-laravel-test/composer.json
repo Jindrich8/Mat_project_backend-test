@@ -47,14 +47,14 @@
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "Powershell.exe ./generate.ps1",
+            "php ./generate_php.php",
             "@php artisan ide-helper:generate",
             "@php artisan ide-helper:meta",
             "@php artisan ide-helper:models"
             
         ],
         "post-install-cmd": [
-            "Powershell.exe ./generate.ps1",
+            "php ./generate_php.php",
             "@php artisan ide-helper:generate",
             "@php artisan ide-helper:meta",
             "@php artisan ide-helper:models"
