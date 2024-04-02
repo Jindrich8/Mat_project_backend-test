@@ -3,5 +3,7 @@ This is backend for [System for practising the grammar of the Czech language](ht
 ## Installation
 1. For proper installation with frontend refer to [frontend](https://github.com/Jindrich8/Mat_project_frontend-test#readme).
 2. Step into mat-project-laravel-test
-3. Run composer update
-4. Run php artisan serve
+3. Rename .env.example to .env
+4. Set DB_USERNAME, DB_PASSWORD, DB_DATABASE, DB_PORT, DB_CONNECTION, APP_URL, FRONTEND_URL, SANCTUM_STATEFUL_DOMAINS and SESSION_DOMAIN to correct values
+5. Run composer update
+6. Run php artisan serve
