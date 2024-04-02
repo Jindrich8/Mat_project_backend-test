@@ -4,3 +4,4 @@ This is backend for [System for practising the grammar of the Czech language](ht
 1. For proper installation with frontend refer to [frontend](https://github.com/Jindrich8/Mat_project_frontend-test#readme).
 2. Step into mat-project-laravel-test
 3. Run composer update
+4. Run php artisan serve
