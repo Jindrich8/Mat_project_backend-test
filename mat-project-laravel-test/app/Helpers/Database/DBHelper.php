@@ -16,6 +16,24 @@ namespace App\Helpers\Database {
     class DBHelper
     {
 
+        /**
+         * @param array<string,mixed> $attributes
+         * @param array<string,mixed> $values
+         * @return bool|int
+         * Returns boolean, indicating if insert was successful, when record with given attributes DOES NOT exist  
+         * Returns int, indicating number of affected records, when record with given attributes exists   
+         * 
+         * The number of affected records can be 0, even if the update was successful, because some databases (e.g. MySQL) return 0 when updating the same values.
+         */
+        public static function insertOrUpdate(string $table,array $attributes,array $values){
+
+            if (!DB::table($table)->where($attributes)->exists()) {
+                return DB::insert(array_merge($attributes, $values));
+            }
+    
+            return DB::table($table)->where($attributes)->update($values);
+        }
+
         public static function insertFromSameByIdSingleWConstantsGetId(string $tableName,array $insertColumns,array $values,string $primaryKeyName,string $primaryKeyValue):mixed{
             $unmodifiedColumns = [];
             foreach($insertColumns as $insertColumn){

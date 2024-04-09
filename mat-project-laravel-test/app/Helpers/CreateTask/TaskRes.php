@@ -245,7 +245,7 @@ namespace App\Helpers\CreateTask {
 
             // insert task info and tags
             {
-                $success = false;
+                $success = true;
                 $taskInfoBindings = [
                     TaskInfoConstants::COL_TASK_SOURCE_ID => $taskSourceId
                 ];
@@ -254,10 +254,11 @@ namespace App\Helpers\CreateTask {
                 task:$this->task
             );
                 $updateTaskInfo = $taskInfoId !== null;
+                $newTaskInfoId = $taskInfoId;
                 if($updateTaskInfo && !$insertUsingOld){
-                    $success = DB::table(TaskInfoConstants::TABLE_NAME)
+                    DB::table(TaskInfoConstants::TABLE_NAME)
                     ->where(TaskInfoConstants::COL_ID,'=',$taskInfoId)
-                    ->update($taskInfoBindings) === 1;
+                    ->update($taskInfoBindings);
                 }
                 else{
                    $newTaskInfoId = $insertUsingOld && $taskInfoId !== null ? 
@@ -554,40 +555,11 @@ namespace App\Helpers\CreateTask {
                     insertUsingOld:$reviewTemplateExists
                 );
                 $taskUpdateData[TaskConstants::COL_TASK_INFO_ID] = $newTaskInfoId;
-                $updated = null;
-                try{
-                $updated = $taskUpdateQuery->update($taskUpdateData);
-                }
-                catch(UniqueConstraintViolationException $e){
-                    throw new ApplicationException(
-                        Response::HTTP_BAD_REQUEST,
-                        ApplicationErrorInformation::create()
-                        ->setUserInfo(
-                            UserSpecificPartOfAnError::create()
-                            ->setMessage("Task modification failed.")
-                            )
-                        ->setDetails(
-                            TaskUpdateErrorDetails::create()
-                            ->setErrorData(
-                                TaskUpdateErrorDetailsErrorData::create()
-                                ->setName(
-                                    FieldError::create()
-                                    ->setMessage("Name of the task must be unique.")
-                                )
-                            )
-                        )
-                                );
-                }
-                if ($updated !== 1) {
-                    throw new InternalException(
-                        "Could not update task with id '$taskId'.",
-                        context: [
-                            'taskData' => $taskUpdateData,
-                            'taskId' => $taskId,
-                            'updated' => $updated
-                        ]
-                    );
-                }
+                TaskHelper::insertOrUpdateTaskWUniqueName(
+                    insertOrUpdate:fn()=>$taskUpdateQuery->update($taskUpdateData),
+                    insert:false,
+                    name:$taskUpdateData[TaskConstants::COL_NAME] ?? null
+                );
             });
         }
     }

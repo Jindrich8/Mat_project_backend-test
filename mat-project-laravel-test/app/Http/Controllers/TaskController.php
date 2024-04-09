@@ -204,17 +204,22 @@ class TaskController extends Controller
     {
         $userId = UserHelper::getUserId();
         $requestData = RequestHelper::getDtoFromRequest(Save\SaveTaskRequest::class, $request);
-        $success = DB::table(SavedTaskConstants::TABLE_NAME)
-            ->updateOrInsert(
-                attributes: [
-                    SavedTaskConstants::COL_TASK_ID => $id,
-                    SavedTaskConstants::COL_USER_ID => $userId
-                ],
-                values: [
-                    SavedTaskConstants::COL_DATA => Save\SaveTaskRequest::export($requestData->exercises)
-                ]
-            );
-        if (!$success) {
+        $success = null;
+        try{
+        $success = DBHelper::insertOrUpdate(
+            table:SavedTaskConstants::TABLE_NAME,
+            attributes: [
+                SavedTaskConstants::COL_TASK_ID => $id,
+                SavedTaskConstants::COL_USER_ID => $userId
+            ],
+            values: [
+                SavedTaskConstants::COL_DATA => Save\SaveTaskRequest::export($requestData->exercises)
+            ]);
+        }
+        catch(\Throwable $e){
+            $success = false;
+        }
+        if (is_bool($success) && !$success) {
             throw new InternalException(
                 "Could not save task values!",
                 context: ['taskId' => $id]
@@ -419,18 +424,9 @@ class TaskController extends Controller
                     }
                     $taskBindings[TaskConstants::COL_TASK_INFO_ID] = $newTaskInfoId;
                 } else {
-                    $success = DB::table(TaskInfoConstants::TABLE_NAME)
+                    DB::table(TaskInfoConstants::TABLE_NAME)
                         ->where(TaskInfoConstants::COL_ID, '=', $taskInfoId)
-                        ->update($taskInfoBindings) === 1;
-                    if (!$success) {
-                        throw new InternalException(
-                            message: "Could not update task info with id '$taskInfoId'.",
-                            context: [
-                                'taskInfoId' => $taskInfoId,
-                                'taskInfoBindings' => $taskInfoBindings
-                            ]
-                        );
-                    }
+                        ->update($taskInfoBindings);
                 }
                 $currentTaskInfoId = $taskBindings[TaskConstants::COL_TASK_INFO_ID] ?? $taskInfoId;
                 TaskHelper::insertOrReplaceTags(
@@ -439,21 +435,13 @@ class TaskController extends Controller
                     replace:$currentTaskInfoId === $taskInfoId
                 );
 
-                $success = TaskHelper::insertOrUpdateTaskWUniqueName(
+                TaskHelper::insertOrUpdateTaskWUniqueName(
                     fn()=>DB::table(TaskConstants::TABLE_NAME)
                     ->where(TaskConstants::COL_ID, '=', $id)
-                    ->update($taskBindings) === 1,
+                    ->update($taskBindings),
                     insert:false,
                     name:$taskBindings[TaskConstants::COL_NAME] ?? null
                 );
-                if (!$success) {
-                    throw new InternalException(
-                        message: "Could not update task with id '$id'.",
-                        context: [
-                            'taskBindings' => $taskBindings
-                        ]
-                    );
-                }
             }));
         }
 
@@ -616,12 +604,15 @@ class TaskController extends Controller
                     )
                 ];
 
-                $inserted = DB::table(TaskReviewConstants::TABLE_NAME)
-                    ->updateOrInsert([
+                $inserted = DBHelper::insertOrUpdate(
+                    table:TaskReviewConstants::TABLE_NAME,
+                    attributes:[
                         TaskReviewConstants::COL_USER_ID => $userId,
                         TaskReviewConstants::COL_TASK_REVIEW_TEMPLATE_ID => $templateId
-                    ], $taskReviewData);
-                if (!$inserted) {
+                    ],
+                    values:$taskReviewData
+                );
+                if (is_bool($inserted) && !$inserted) {
                     throw new InternalException(
                         message: "Could not insert task review.",
                         context: [
