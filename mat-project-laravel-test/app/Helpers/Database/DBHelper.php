@@ -28,7 +28,7 @@ namespace App\Helpers\Database {
         public static function insertOrUpdate(string $table,array $attributes,array $values){
 
             if (!DB::table($table)->where($attributes)->exists()) {
-                return DB::insert(array_merge($attributes, $values));
+                return DB::table($table)->insert($values);
             }
     
             return DB::table($table)->where($attributes)->update($values);

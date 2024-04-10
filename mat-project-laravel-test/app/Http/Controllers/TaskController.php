@@ -213,7 +213,7 @@ class TaskController extends Controller
                 SavedTaskConstants::COL_USER_ID => $userId
             ],
             values: [
-                SavedTaskConstants::COL_DATA => Save\SaveTaskRequest::export($requestData->exercises)
+                SavedTaskConstants::COL_DATA => DtoUtils::dtoToJson($requestData,$requestData::EXERCISES)
             ]);
         }
         catch(\Throwable $e){
