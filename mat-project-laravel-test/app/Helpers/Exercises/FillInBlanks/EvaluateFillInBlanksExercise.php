@@ -54,10 +54,10 @@ namespace App\Helpers\Exercises\FillInBlanks {
                     if ($item->type === TextInput::TYPE_CONST) {
                         $responseItem = DefsTxtI::create()
                             ->setUserValue($filled);
-                        if ($filled === null) {
-                            $responseItem->setCorrectValue($item->correctText);
-                        } else if ($filled === $item->correctText) {
+                        if (($filled ?? "") === ($item->correctText ?? "")) {
                             ++$points;
+                        } else if ($filled === null) {
+                            $responseItem->setCorrectValue($item->correctText);
                         } else {
                             $responseItem->setCorrectValue($item->correctText);
                         }
