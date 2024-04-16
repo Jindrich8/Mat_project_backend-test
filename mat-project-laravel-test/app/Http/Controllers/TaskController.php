@@ -1149,7 +1149,7 @@ class TaskController extends Controller
                         } else {
                             return false;
                         }
-                        DebugLogger::log("TaskController::myList - orderBy",[$column,$direction]);
+                       // DebugLogger::log("TaskController::myList - orderBy",[$column,$direction]);
                         $builder->orderBy($column, $direction);
                     }
                     return true;
@@ -1157,7 +1157,7 @@ class TaskController extends Controller
             );
         }
 
-            Log::debug("TaskController - myList - Executed query: '" . $builder->toRawSql() . "");
+            //Log::debug("TaskController - myList - Executed query: '" . $builder->toRawSql() . "");
             $paginator = $builder->orderBy(TaskConstants::COL_ID)
                 ->cursorPaginate(
                     perPage: $requestData->options->limit,
