@@ -25,34 +25,39 @@ namespace App\Helpers\Database {
          * 
          * The number of affected records can be 0, even if the update was successful, because some databases (e.g. MySQL) return 0 when updating the same values.
          */
-        public static function insertOrUpdate(string $table,array $attributes,array $values){
+        public static function insertOrUpdate(string $table, array $attributes, array $values)
+        {
 
             if (!DB::table($table)->where($attributes)->exists()) {
                 return DB::table($table)->insert($values);
             }
-    
+
             return DB::table($table)->where($attributes)->update($values);
         }
 
-        public static function insertFromSameByIdSingleWConstantsGetId(string $tableName,array $insertColumns,array $values,string $primaryKeyName,string $primaryKeyValue):mixed{
+        public static function insertFromSameByIdSingleWConstantsGetId(string $tableName, array $insertColumns, array $values, string $primaryKeyName, string $primaryKeyValue): mixed
+        {
             $unmodifiedColumns = [];
-            foreach($insertColumns as $insertColumn){
-                if(!isset($values[$insertColumn])){
-                    $unmodifiedColumns[]=$insertColumn;
+            foreach ($insertColumns as $insertColumn) {
+                if (!isset($values[$insertColumn])) {
+                    $unmodifiedColumns[] = $insertColumn;
                 }
             }
-
-            $unmodifiedValues = (array)DB::table($tableName)
-            ->select($unmodifiedColumns)
-            ->where($primaryKeyName, '=', $primaryKeyValue)
-            ->first() ?? throw new InternalException(
-                message:"Could not find row in '$tableName' with '$primaryKeyName' '$primaryKeyValue'.",
-        context:[
-            'tableName' => $tableName,
-            'primaryKeyName'=>$primaryKeyName,
-            'primaryKeyValue'=>$primaryKeyValue,
-            'unmodifiedColumns'=>$unmodifiedColumns
-        ]);
+            $unmodifiedValues = [];
+            if ($unmodifiedColumns) {
+                $unmodifiedValues = (array)DB::table($tableName)
+                    ->select($unmodifiedColumns)
+                    ->where($primaryKeyName, '=', $primaryKeyValue)
+                    ->first() ?? throw new InternalException(
+                    message: "Could not find row in '$tableName' with '$primaryKeyName' '$primaryKeyValue'.",
+                    context: [
+                        'tableName' => $tableName,
+                        'primaryKeyName' => $primaryKeyName,
+                        'primaryKeyValue' => $primaryKeyValue,
+                        'unmodifiedColumns' => $unmodifiedColumns
+                    ]
+                );
+            }
 
             // Order of array + array is important, because:
             // ,,for keys that exist in both arrays, the elements from the left-hand array will be used"
@@ -63,7 +68,7 @@ namespace App\Helpers\Database {
                 ->insertGetId($values, $primaryKeyName);
         }
 
-       
+
 
         /**
          * @param string[] $columns
@@ -71,37 +76,38 @@ namespace App\Helpers\Database {
          * @param callable():int[] $getIdsIfNotSupported
          * @return int[]|null
          */
-        public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values,callable $getIdsIfNotSupported,bool $unsetValuesArray = false): array
+        public static function insertAndGetIds(string $tableName, string $primaryKeyName, array $columns, array &$values, callable $getIdsIfNotSupported, bool $unsetValuesArray = false): array
         {
-            if(DBUtils::getDBType() === DBTypeEnum::POSTGRESQL){
-                return PgDB::insertAndGetIds($tableName,$primaryKeyName,$columns,$values,$unsetValuesArray);
-            }
-            else{
+            if (DBUtils::getDBType() === DBTypeEnum::POSTGRESQL) {
+                return PgDB::insertAndGetIds($tableName, $primaryKeyName, $columns, $values, $unsetValuesArray);
+            } else {
                 $valuesCount = count($values);
                 $columnsCount = count($columns);
                 $transformed = [];
-                for($i = 0;$i < $valuesCount;++$i){
+                for ($i = 0; $i < $valuesCount; ++$i) {
                     $value = &$values[$i];
-                    if(count($value) !== $columnsCount){
-                        throw new InternalException("The values array element arrays should have same length as columns array.",
-                        context:[
-                            'tableName' => $tableName,
-                        'primaryKeyName' => $primaryKeyName,
-                        'values' => $values
-                    ]);
+                    if (count($value) !== $columnsCount) {
+                        throw new InternalException(
+                            "The values array element arrays should have same length as columns array.",
+                            context: [
+                                'tableName' => $tableName,
+                                'primaryKeyName' => $primaryKeyName,
+                                'values' => $values
+                            ]
+                        );
                     }
-                    $transformed[] = array_combine($columns,$value);
-                    if($unsetValuesArray){
+                    $transformed[] = array_combine($columns, $value);
+                    if ($unsetValuesArray) {
                         unset($values[$i]);
                     }
                 }
-               $inserted = DB::table($tableName)
-                ->insert($transformed);
-                if(!$inserted){
+                $inserted = DB::table($tableName)
+                    ->insert($transformed);
+                if (!$inserted) {
                     return null;
                 }
                 $ids = $getIdsIfNotSupported();
-                if(count($ids)!== $valuesCount){
+                if (count($ids) !== $valuesCount) {
                     return null;
                 }
                 return $ids;
@@ -113,8 +119,9 @@ namespace App\Helpers\Database {
          * @param class-string<T> $enum
          * @return T
          */
-        public static function accessAsEnum(mixed $record, string $prop,string $enum):BackedEnum{
-            return EnumHelper::fromThrow($enum,self::access($record,$prop));
+        public static function accessAsEnum(mixed $record, string $prop, string $enum): BackedEnum
+        {
+            return EnumHelper::fromThrow($enum, self::access($record, $prop));
         }
 
         /**
@@ -182,7 +189,5 @@ namespace App\Helpers\Database {
             $expr .= ($as ? ' AS ' . $as : '');
             return $expr;
         }
-
-
     }
 }
