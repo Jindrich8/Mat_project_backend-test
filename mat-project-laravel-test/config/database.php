@@ -58,6 +58,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone'  => (new DateTime('now', new DateTimeZone(config('app.timezone','+00:00'))))->format('P'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -76,6 +77,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
+            'timezone'  => (new DateTime('now', new DateTimeZone(config('app.timezone','+00:00'))))->format('P')
         ],
 
         'sqlsrv' => [

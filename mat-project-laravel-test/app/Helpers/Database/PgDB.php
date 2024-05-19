@@ -27,7 +27,7 @@ namespace App\Helpers\Database {
                 DB::statement("CREATE OR REPLACE FUNCTION {$name}()
             RETURNS TRIGGER AS $$
             BEGIN
-                NEW.updated_at = now();
+                NEW.updated_at = timezone('utc',now());
                 RETURN NEW;
             END;
             $$ language 'plpgsql';");
