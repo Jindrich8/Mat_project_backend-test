@@ -74,7 +74,7 @@ namespace App\MyConfigs {
                         $this->groupMembersName = 'members';
                         $this->groupResourcesName = 'resources';
 
-                        $this->resourcesResource = new ValidableString('resource', 1000, 1);
+                        $this->resourcesResource = new ValidableString('resource', 2000, 1);
 
                         $this->exerciseName = 'exercise';
                         $this->exerciseInstructions = new ValidableString('instructions', 255, 1);
@@ -111,7 +111,7 @@ namespace App\MyConfigs {
                         $this->groupMembersName = 'clenove';
                         $this->groupResourcesName = 'zdroje';
 
-                        $this->resourcesResource = new ValidableString('zdroj', 1000, 1);
+                        $this->resourcesResource = new ValidableString('zdroj', 2000, 1);
 
                         $this->exerciseName = 'cviceni';
                         $this->exerciseInstructions = new ValidableString('instrukce', 255, 1);
