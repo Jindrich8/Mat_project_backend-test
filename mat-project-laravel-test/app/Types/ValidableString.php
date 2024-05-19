@@ -45,6 +45,9 @@ namespace App\Types {
                 $error = "Value of '{$this->name}'"
                 .($this->isElement ? 'element' : 'attribute')
                 ." should be string with length from '{$this->minLen}' to '{$this->maxLen}'.";
+                if($length !== null){
+                    $error .= "\nActual length of text is '$length'.";
+                }
             }
             return $error;
         }
