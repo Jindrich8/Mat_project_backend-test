@@ -640,7 +640,7 @@ class TaskController extends Controller
             $filters = $requestData->filters;
             if ($filters) {
                 if ($filters->tags) {
-                    $invalidTags = TaskHelper::filterTaskByTags($filters->tags, $builder, hasAll: true);
+                    $invalidTags = TaskHelper::filterTaskByTags($filters->tags, $builder, hasAll: false);
                     if ($invalidTags) {
                         ($filterErrorData ??= List\Errors\FilterErrorDetailsErrorData::create())
                             ->setTags(
